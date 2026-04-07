@@ -24,7 +24,10 @@
   .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
   .error-msg { font-size: 13px; color: #c0392b; margin-top: 0.75rem; text-align: center; display: none; }
   .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
-  .kpi-card { background: #f1efe8; border-radius: 8px; padding: 1rem; }
+  .kpi-card { background: #f1efe8; border-radius: 8px; padding: 1rem; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s, background 0.15s; user-select: none; }
+  .kpi-card:hover { border-color: #bbb; }
+  .kpi-card.active { border-color: #1a1a1a; background: #e2e0d9; }
+  .kpi-hint { font-size: 11px; color: #aaa; margin-top: 6px; }
   .kpi-label { font-size: 12px; color: #666; margin-bottom: 6px; }
   .kpi-value { font-size: 28px; font-weight: 500; color: #1a1a1a; }
   .kpi-sub { font-size: 12px; color: #888; margin-top: 4px; }
@@ -62,6 +65,9 @@
   .bar-fill { height: 100%; border-radius: 99px; background: #378add; }
   .refresh-btn { font-size: 13px; padding: 6px 14px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
   .refresh-btn:hover { background: #f1efe8; }
+  .clear-filter-btn { font-size: 12px; padding: 4px 10px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #666; display: none; }
+  .clear-filter-btn:hover { background: #f1efe8; }
+  .active-filter-label { font-size: 12px; color: #666; background: #f1efe8; border: 1px solid #ddd; border-radius: 99px; padding: 3px 10px; display: none; }
   .tag { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; background: #e6f1fb; color: #185fa5; margin-left: 8px; }
   .no-oa-tag { background: #fcebeb; color: #a32d2d; }
   input[type=text], input[type=password], select { border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 13px; outline: none; background: #fff; }
@@ -99,25 +105,29 @@
       </div>
 
       <div class="kpi-grid">
-        <div class="kpi-card">
+        <div class="kpi-card" id="kpi-card-hold" onclick="toggleKpiFilter('hold')">
           <div class="kpi-label">Total on hold orders</div>
           <div class="kpi-value" id="kpi-hold">—</div>
           <div class="kpi-sub">Unique order numbers</div>
+          <div class="kpi-hint">Click to filter</div>
         </div>
-        <div class="kpi-card kpi-danger">
+        <div class="kpi-card kpi-danger" id="kpi-card-nooa" onclick="toggleKpiFilter('nooa')">
           <div class="kpi-label">Orders without OAs</div>
           <div class="kpi-value" id="kpi-no-oa">—</div>
           <div class="kpi-sub">Unique POs with no vendor ref</div>
+          <div class="kpi-hint">Click to filter</div>
         </div>
-        <div class="kpi-card kpi-warning">
+        <div class="kpi-card kpi-warning" id="kpi-card-late" onclick="toggleKpiFilter('late')">
           <div class="kpi-label">Promised &gt; 3 months out</div>
           <div class="kpi-value" id="kpi-late">—</div>
           <div class="kpi-sub">Unique orders with late promise dates</div>
+          <div class="kpi-hint">Click to filter</div>
         </div>
-        <div class="kpi-card">
+        <div class="kpi-card" id="kpi-card-total" onclick="toggleKpiFilter('total')">
           <div class="kpi-label">Total lines on order</div>
           <div class="kpi-value" id="kpi-total">—</div>
           <div class="kpi-sub">All loaded PO lines</div>
+          <div class="kpi-hint">Click to show all</div>
         </div>
       </div>
 
@@ -134,6 +144,8 @@
 
       <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <div class="section-title" style="margin:0;">Order lines</div>
+        <span class="active-filter-label" id="active-filter-label"></span>
+        <button class="clear-filter-btn" id="clear-filter-btn" onclick="clearKpiFilter()">Clear filter</button>
         <input type="text" id="search" placeholder="Search order, account, inventory..." style="flex:1;min-width:180px;" oninput="renderTable()" />
         <select id="status-filter" onchange="renderTable()">
           <option value="">All statuses</option>
@@ -154,6 +166,7 @@ const PROXY = "https://abpoquery.greg-capell.workers.dev";
 let allData = [];
 let credentials = '';
 let expandedRows = new Set();
+let activeKpiFilter = null;
 
 function getDateRange() {
   const today = new Date();
@@ -193,10 +206,7 @@ async function fetchData() {
   const { today, start } = getDateRange();
   const path = `/odata/ASF/DB-DS%20PO%20Line%20Detail?StartDate=${start}&EndDate=${today}`;
   const resp = await fetch(PROXY + path, {
-    headers: {
-      'Authorization': 'Basic ' + credentials,
-      'Accept': 'application/json'
-    }
+    headers: { 'Authorization': 'Basic ' + credentials, 'Accept': 'application/json' }
   });
   if (!resp.ok) throw new Error('HTTP ' + resp.status);
   const json = await resp.json();
@@ -214,10 +224,42 @@ async function fetchData() {
 }
 
 async function refreshData() {
+  activeKpiFilter = null;
+  updateKpiCardStates();
   document.getElementById('table-container').innerHTML = '<div class="loading">Refreshing...</div>';
   document.getElementById('qty-table-wrap').innerHTML = '<div class="loading">Loading...</div>';
   document.getElementById('no-oa-wrap').innerHTML = '<div class="loading">Loading...</div>';
   await fetchData();
+}
+
+function toggleKpiFilter(filter) {
+  activeKpiFilter = activeKpiFilter === filter ? null : filter;
+  updateKpiCardStates();
+  renderTable();
+}
+
+function clearKpiFilter() {
+  activeKpiFilter = null;
+  updateKpiCardStates();
+  renderTable();
+}
+
+function updateKpiCardStates() {
+  ['hold','nooa','late','total'].forEach(f => {
+    const card = document.getElementById('kpi-card-' + f);
+    if (card) card.classList.toggle('active', activeKpiFilter === f);
+  });
+  const label = document.getElementById('active-filter-label');
+  const clearBtn = document.getElementById('clear-filter-btn');
+  const labels = { hold: 'On Hold orders', nooa: 'Orders without OAs', late: 'Promised > 3 months', total: 'All lines' };
+  if (activeKpiFilter) {
+    label.textContent = 'Filtered: ' + labels[activeKpiFilter];
+    label.style.display = 'inline-block';
+    clearBtn.style.display = 'inline-block';
+  } else {
+    label.style.display = 'none';
+    clearBtn.style.display = 'none';
+  }
 }
 
 function renderKPIs() {
@@ -286,10 +328,21 @@ function isLate(val) {
   return new Date(val) > t;
 }
 
+function getKpiFiltered() {
+  if (!activeKpiFilter || activeKpiFilter === 'total') return allData;
+  const { todayObj } = getDateRange();
+  const threeMonths = new Date(todayObj);
+  threeMonths.setMonth(threeMonths.getMonth() + 3);
+  if (activeKpiFilter === 'hold') return allData.filter(r => (r.Status||'').trim() === 'On Hold');
+  if (activeKpiFilter === 'nooa') return allData.filter(r => !r.VendorRef || r.VendorRef.toString().trim() === '');
+  if (activeKpiFilter === 'late') return allData.filter(r => r.PromisedOn && new Date(r.PromisedOn) > threeMonths);
+  return allData;
+}
+
 function getFiltered() {
   const search = (document.getElementById('search')?.value || '').toLowerCase();
   const status = document.getElementById('status-filter')?.value || '';
-  return allData.filter(r => {
+  return getKpiFiltered().filter(r => {
     const matchStatus = !status || (r.Status||'').trim() === status;
     const matchSearch = !search || [r.OrderNbr, r.AccountName, r.InventoryID, r.SalesOrderNbr, r.VendorRef, r.Description].some(v => v && v.toString().toLowerCase().includes(search));
     return matchStatus && matchSearch;
@@ -311,8 +364,9 @@ function renderTable() {
     {key:'OrderNbr', label:'Order #', w:'90px'},
     {key:'LineNbr', label:'Line', w:'45px'},
     {key:'SalesOrderNbr', label:'SO #', w:'90px'},
-    {key:'AccountName', label:'Account', w:'140px'},
-    {key:'InventoryID', label:'Inventory ID', w:'110px'},
+    {key:'AccountName', label:'Account', w:'130px'},
+    {key:'InventoryID', label:'Inventory ID', w:'100px'},
+    {key:'VendorRef', label:'Vendor ref', w:'100px'},
     {key:'Status', label:'Status', w:'80px'},
     {key:'Date', label:'Date', w:'90px'},
     {key:'PromisedOn', label:'Promised', w:'90px'},
@@ -328,6 +382,7 @@ function renderTable() {
       <td style="font-family:monospace;font-size:12px;">${r.SalesOrderNbr||'—'}</td>
       <td title="${r.AccountName||''}">${r.AccountName||'—'}</td>
       <td>${r.InventoryID||'—'}</td>
+      <td>${noOA?'<span class="badge badge-nooa">No OA</span>':(r.VendorRef||'—')}</td>
       <td>${(r.Status||'').trim()==='On Hold'?'<span class="badge badge-hold">On Hold</span>':(r.Status||'').trim()==='Open'?'<span class="badge badge-open">Open</span>':(r.Status||'—')}</td>
       <td>${fmtDate(r.Date)}</td>
       <td>${late?`<span class="badge badge-late">${fmtDate(r.PromisedOn)}</span>`:fmtDate(r.PromisedOn)}</td>
