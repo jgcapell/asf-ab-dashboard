@@ -1,0 +1,341 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  .dash { padding: 1.5rem; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
+  .header h1 { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+  .header-sub { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
+  .login-overlay { position: relative; min-height: 400px; display: flex; align-items: center; justify-content: center; }
+  .login-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 2rem; width: 100%; max-width: 380px; }
+  .login-card h2 { font-size: 18px; font-weight: 500; margin-bottom: 0.5rem; color: var(--color-text-primary); }
+  .login-card p { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+  .field { margin-bottom: 1rem; }
+  .field label { display: block; font-size: 13px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .field input { width: 100%; }
+  .btn-primary { background: var(--color-text-primary); color: var(--color-background-primary); border: none; border-radius: var(--border-radius-md); padding: 10px 16px; font-size: 14px; cursor: pointer; width: 100%; }
+  .btn-primary:hover { opacity: 0.85; }
+  .error-msg { font-size: 13px; color: var(--color-text-danger); margin-top: 0.75rem; text-align: center; display: none; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .kpi-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem; }
+  .kpi-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 500; color: var(--color-text-primary); }
+  .kpi-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+  .kpi-warning .kpi-value { color: var(--color-text-warning); }
+  .kpi-danger .kpi-value { color: var(--color-text-danger); }
+  .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  @media (max-width: 600px) { .bottom-grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+  .section-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 0.75rem; }
+  .table-wrap { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+  .data-table th { background: var(--color-background-secondary); padding: 10px 12px; text-align: left; font-weight: 500; font-size: 12px; color: var(--color-text-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .data-table td { padding: 9px 12px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr.summary-row { cursor: pointer; }
+  .data-table tr.summary-row:hover td { background: var(--color-background-secondary); }
+  .data-table tr.detail-row td { background: var(--color-background-secondary); padding: 0; }
+  .detail-inner { padding: 12px 16px; }
+  .detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+  .detail-item .dl { color: var(--color-text-secondary); font-size: 11px; margin-bottom: 2px; }
+  .detail-item .dv { color: var(--color-text-primary); font-size: 12px; word-break: break-word; white-space: normal; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .badge-hold { background: #FAEEDA; color: #854F0B; }
+  .badge-open { background: #EAF3DE; color: #3B6D11; }
+  .badge-late { background: #FCEBEB; color: #A32D2D; }
+  .badge-nooa { background: #FCEBEB; color: #A32D2D; font-size: 10px; }
+  .expand-icon { display: inline-block; font-size: 10px; margin-right: 6px; transition: transform 0.15s; color: var(--color-text-secondary); }
+  .expanded .expand-icon { transform: rotate(90deg); }
+  .loading { text-align: center; padding: 3rem; color: var(--color-text-secondary); font-size: 14px; }
+  .qty-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .qty-table th { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); padding: 6px 8px; text-align: left; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .qty-table td { padding: 6px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); }
+  .qty-table tr:last-child td { border-bottom: none; }
+  .bar-wrap { background: var(--color-border-tertiary); border-radius: 99px; height: 6px; flex: 1; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; background: #378ADD; }
+  .refresh-btn { font-size: 13px; padding: 6px 14px; cursor: pointer; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; background: var(--color-background-info); color: var(--color-text-info); margin-left: 8px; }
+  .no-oa-tag { background: #FCEBEB; color: #A32D2D; }
+</style>
+
+<div class="dash" id="app">
+  <div id="login-screen" class="login-overlay">
+    <div class="login-card">
+      <h2>Drop-Ship PO Dashboard</h2>
+      <p>Sign in with your Acumatica credentials to view the dashboard.</p>
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="username" placeholder="Enter username" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter password" />
+      </div>
+      <button class="btn-primary" onclick="loadDashboard()">Sign in & load dashboard</button>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+  </div>
+
+  <div id="dashboard-screen" style="display:none;">
+    <div class="header">
+      <div>
+        <h1>Drop-Ship PO line detail</h1>
+        <div class="header-sub" id="date-range-label"></div>
+      </div>
+      <button class="refresh-btn" onclick="refreshData()">Refresh data</button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total on hold orders</div>
+        <div class="kpi-value" id="kpi-hold">—</div>
+        <div class="kpi-sub">Unique order numbers</div>
+      </div>
+      <div class="kpi-card kpi-danger">
+        <div class="kpi-label">Orders without OAs</div>
+        <div class="kpi-value" id="kpi-no-oa">—</div>
+        <div class="kpi-sub">Unique POs with no vendor ref</div>
+      </div>
+      <div class="kpi-card kpi-warning">
+        <div class="kpi-label">Promised &gt; 3 months out</div>
+        <div class="kpi-value" id="kpi-late">—</div>
+        <div class="kpi-sub">Unique orders with late promise dates</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total lines on order</div>
+        <div class="kpi-value" id="kpi-total">—</div>
+        <div class="kpi-sub">All loaded PO lines</div>
+      </div>
+    </div>
+
+    <div class="bottom-grid">
+      <div class="panel">
+        <div class="section-title">Qty on order by inventory ID</div>
+        <div id="qty-table-wrap"><div class="loading">Loading...</div></div>
+      </div>
+      <div class="panel">
+        <div class="section-title">Orders without OAs <span class="tag no-oa-tag">No vendor ref</span></div>
+        <div id="no-oa-wrap"><div class="loading">Loading...</div></div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div class="section-title" style="margin:0;">Order lines</div>
+      <input type="text" id="search" placeholder="Search order, account, inventory..." style="font-size:13px;padding:5px 10px;flex:1;min-width:180px;" oninput="renderTable()" />
+      <select id="status-filter" onchange="renderTable()" style="font-size:13px;padding:5px 10px;">
+        <option value="">All statuses</option>
+        <option value="On Hold">On Hold</option>
+        <option value="Open">Open</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <div id="table-container"><div class="loading">Loading...</div></div>
+    </div>
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:8px;" id="row-count"></div>
+  </div>
+</div>
+
+<script>
+const PROXY = "https://abpoquery.greg-capell.workers.dev";
+let allData = [];
+let credentials = '';
+let expandedRows = new Set();
+
+function getDateRange() {
+  const today = new Date();
+  const start = new Date(today);
+  start.setMonth(start.getMonth() - 12);
+  const fmt = d => d.toISOString().split('T')[0];
+  return { today: fmt(today), start: fmt(start), todayObj: today };
+}
+
+async function loadDashboard() {
+  const user = document.getElementById('username').value.trim();
+  const pass = document.getElementById('password').value.trim();
+  if (!user || !pass) { showError('Please enter username and password.'); return; }
+  credentials = btoa(user + ':' + pass);
+  const btn = document.querySelector('.btn-primary');
+  btn.textContent = 'Connecting...';
+  btn.disabled = true;
+  document.getElementById('error-msg').style.display = 'none';
+  try {
+    await fetchData();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard-screen').style.display = 'block';
+  } catch(e) {
+    showError('Unable to connect. Check your credentials and try again.');
+    btn.textContent = 'Sign in & load dashboard';
+    btn.disabled = false;
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function fetchData() {
+  const { today, start } = getDateRange();
+  const path = `/odata/ASF/DB-DS%20PO%20Line%20Detail?StartDate=${start}&EndDate=${today}`;
+  const resp = await fetch(PROXY + path, {
+    headers: {
+      'Authorization': 'Basic ' + credentials,
+      'Accept': 'application/json'
+    }
+  });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  const json = await resp.json();
+  const raw = json.value || json;
+  allData = raw.filter(r => r.Status === 'On Hold' || r.Status === 'Open')
+               .filter(r => r.ItemClass === 'AMERICANBILTRITESVT');
+  renderKPIs();
+  renderQtyTable();
+  renderNoOATable();
+  renderTable();
+  const { start: s, today: t } = getDateRange();
+  document.getElementById('date-range-label').textContent = `${s} → ${t} · ${allData.length.toLocaleString()} lines loaded`;
+}
+
+async function refreshData() {
+  document.getElementById('table-container').innerHTML = '<div class="loading">Refreshing...</div>';
+  document.getElementById('qty-table-wrap').innerHTML = '<div class="loading">Loading...</div>';
+  document.getElementById('no-oa-wrap').innerHTML = '<div class="loading">Loading...</div>';
+  await fetchData();
+}
+
+function renderKPIs() {
+  const { todayObj } = getDateRange();
+  const threeMonths = new Date(todayObj);
+  threeMonths.setMonth(threeMonths.getMonth() + 3);
+  const holdOrders = new Set(allData.filter(r => r.Status === 'On Hold').map(r => r.OrderNbr));
+  const noOAOrders = new Set(allData.filter(r => !r.VendorRef || r.VendorRef.toString().trim() === '').map(r => r.OrderNbr));
+  const lateOrders = new Set(allData.filter(r => r.PromisedOn && new Date(r.PromisedOn) > threeMonths).map(r => r.OrderNbr));
+  document.getElementById('kpi-hold').textContent = holdOrders.size.toLocaleString();
+  document.getElementById('kpi-no-oa').textContent = noOAOrders.size.toLocaleString();
+  document.getElementById('kpi-late').textContent = lateOrders.size.toLocaleString();
+  document.getElementById('kpi-total').textContent = allData.length.toLocaleString();
+}
+
+function renderQtyTable() {
+  const qtyMap = {};
+  allData.forEach(r => {
+    const id = r.InventoryID || '(none)';
+    qtyMap[id] = (qtyMap[id] || 0) + (parseFloat(r.POLine_baseOpenQty) || 0);
+  });
+  const sorted = Object.entries(qtyMap).sort((a,b) => b[1]-a[1]);
+  const max = sorted[0] ? sorted[0][1] : 1;
+  const wrap = document.getElementById('qty-table-wrap');
+  if (!sorted.length) { wrap.innerHTML = '<div style="font-size:13px;color:var(--color-text-secondary);padding:1rem 0;">No data</div>'; return; }
+  wrap.innerHTML = `<div style="max-height:240px;overflow-y:auto;"><table class="qty-table">
+    <thead><tr><th>Inventory ID</th><th>Open qty</th><th style="width:80px;"></th></tr></thead>
+    <tbody>${sorted.map(([id,qty]) => `<tr>
+      <td>${id}</td>
+      <td>${Math.round(qty).toLocaleString()}</td>
+      <td><div style="display:flex;align-items:center;gap:6px;"><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round((qty/max)*100)}%"></div></div></div></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function renderNoOATable() {
+  const noOA = allData.filter(r => !r.VendorRef || r.VendorRef.toString().trim() === '');
+  const orders = {};
+  noOA.forEach(r => {
+    if (!orders[r.OrderNbr]) orders[r.OrderNbr] = { account: r.AccountName, lines: 0 };
+    orders[r.OrderNbr].lines++;
+  });
+  const sorted = Object.entries(orders).sort((a,b) => b[1].lines - a[1].lines);
+  const wrap = document.getElementById('no-oa-wrap');
+  if (!sorted.length) { wrap.innerHTML = '<div style="font-size:13px;color:var(--color-text-secondary);padding:1rem 0;">All orders have vendor refs</div>'; return; }
+  wrap.innerHTML = `<div style="max-height:240px;overflow-y:auto;"><table class="qty-table">
+    <thead><tr><th>Order #</th><th>Account</th><th>Lines</th></tr></thead>
+    <tbody>${sorted.map(([nbr,d]) => `<tr>
+      <td style="font-family:var(--font-mono);font-size:12px;">${nbr}</td>
+      <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;" title="${d.account||''}">${d.account||'—'}</td>
+      <td>${d.lines}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function fmtDate(val) {
+  if (!val) return '—';
+  try { return new Date(val).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}); } catch { return val; }
+}
+
+function isLate(val) {
+  if (!val) return false;
+  const { todayObj } = getDateRange();
+  const t = new Date(todayObj);
+  t.setMonth(t.getMonth() + 3);
+  return new Date(val) > t;
+}
+
+function getFiltered() {
+  const search = (document.getElementById('search')?.value || '').toLowerCase();
+  const status = document.getElementById('status-filter')?.value || '';
+  return allData.filter(r => {
+    const matchStatus = !status || r.Status === status;
+    const matchSearch = !search || [r.OrderNbr, r.AccountName, r.InventoryID, r.SalesOrderNbr, r.VendorRef, r.Description].some(v => v && v.toString().toLowerCase().includes(search));
+    return matchStatus && matchSearch;
+  });
+}
+
+function toggleRow(id) {
+  if (expandedRows.has(id)) expandedRows.delete(id);
+  else expandedRows.add(id);
+  renderTable();
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  document.getElementById('row-count').textContent = `Showing ${filtered.length.toLocaleString()} of ${allData.length.toLocaleString()} lines`;
+  const container = document.getElementById('table-container');
+  if (!filtered.length) { container.innerHTML = '<div class="loading">No results match your filters.</div>'; return; }
+  const cols = [
+    {key:'OrderNbr', label:'Order #', w:'90px'},
+    {key:'LineNbr', label:'Line', w:'45px'},
+    {key:'SalesOrderNbr', label:'SO #', w:'90px'},
+    {key:'AccountName', label:'Account', w:'140px'},
+    {key:'InventoryID', label:'Inventory ID', w:'110px'},
+    {key:'Status', label:'Status', w:'80px'},
+    {key:'Date', label:'Date', w:'90px'},
+    {key:'PromisedOn', label:'Promised', w:'90px'},
+  ];
+  const rows = filtered.map((r,i) => {
+    const rowId = `${r.OrderNbr}-${r.LineNbr}-${i}`;
+    const expanded = expandedRows.has(rowId);
+    const noOA = !r.VendorRef || r.VendorRef.toString().trim() === '';
+    const late = isLate(r.PromisedOn);
+    const mainRow = `<tr class="summary-row${expanded?' expanded':''}" onclick="toggleRow('${rowId}')">
+      <td><span class="expand-icon">▶</span><span style="font-family:var(--font-mono);font-size:12px;">${r.OrderNbr||'—'}</span></td>
+      <td>${r.LineNbr||'—'}</td>
+      <td style="font-family:var(--font-mono);font-size:12px;">${r.SalesOrderNbr||'—'}</td>
+      <td title="${r.AccountName||''}">${r.AccountName||'—'}</td>
+      <td>${r.InventoryID||'—'}</td>
+      <td>${r.Status==='On Hold'?'<span class="badge badge-hold">On Hold</span>':r.Status==='Open'?'<span class="badge badge-open">Open</span>':(r.Status||'—')}</td>
+      <td>${fmtDate(r.Date)}</td>
+      <td>${late?`<span class="badge badge-late">${fmtDate(r.PromisedOn)}</span>`:fmtDate(r.PromisedOn)}</td>
+    </tr>`;
+    const detailRow = expanded ? `<tr class="detail-row"><td colspan="${cols.length}"><div class="detail-inner"><div class="detail-grid">
+      <div class="detail-item"><div class="dl">Order #</div><div class="dv">${r.OrderNbr||'—'}</div></div>
+      <div class="detail-item"><div class="dl">Line #</div><div class="dv">${r.LineNbr||'—'}</div></div>
+      <div class="detail-item"><div class="dl">Description</div><div class="dv">${r.Description||'—'}</div></div>
+      <div class="detail-item"><div class="dl">UOM</div><div class="dv">${r.UOM||'—'}</div></div>
+      <div class="detail-item"><div class="dl">Sales order #</div><div class="dv">${r.SalesOrderNbr||'—'}</div></div>
+      <div class="detail-item"><div class="dl">Date</div><div class="dv">${fmtDate(r.Date)}</div></div>
+      <div class="detail-item"><div class="dl">Promised on</div><div class="dv">${late?'<span class="badge badge-late">':''} ${fmtDate(r.PromisedOn)} ${late?'</span>':''}</div></div>
+      <div class="detail-item"><div class="dl">Last modified</div><div class="dv">${fmtDate(r.LastModifiedOn)}</div></div>
+      <div class="detail-item"><div class="dl">Account name</div><div class="dv">${r.AccountName||'—'}</div></div>
+      <div class="detail-item"><div class="dl">Description 2</div><div class="dv">${r.Description_2||'—'}</div></div>
+      <div class="detail-item"><div class="dl">Open qty</div><div class="dv">${r.POLine_baseOpenQty!=null?parseFloat(r.POLine_baseOpenQty).toLocaleString():'—'}</div></div>
+      <div class="detail-item"><div class="dl">Description 3</div><div class="dv">${r.Description_3||'—'}</div></div>
+      <div class="detail-item"><div class="dl">Vendor ref ${noOA?'<span class="badge badge-nooa">No OA</span>':''}</div><div class="dv">${r.VendorRef||'—'}</div></div>
+      <div class="detail-item"><div class="dl">Inventory ID</div><div class="dv">${r.InventoryID||'—'}</div></div>
+    </div></div></td></tr>` : '';
+    return mainRow + detailRow;
+  }).join('');
+  container.innerHTML = `<div style="overflow-x:auto;"><table class="data-table">
+    <thead><tr>${cols.map(c=>`<th style="width:${c.w}">${c.label}</th>`).join('')}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+</script>
