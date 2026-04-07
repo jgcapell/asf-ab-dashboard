@@ -634,10 +634,10 @@ function renderProjects() {
       </td>
     </tr>`;
 
-    const detailRow = expanded && items.length ? `<tr class="proj-lines-row">
+    const detailRow = expanded ? `<tr class="proj-lines-row">
       <td colspan="8">
         <div class="proj-lines-inner">
-          <table class="proj-lines-table">
+          ${items.length ? `<table class="proj-lines-table">
             <thead><tr><th>#</th><th>Inventory ID</th><th>UOM</th><th style="text-align:right;">Qty</th></tr></thead>
             <tbody>${items.map((item, idx) => `<tr>
               <td style="color:#aaa;">${idx+1}</td>
@@ -645,7 +645,8 @@ function renderProjects() {
               <td>${item.uom||'—'}</td>
               <td style="text-align:right;">${item.qty ? parseFloat(item.qty).toLocaleString() : '—'}</td>
             </tr>`).join('')}</tbody>
-          </table>
+          </table>` : ''}
+          ${p.notes ? `<div style="margin-top:${items.length?'10px':'0'};padding-top:${items.length?'10px':'0'};${items.length?'border-top:1px solid #eee;':''}font-size:12px;color:#444;white-space:pre-wrap;line-height:1.6;"><span style="font-size:11px;color:#888;font-weight:500;display:block;margin-bottom:4px;">Notes</span>${p.notes}</div>` : ''}
         </div>
       </td>
     </tr>` : '';
