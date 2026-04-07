@@ -1,63 +1,76 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Drop-Ship PO Dashboard</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  .dash { padding: 1.5rem; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9f9f8; color: #1a1a1a; }
+  .dash { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
   .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
-  .header h1 { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
-  .header-sub { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
-  .login-overlay { position: relative; min-height: 400px; display: flex; align-items: center; justify-content: center; }
-  .login-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 2rem; width: 100%; max-width: 380px; }
-  .login-card h2 { font-size: 18px; font-weight: 500; margin-bottom: 0.5rem; color: var(--color-text-primary); }
-  .login-card p { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+  .header h1 { font-size: 20px; font-weight: 500; }
+  .header-sub { font-size: 13px; color: #666; margin-top: 2px; }
+  .login-overlay { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f9f9f8; }
+  .login-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 2rem; width: 100%; max-width: 380px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .login-card h2 { font-size: 18px; font-weight: 500; margin-bottom: 0.5rem; }
+  .login-card p { font-size: 13px; color: #666; margin-bottom: 1.5rem; }
   .field { margin-bottom: 1rem; }
-  .field label { display: block; font-size: 13px; color: var(--color-text-secondary); margin-bottom: 4px; }
-  .field input { width: 100%; }
-  .btn-primary { background: var(--color-text-primary); color: var(--color-background-primary); border: none; border-radius: var(--border-radius-md); padding: 10px 16px; font-size: 14px; cursor: pointer; width: 100%; }
-  .btn-primary:hover { opacity: 0.85; }
-  .error-msg { font-size: 13px; color: var(--color-text-danger); margin-top: 0.75rem; text-align: center; display: none; }
+  .field label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; }
+  .field input { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+  .field input:focus { border-color: #888; }
+  .btn-primary { background: #1a1a1a; color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; cursor: pointer; width: 100%; }
+  .btn-primary:hover { background: #333; }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .error-msg { font-size: 13px; color: #c0392b; margin-top: 0.75rem; text-align: center; display: none; }
   .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
-  .kpi-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem; }
-  .kpi-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
-  .kpi-value { font-size: 28px; font-weight: 500; color: var(--color-text-primary); }
-  .kpi-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
-  .kpi-warning .kpi-value { color: var(--color-text-warning); }
-  .kpi-danger .kpi-value { color: var(--color-text-danger); }
+  .kpi-card { background: #f1efe8; border-radius: 8px; padding: 1rem; }
+  .kpi-label { font-size: 12px; color: #666; margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 500; color: #1a1a1a; }
+  .kpi-sub { font-size: 12px; color: #888; margin-top: 4px; }
+  .kpi-warning .kpi-value { color: #b8860b; }
+  .kpi-danger .kpi-value { color: #c0392b; }
   .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
   @media (max-width: 600px) { .bottom-grid { grid-template-columns: 1fr; } }
-  .panel { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
-  .section-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 0.75rem; }
-  .table-wrap { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+  .panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1rem 1.25rem; }
+  .section-title { font-size: 14px; font-weight: 500; margin-bottom: 0.75rem; }
+  .table-wrap { border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden; }
   .data-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-  .data-table th { background: var(--color-background-secondary); padding: 10px 12px; text-align: left; font-weight: 500; font-size: 12px; color: var(--color-text-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .data-table td { padding: 9px 12px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+  .data-table th { background: #f9f9f8; padding: 10px 12px; text-align: left; font-weight: 500; font-size: 12px; color: #666; border-bottom: 1px solid #e5e5e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .data-table td { padding: 9px 12px; border-bottom: 1px solid #e5e5e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
   .data-table tr:last-child td { border-bottom: none; }
   .data-table tr.summary-row { cursor: pointer; }
-  .data-table tr.summary-row:hover td { background: var(--color-background-secondary); }
-  .data-table tr.detail-row td { background: var(--color-background-secondary); padding: 0; }
+  .data-table tr.summary-row:hover td { background: #f9f9f8; }
+  .data-table tr.detail-row td { background: #f9f9f8; padding: 0; }
   .detail-inner { padding: 12px 16px; }
   .detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
-  .detail-item .dl { color: var(--color-text-secondary); font-size: 11px; margin-bottom: 2px; }
-  .detail-item .dv { color: var(--color-text-primary); font-size: 12px; word-break: break-word; white-space: normal; }
+  .detail-item .dl { color: #888; font-size: 11px; margin-bottom: 2px; }
+  .detail-item .dv { color: #1a1a1a; font-size: 12px; word-break: break-word; white-space: normal; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
-  .badge-hold { background: #FAEEDA; color: #854F0B; }
-  .badge-open { background: #EAF3DE; color: #3B6D11; }
-  .badge-late { background: #FCEBEB; color: #A32D2D; }
-  .badge-nooa { background: #FCEBEB; color: #A32D2D; font-size: 10px; }
-  .expand-icon { display: inline-block; font-size: 10px; margin-right: 6px; transition: transform 0.15s; color: var(--color-text-secondary); }
+  .badge-hold { background: #faeeda; color: #854f0b; }
+  .badge-open { background: #eaf3de; color: #3b6d11; }
+  .badge-late { background: #fcebeb; color: #a32d2d; }
+  .badge-nooa { background: #fcebeb; color: #a32d2d; font-size: 10px; }
+  .expand-icon { display: inline-block; font-size: 10px; margin-right: 6px; transition: transform 0.15s; color: #999; }
   .expanded .expand-icon { transform: rotate(90deg); }
-  .loading { text-align: center; padding: 3rem; color: var(--color-text-secondary); font-size: 14px; }
+  .loading { text-align: center; padding: 3rem; color: #888; font-size: 14px; }
   .qty-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .qty-table th { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); padding: 6px 8px; text-align: left; border-bottom: 0.5px solid var(--color-border-tertiary); }
-  .qty-table td { padding: 6px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); }
+  .qty-table th { font-size: 12px; font-weight: 500; color: #666; padding: 6px 8px; text-align: left; border-bottom: 1px solid #e5e5e5; }
+  .qty-table td { padding: 6px 8px; border-bottom: 1px solid #e5e5e5; }
   .qty-table tr:last-child td { border-bottom: none; }
-  .bar-wrap { background: var(--color-border-tertiary); border-radius: 99px; height: 6px; flex: 1; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 99px; background: #378ADD; }
-  .refresh-btn { font-size: 13px; padding: 6px 14px; cursor: pointer; }
-  .tag { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; background: var(--color-background-info); color: var(--color-text-info); margin-left: 8px; }
-  .no-oa-tag { background: #FCEBEB; color: #A32D2D; }
+  .bar-wrap { background: #e5e5e5; border-radius: 99px; height: 6px; flex: 1; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; background: #378add; }
+  .refresh-btn { font-size: 13px; padding: 6px 14px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
+  .refresh-btn:hover { background: #f1efe8; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; background: #e6f1fb; color: #185fa5; margin-left: 8px; }
+  .no-oa-tag { background: #fcebeb; color: #a32d2d; }
+  input[type=text], input[type=password], select { border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 13px; outline: none; background: #fff; }
+  input:focus, select:focus { border-color: #888; }
 </style>
+</head>
+<body>
 
-<div class="dash" id="app">
+<div id="app">
   <div id="login-screen" class="login-overlay">
     <div class="login-card">
       <h2>Drop-Ship PO Dashboard</h2>
@@ -70,67 +83,69 @@
         <label>Password</label>
         <input type="password" id="password" placeholder="Enter password" />
       </div>
-      <button class="btn-primary" onclick="loadDashboard()">Sign in & load dashboard</button>
+      <button class="btn-primary" id="login-btn" onclick="loadDashboard()">Sign in & load dashboard</button>
       <div class="error-msg" id="error-msg"></div>
     </div>
   </div>
 
   <div id="dashboard-screen" style="display:none;">
-    <div class="header">
-      <div>
-        <h1>Drop-Ship PO line detail</h1>
-        <div class="header-sub" id="date-range-label"></div>
+    <div class="dash">
+      <div class="header">
+        <div>
+          <h1>Drop-Ship PO line detail</h1>
+          <div class="header-sub" id="date-range-label"></div>
+        </div>
+        <button class="refresh-btn" onclick="refreshData()">Refresh data</button>
       </div>
-      <button class="refresh-btn" onclick="refreshData()">Refresh data</button>
-    </div>
 
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">Total on hold orders</div>
-        <div class="kpi-value" id="kpi-hold">—</div>
-        <div class="kpi-sub">Unique order numbers</div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total on hold orders</div>
+          <div class="kpi-value" id="kpi-hold">—</div>
+          <div class="kpi-sub">Unique order numbers</div>
+        </div>
+        <div class="kpi-card kpi-danger">
+          <div class="kpi-label">Orders without OAs</div>
+          <div class="kpi-value" id="kpi-no-oa">—</div>
+          <div class="kpi-sub">Unique POs with no vendor ref</div>
+        </div>
+        <div class="kpi-card kpi-warning">
+          <div class="kpi-label">Promised &gt; 3 months out</div>
+          <div class="kpi-value" id="kpi-late">—</div>
+          <div class="kpi-sub">Unique orders with late promise dates</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total lines on order</div>
+          <div class="kpi-value" id="kpi-total">—</div>
+          <div class="kpi-sub">All loaded PO lines</div>
+        </div>
       </div>
-      <div class="kpi-card kpi-danger">
-        <div class="kpi-label">Orders without OAs</div>
-        <div class="kpi-value" id="kpi-no-oa">—</div>
-        <div class="kpi-sub">Unique POs with no vendor ref</div>
-      </div>
-      <div class="kpi-card kpi-warning">
-        <div class="kpi-label">Promised &gt; 3 months out</div>
-        <div class="kpi-value" id="kpi-late">—</div>
-        <div class="kpi-sub">Unique orders with late promise dates</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Total lines on order</div>
-        <div class="kpi-value" id="kpi-total">—</div>
-        <div class="kpi-sub">All loaded PO lines</div>
-      </div>
-    </div>
 
-    <div class="bottom-grid">
-      <div class="panel">
-        <div class="section-title">Qty on order by inventory ID</div>
-        <div id="qty-table-wrap"><div class="loading">Loading...</div></div>
+      <div class="bottom-grid">
+        <div class="panel">
+          <div class="section-title">Qty on order by inventory ID</div>
+          <div id="qty-table-wrap"><div class="loading">Loading...</div></div>
+        </div>
+        <div class="panel">
+          <div class="section-title">Orders without OAs <span class="tag no-oa-tag">No vendor ref</span></div>
+          <div id="no-oa-wrap"><div class="loading">Loading...</div></div>
+        </div>
       </div>
-      <div class="panel">
-        <div class="section-title">Orders without OAs <span class="tag no-oa-tag">No vendor ref</span></div>
-        <div id="no-oa-wrap"><div class="loading">Loading...</div></div>
-      </div>
-    </div>
 
-    <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-      <div class="section-title" style="margin:0;">Order lines</div>
-      <input type="text" id="search" placeholder="Search order, account, inventory..." style="font-size:13px;padding:5px 10px;flex:1;min-width:180px;" oninput="renderTable()" />
-      <select id="status-filter" onchange="renderTable()" style="font-size:13px;padding:5px 10px;">
-        <option value="">All statuses</option>
-        <option value="On Hold">On Hold</option>
-        <option value="Open">Open</option>
-      </select>
+      <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="section-title" style="margin:0;">Order lines</div>
+        <input type="text" id="search" placeholder="Search order, account, inventory..." style="flex:1;min-width:180px;" oninput="renderTable()" />
+        <select id="status-filter" onchange="renderTable()">
+          <option value="">All statuses</option>
+          <option value="On Hold">On Hold</option>
+          <option value="Open">Open</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <div id="table-container"><div class="loading">Loading...</div></div>
+      </div>
+      <div style="font-size:12px;color:#888;margin-top:8px;" id="row-count"></div>
     </div>
-    <div class="table-wrap">
-      <div id="table-container"><div class="loading">Loading...</div></div>
-    </div>
-    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:8px;" id="row-count"></div>
   </div>
 </div>
 
@@ -153,7 +168,7 @@ async function loadDashboard() {
   const pass = document.getElementById('password').value.trim();
   if (!user || !pass) { showError('Please enter username and password.'); return; }
   credentials = btoa(user + ':' + pass);
-  const btn = document.querySelector('.btn-primary');
+  const btn = document.getElementById('login-btn');
   btn.textContent = 'Connecting...';
   btn.disabled = true;
   document.getElementById('error-msg').style.display = 'none';
@@ -162,7 +177,7 @@ async function loadDashboard() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('dashboard-screen').style.display = 'block';
   } catch(e) {
-    showError('Unable to connect. Check your credentials and try again.');
+    showError('Unable to connect. Check your credentials and try again. (' + e.message + ')');
     btn.textContent = 'Sign in & load dashboard';
     btn.disabled = false;
   }
@@ -186,8 +201,10 @@ async function fetchData() {
   if (!resp.ok) throw new Error('HTTP ' + resp.status);
   const json = await resp.json();
   const raw = json.value || json;
-  allData = raw.filter(r => r.Status === 'On Hold' || r.Status === 'Open')
-               .filter(r => r.ItemClass === 'AMERICANBILTRITESVT');
+  allData = raw.filter(r => {
+    const status = (r.Status || '').trim();
+    return status === 'On Hold' || status === 'Open';
+  }).filter(r => (r.ItemClass || '').trim() === 'AMERICANBILTRITESVT');
   renderKPIs();
   renderQtyTable();
   renderNoOATable();
@@ -207,7 +224,7 @@ function renderKPIs() {
   const { todayObj } = getDateRange();
   const threeMonths = new Date(todayObj);
   threeMonths.setMonth(threeMonths.getMonth() + 3);
-  const holdOrders = new Set(allData.filter(r => r.Status === 'On Hold').map(r => r.OrderNbr));
+  const holdOrders = new Set(allData.filter(r => (r.Status||'').trim() === 'On Hold').map(r => r.OrderNbr));
   const noOAOrders = new Set(allData.filter(r => !r.VendorRef || r.VendorRef.toString().trim() === '').map(r => r.OrderNbr));
   const lateOrders = new Set(allData.filter(r => r.PromisedOn && new Date(r.PromisedOn) > threeMonths).map(r => r.OrderNbr));
   document.getElementById('kpi-hold').textContent = holdOrders.size.toLocaleString();
@@ -225,7 +242,7 @@ function renderQtyTable() {
   const sorted = Object.entries(qtyMap).sort((a,b) => b[1]-a[1]);
   const max = sorted[0] ? sorted[0][1] : 1;
   const wrap = document.getElementById('qty-table-wrap');
-  if (!sorted.length) { wrap.innerHTML = '<div style="font-size:13px;color:var(--color-text-secondary);padding:1rem 0;">No data</div>'; return; }
+  if (!sorted.length) { wrap.innerHTML = '<div style="font-size:13px;color:#888;padding:1rem 0;">No data</div>'; return; }
   wrap.innerHTML = `<div style="max-height:240px;overflow-y:auto;"><table class="qty-table">
     <thead><tr><th>Inventory ID</th><th>Open qty</th><th style="width:80px;"></th></tr></thead>
     <tbody>${sorted.map(([id,qty]) => `<tr>
@@ -245,11 +262,11 @@ function renderNoOATable() {
   });
   const sorted = Object.entries(orders).sort((a,b) => b[1].lines - a[1].lines);
   const wrap = document.getElementById('no-oa-wrap');
-  if (!sorted.length) { wrap.innerHTML = '<div style="font-size:13px;color:var(--color-text-secondary);padding:1rem 0;">All orders have vendor refs</div>'; return; }
+  if (!sorted.length) { wrap.innerHTML = '<div style="font-size:13px;color:#888;padding:1rem 0;">All orders have vendor refs</div>'; return; }
   wrap.innerHTML = `<div style="max-height:240px;overflow-y:auto;"><table class="qty-table">
     <thead><tr><th>Order #</th><th>Account</th><th>Lines</th></tr></thead>
     <tbody>${sorted.map(([nbr,d]) => `<tr>
-      <td style="font-family:var(--font-mono);font-size:12px;">${nbr}</td>
+      <td style="font-family:monospace;font-size:12px;">${nbr}</td>
       <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;" title="${d.account||''}">${d.account||'—'}</td>
       <td>${d.lines}</td>
     </tr>`).join('')}</tbody>
@@ -273,7 +290,7 @@ function getFiltered() {
   const search = (document.getElementById('search')?.value || '').toLowerCase();
   const status = document.getElementById('status-filter')?.value || '';
   return allData.filter(r => {
-    const matchStatus = !status || r.Status === status;
+    const matchStatus = !status || (r.Status||'').trim() === status;
     const matchSearch = !search || [r.OrderNbr, r.AccountName, r.InventoryID, r.SalesOrderNbr, r.VendorRef, r.Description].some(v => v && v.toString().toLowerCase().includes(search));
     return matchStatus && matchSearch;
   });
@@ -306,12 +323,12 @@ function renderTable() {
     const noOA = !r.VendorRef || r.VendorRef.toString().trim() === '';
     const late = isLate(r.PromisedOn);
     const mainRow = `<tr class="summary-row${expanded?' expanded':''}" onclick="toggleRow('${rowId}')">
-      <td><span class="expand-icon">▶</span><span style="font-family:var(--font-mono);font-size:12px;">${r.OrderNbr||'—'}</span></td>
+      <td><span class="expand-icon">▶</span><span style="font-family:monospace;font-size:12px;">${r.OrderNbr||'—'}</span></td>
       <td>${r.LineNbr||'—'}</td>
-      <td style="font-family:var(--font-mono);font-size:12px;">${r.SalesOrderNbr||'—'}</td>
+      <td style="font-family:monospace;font-size:12px;">${r.SalesOrderNbr||'—'}</td>
       <td title="${r.AccountName||''}">${r.AccountName||'—'}</td>
       <td>${r.InventoryID||'—'}</td>
-      <td>${r.Status==='On Hold'?'<span class="badge badge-hold">On Hold</span>':r.Status==='Open'?'<span class="badge badge-open">Open</span>':(r.Status||'—')}</td>
+      <td>${(r.Status||'').trim()==='On Hold'?'<span class="badge badge-hold">On Hold</span>':(r.Status||'').trim()==='Open'?'<span class="badge badge-open">Open</span>':(r.Status||'—')}</td>
       <td>${fmtDate(r.Date)}</td>
       <td>${late?`<span class="badge badge-late">${fmtDate(r.PromisedOn)}</span>`:fmtDate(r.PromisedOn)}</td>
     </tr>`;
@@ -339,3 +356,5 @@ function renderTable() {
   </table></div>`;
 }
 </script>
+</body>
+</html>
