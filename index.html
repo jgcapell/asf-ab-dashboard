@@ -194,8 +194,29 @@
             <div id="qty-table-wrap"><div class="loading">Loading...</div></div>
           </div>
           <div class="panel">
-            <div class="section-title">Orders without OAs <span class="tag no-oa-tag">No vendor ref</span></div>
-            <div id="no-oa-wrap"><div class="loading">Loading...</div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+              <div class="section-title" style="margin:0;">Hot list</div>
+              <button class="btn-add" onclick="showHotListForm()" style="font-size:12px;padding:4px 12px;">+ Add</button>
+            </div>
+            <div id="hotlist-form" style="display:none;background:#f9f9f8;border:1px solid #e5e5e5;border-radius:8px;padding:10px;margin-bottom:10px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">ASF PO #</label><input type="text" id="hl-po" placeholder="PO number" style="width:100%;font-size:12px;" /></div>
+                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Status</label>
+                  <select id="hl-status" style="width:100%;font-size:12px;">
+                    <option value="Requested">Requested</option>
+                    <option value="Accepted by Customer">Accepted by Customer</option>
+                    <option value="Canceled">Canceled</option>
+                  </select>
+                </div>
+                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Promised on date</label><input type="date" id="hl-promised" style="width:100%;font-size:12px;" /></div>
+                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Need by date</label><input type="date" id="hl-needby" style="width:100%;font-size:12px;" /></div>
+              </div>
+              <div style="display:flex;gap:6px;justify-content:flex-end;">
+                <button class="btn-cancel" onclick="cancelHotListForm()" style="font-size:12px;padding:5px 12px;">Cancel</button>
+                <button class="btn-save" id="hl-save-btn" onclick="saveHotListItem()" style="font-size:12px;padding:5px 12px;">Save</button>
+              </div>
+            </div>
+            <div id="hotlist-wrap"><div class="loading">Loading...</div></div>
           </div>
         </div>
         <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
@@ -310,6 +331,7 @@ async function loadDashboard() {
   try {
     await fetchData();
     await loadProjects();
+    await loadHotList();
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('dashboard-screen').style.display = 'block';
   } catch(e) {
@@ -341,7 +363,6 @@ async function fetchData() {
   }).filter(r => (r.ItemClass || '').trim() === 'AMERICANBILTRITESVT');
   renderKPIs();
   renderQtyTable();
-  renderNoOATable();
   populateSalesRepFilter();
   renderTable();
   const { start: s, today: t } = getDateRange();
@@ -354,9 +375,9 @@ async function refreshData() {
   updateKpiCardStates();
   document.getElementById('table-container').innerHTML = '<div class="loading">Refreshing...</div>';
   document.getElementById('qty-table-wrap').innerHTML = '<div class="loading">Loading...</div>';
-  document.getElementById('no-oa-wrap').innerHTML = '<div class="loading">Loading...</div>';
   await fetchData();
   await loadProjects();
+  await loadHotList();
 }
 
 function toggleKpiFilter(filter) {
@@ -421,24 +442,130 @@ function renderQtyTable() {
   </table></div>`;
 }
 
-function renderNoOATable() {
-  const noOA = allData.filter(r => !r.VendorRef || r.VendorRef.toString().trim() === '');
-  const orders = {};
-  noOA.forEach(r => {
-    if (!orders[r.OrderNbr]) orders[r.OrderNbr] = { account: r.AccountName, lines: 0 };
-    orders[r.OrderNbr].lines++;
-  });
-  const sorted = Object.entries(orders).sort((a,b) => b[1].lines - a[1].lines);
-  const wrap = document.getElementById('no-oa-wrap');
-  if (!sorted.length) { wrap.innerHTML = '<div style="font-size:13px;color:#888;padding:1rem 0;">All orders have vendor refs</div>'; return; }
-  wrap.innerHTML = `<div style="max-height:240px;overflow-y:auto;"><table class="qty-table">
-    <thead><tr><th>Order #</th><th>Account</th><th>Lines</th></tr></thead>
-    <tbody>${sorted.map(([nbr,d]) => `<tr>
-      <td style="font-family:monospace;font-size:12px;">${nbr}</td>
-      <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;" title="${d.account||''}">${d.account||'—'}</td>
-      <td>${d.lines}</td>
-    </tr>`).join('')}</tbody>
-  </table></div>`;
+// ── Hot List ───────────────────────────────────────────────────
+let hotList = [];
+let editingHotListId = null;
+
+const HL_STATUS_ORDER = { 'Requested': 0, 'Canceled': 1, 'Accepted by Customer': 2 };
+const HL_STATUS_STYLE = {
+  'Requested':            { bg: '#fff8e1', color: '#856404', border: '#f0c842' },
+  'Accepted by Customer': { bg: '#eaf3de', color: '#3b6d11', border: '#8bc34a' },
+  'Canceled':             { bg: '#fcebeb', color: '#a32d2d', border: '#e57373' },
+};
+
+async function loadHotList() {
+  try {
+    const resp = await fetch(PROXY + '/hotlist');
+    hotList = await resp.json();
+  } catch(e) {
+    hotList = [];
+  }
+  renderHotList();
+}
+
+function renderHotList() {
+  const sorted = [...hotList].sort((a, b) =>
+    (HL_STATUS_ORDER[a.status] ?? 99) - (HL_STATUS_ORDER[b.status] ?? 99)
+  );
+  const wrap = document.getElementById('hotlist-wrap');
+  if (!sorted.length) {
+    wrap.innerHTML = '<div style="font-size:13px;color:#888;padding:0.75rem 0;">No items yet. Click + Add to get started.</div>';
+    return;
+  }
+  wrap.innerHTML = `<div style="max-height:220px;overflow-y:auto;">
+    <table class="qty-table" style="font-size:12px;">
+      <thead><tr>
+        <th>ASF PO #</th>
+        <th>Promised on</th>
+        <th>Need by</th>
+        <th>Status</th>
+        <th style="width:60px;"></th>
+      </tr></thead>
+      <tbody>${sorted.map(item => {
+        const s = HL_STATUS_STYLE[item.status] || {};
+        return `<tr style="background:${s.bg||''};">
+          <td style="font-family:monospace;font-weight:500;">${item.po||'—'}</td>
+          <td>${fmtDate(item.promisedOn)}</td>
+          <td>${fmtDate(item.needBy)}</td>
+          <td><span style="display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;background:${s.bg||'#eee'};color:${s.color||'#333'};border:1px solid ${s.border||'#ccc'};">${item.status||'—'}</span></td>
+          <td style="white-space:nowrap;">
+            <button class="btn-edit" onclick="editHotListItem('${item.id}')">Edit</button>
+            <button class="btn-delete" onclick="deleteHotListItem('${item.id}')">Del</button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function showHotListForm() {
+  editingHotListId = null;
+  document.getElementById('hl-po').value = '';
+  document.getElementById('hl-promised').value = '';
+  document.getElementById('hl-needby').value = '';
+  document.getElementById('hl-status').value = 'Requested';
+  document.getElementById('hotlist-form').style.display = 'block';
+  document.getElementById('hl-po').focus();
+}
+
+function editHotListItem(id) {
+  const item = hotList.find(i => i.id === id);
+  if (!item) return;
+  editingHotListId = id;
+  document.getElementById('hl-po').value = item.po || '';
+  document.getElementById('hl-promised').value = item.promisedOn || '';
+  document.getElementById('hl-needby').value = item.needBy || '';
+  document.getElementById('hl-status').value = item.status || 'Requested';
+  document.getElementById('hotlist-form').style.display = 'block';
+  document.getElementById('hl-po').focus();
+}
+
+function cancelHotListForm() {
+  editingHotListId = null;
+  document.getElementById('hotlist-form').style.display = 'none';
+}
+
+async function saveHotListItem() {
+  const payload = {
+    po: document.getElementById('hl-po').value.trim(),
+    promisedOn: document.getElementById('hl-promised').value,
+    needBy: document.getElementById('hl-needby').value,
+    status: document.getElementById('hl-status').value,
+  };
+  if (!payload.po) { alert('ASF PO # is required.'); return; }
+  const btn = document.getElementById('hl-save-btn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  try {
+    if (editingHotListId) {
+      payload.id = editingHotListId;
+      await fetch(PROXY + '/hotlist', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const idx = hotList.findIndex(i => i.id === editingHotListId);
+      if (idx !== -1) hotList[idx] = { ...hotList[idx], ...payload };
+    } else {
+      const resp = await fetch(PROXY + '/hotlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const newItem = await resp.json();
+      hotList.push(newItem);
+    }
+    cancelHotListForm();
+    renderHotList();
+  } catch(e) {
+    alert('Error saving. Please try again.');
+  } finally {
+    btn.textContent = 'Save';
+    btn.disabled = false;
+  }
+}
+
+async function deleteHotListItem(id) {
+  if (!confirm('Remove this item from the hot list?')) return;
+  try {
+    await fetch(PROXY + '/hotlist', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    hotList = hotList.filter(i => i.id !== id);
+    renderHotList();
+  } catch(e) {
+    alert('Error deleting. Please try again.');
+  }
 }
 
 function fmtDate(val) {
