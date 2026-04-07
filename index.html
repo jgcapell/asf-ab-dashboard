@@ -78,13 +78,15 @@
   .no-oa-tag { background: #fcebeb; color: #a32d2d; }
   input[type=text], input[type=password], input[type=date], input[type=number], select, textarea { border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 13px; outline: none; background: #fff; }
   input:focus, select:focus, textarea:focus { border-color: #888; }
+
+  /* Project form */
   .project-form { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
-  .project-form h3 { font-size: 14px; font-weight: 500; margin-bottom: 1rem; color: #1a1a1a; }
+  .project-form h3 { font-size: 14px; font-weight: 500; margin-bottom: 1rem; }
   .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 1rem; }
   .form-field label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
   .form-field input, .form-field select, .form-field textarea { width: 100%; }
   .form-field textarea { resize: vertical; min-height: 60px; }
-  .form-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1rem; }
   .btn-save { background: #1a1a1a; color: #fff; border: none; border-radius: 6px; padding: 8px 18px; font-size: 13px; cursor: pointer; }
   .btn-save:hover { background: #333; }
   .btn-cancel { background: #fff; color: #666; border: 1px solid #ddd; border-radius: 6px; padding: 8px 18px; font-size: 13px; cursor: pointer; }
@@ -95,17 +97,39 @@
   .btn-edit:hover { text-decoration: underline; }
   .btn-delete { background: none; border: none; color: #c0392b; font-size: 12px; cursor: pointer; padding: 2px 6px; }
   .btn-delete:hover { text-decoration: underline; }
+
+  /* Line items in form */
+  .line-items-section { margin-top: 1rem; }
+  .line-items-section label { display: block; font-size: 12px; color: #666; margin-bottom: 8px; font-weight: 500; }
+  .line-item-row { display: grid; grid-template-columns: 1fr 120px 80px 32px; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .line-item-row input { width: 100%; }
+  .btn-remove-line { background: none; border: none; color: #c0392b; font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .btn-remove-line:hover { color: #a32d2d; }
+  .btn-add-line { background: none; border: 1px dashed #bbb; border-radius: 6px; color: #666; font-size: 12px; cursor: pointer; padding: 6px 12px; width: 100%; margin-top: 4px; }
+  .btn-add-line:hover { background: #f9f9f8; border-color: #888; }
+
+  /* Projects table */
   .projects-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .projects-table th { background: #f9f9f8; padding: 10px 12px; text-align: left; font-weight: 500; font-size: 12px; color: #666; border-bottom: 1px solid #e5e5e5; }
-  .projects-table td { padding: 10px 12px; border-bottom: 1px solid #e5e5e5; vertical-align: middle; }
+  .projects-table th { background: #f9f9f8; padding: 10px 12px; text-align: left; font-weight: 500; font-size: 12px; color: #666; border-bottom: 1px solid #e5e5e5; white-space: nowrap; }
+  .projects-table td { padding: 10px 12px; border-bottom: 1px solid #e5e5e5; vertical-align: top; }
   .projects-table tr:last-child td { border-bottom: none; }
-  .projects-table tr:hover td { background: #f9f9f8; }
+  .projects-table tr.proj-group-row { cursor: pointer; }
+  .projects-table tr.proj-group-row:hover td { background: #f9f9f8; }
+  .projects-table tr.proj-group-row.expanded td { background: #f5f5f3; }
+  .proj-lines-row td { background: #fafaf9; padding: 0; }
+  .proj-lines-inner { padding: 8px 16px 12px 32px; }
+  .proj-lines-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .proj-lines-table th { font-size: 11px; color: #888; font-weight: 500; padding: 4px 8px; border-bottom: 1px solid #eee; text-align: left; }
+  .proj-lines-table td { padding: 5px 8px; border-bottom: 1px solid #f0f0f0; color: #1a1a1a; }
+  .proj-lines-table tr:last-child td { border-bottom: none; }
   .status-badge { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
   .status-planning { background: #e6f1fb; color: #185fa5; }
   .status-pending { background: #faeeda; color: #854f0b; }
   .status-ready { background: #eaf3de; color: #3b6d11; }
   .status-onhold { background: #f1efe8; color: #666; }
   .empty-state { text-align: center; padding: 3rem; color: #888; font-size: 14px; }
+  .items-summary { font-size: 12px; color: #666; }
+  .items-summary span { display: inline-block; background: #f1efe8; border-radius: 4px; padding: 1px 6px; margin: 1px 2px; font-size: 11px; }
 </style>
 </head>
 <body>
@@ -164,7 +188,6 @@
             <div class="kpi-hint">Click to show all</div>
           </div>
         </div>
-
         <div class="bottom-grid">
           <div class="panel">
             <div class="section-title">Qty on order by inventory ID</div>
@@ -175,7 +198,6 @@
             <div id="no-oa-wrap"><div class="loading">Loading...</div></div>
           </div>
         </div>
-
         <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
           <div class="section-title" style="margin:0;">Orders</div>
           <span class="active-filter-label" id="active-filter-label"></span>
@@ -195,14 +217,13 @@
 
       <!-- PROJECTS TAB -->
       <div id="tab-projects" class="tab-content">
+
         <div class="project-form" id="project-form" style="display:none;">
           <h3 id="form-title">Add upcoming project</h3>
           <div class="form-grid">
-            <div class="form-field"><label>Project name</label><input type="text" id="f-name" placeholder="e.g. Main St Renovation" /></div>
+            <div class="form-field"><label>Project name *</label><input type="text" id="f-name" placeholder="e.g. Main St Renovation" /></div>
             <div class="form-field"><label>Customer / Account</label><input type="text" id="f-account" placeholder="Account name" /></div>
-            <div class="form-field"><label>Estimated order date</label><input type="date" id="f-orderdate" /></div>
-            <div class="form-field"><label>Product / Inventory ID</label><input type="text" id="f-inventory" placeholder="e.g. SVTPLANK-01" /></div>
-            <div class="form-field"><label>Estimated quantity</label><input type="number" id="f-qty" placeholder="0" min="0" /></div>
+            <div class="form-field"><label>Need by date</label><input type="date" id="f-needbydate" /></div>
             <div class="form-field"><label>Status</label>
               <select id="f-status">
                 <option value="Planning">Planning</option>
@@ -213,9 +234,22 @@
             </div>
             <div class="form-field" style="grid-column: 1 / -1;"><label>Notes</label><textarea id="f-notes" placeholder="Additional notes..."></textarea></div>
           </div>
+
+          <div class="line-items-section">
+            <label>Items needed</label>
+            <div style="display:grid;grid-template-columns:1fr 120px 80px 32px;gap:8px;margin-bottom:6px;">
+              <span style="font-size:11px;color:#888;padding:0 2px;">Inventory ID</span>
+              <span style="font-size:11px;color:#888;padding:0 2px;">UOM</span>
+              <span style="font-size:11px;color:#888;padding:0 2px;">Qty</span>
+              <span></span>
+            </div>
+            <div id="line-items-container"></div>
+            <button class="btn-add-line" onclick="addLineItem()">+ Add item</button>
+          </div>
+
           <div class="form-actions">
             <button class="btn-cancel" onclick="cancelForm()">Cancel</button>
-            <button class="btn-save" onclick="saveProject()">Save project</button>
+            <button class="btn-save" id="save-btn" onclick="saveProject()">Save project</button>
           </div>
         </div>
 
@@ -226,7 +260,6 @@
             <button class="btn-add" onclick="showAddForm()">+ Add project</button>
           </div>
         </div>
-
         <div class="table-wrap">
           <div id="projects-container"><div class="loading">Loading projects...</div></div>
         </div>
@@ -241,18 +274,19 @@ const PROXY = "https://abpoquery.greg-capell.workers.dev";
 let allData = [];
 let credentials = '';
 let expandedOrders = new Set();
+let expandedProjects = new Set();
 let activeKpiFilter = null;
 let projects = [];
 let editingProjectId = null;
 
-// ── Tab switching ──────────────────────────────────────────────
+// ── Tabs ───────────────────────────────────────────────────────
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ['po','projects'][i] === tab));
   document.getElementById('tab-po').classList.toggle('active', tab === 'po');
   document.getElementById('tab-projects').classList.toggle('active', tab === 'projects');
 }
 
-// ── Auth ───────────────────────────────────────────────────────
+// ── Auth & Init ────────────────────────────────────────────────
 function getDateRange() {
   const today = new Date();
   const start = new Date(today);
@@ -474,12 +508,10 @@ function renderTable() {
     const promisedLate = latestPromise && isLate(latestPromise);
     const desc2vals = [...new Set(lines.map(r => (r.Description_2||'').trim()).filter(Boolean))];
     const desc3vals = [...new Set(lines.map(r => (r.Description_3||'').trim()).filter(Boolean))];
-
     const statusBadges = statuses.map(s =>
       s === 'On Hold' ? '<span class="badge badge-hold">On Hold</span>' :
       s === 'Open' ? '<span class="badge badge-open">Open</span>' : s
     ).join(' ');
-
     const vendorRefDisplay = hasNoOA
       ? (vendorRefs.length ? vendorRefs.join(', ') + ' <span class="badge badge-nooa">+ No OA</span>' : '<span class="badge badge-nooa">No OA</span>')
       : vendorRefs.join(', ') || '—';
@@ -492,9 +524,9 @@ function renderTable() {
       <td>${statusBadges}</td>
       <td>${fmtDate(first.Date)}</td>
       <td style="${promisedLate?'color:#a32d2d;font-weight:500;':''}">${latestPromise ? fmtDate(latestPromise) : '—'}</td>
-      <td title="${desc2vals.join(', ')}" style="overflow:hidden;text-overflow:ellipsis;">${desc2vals.join(', ')||'—'}</td>
-      <td title="${desc3vals.join(', ')}" style="overflow:hidden;text-overflow:ellipsis;">${desc3vals.join(', ')||'—'}</td>
-      <td style="text-align:right;font-variant-numeric:tabular-nums;">${lines.length} line${lines.length!==1?'s':''} · ${Math.round(totalQty).toLocaleString()} qty</td>
+      <td title="${desc2vals.join(', ')}">${desc2vals.join(', ')||'—'}</td>
+      <td title="${desc3vals.join(', ')}">${desc3vals.join(', ')||'—'}</td>
+      <td style="text-align:right;">${lines.length} line${lines.length!==1?'s':''} · ${Math.round(totalQty).toLocaleString()} qty</td>
     </tr>`;
 
     const lineRows = expanded ? `
@@ -552,10 +584,16 @@ async function loadProjects() {
   }
 }
 
+function toggleProject(id) {
+  if (expandedProjects.has(id)) expandedProjects.delete(id);
+  else expandedProjects.add(id);
+  renderProjects();
+}
+
 function renderProjects() {
   const search = (document.getElementById('project-search')?.value || '').toLowerCase();
   const filtered = projects.filter(p =>
-    !search || [p.name, p.account, p.inventoryId, p.notes, p.status].some(v => v && v.toLowerCase().includes(search))
+    !search || [p.name, p.account, p.notes, p.status, ...(p.items||[]).map(i => i.inventoryId)].some(v => v && v.toLowerCase().includes(search))
   );
   document.getElementById('project-count').textContent = `(${filtered.length} of ${projects.length})`;
   const container = document.getElementById('projects-container');
@@ -573,31 +611,83 @@ function renderProjects() {
     if (s === 'On hold') return 'status-onhold';
     return '';
   };
+
+  const rows = filtered.map(p => {
+    const expanded = expandedProjects.has(p.id);
+    const items = p.items || [];
+    const totalQty = items.reduce((s, i) => s + (parseFloat(i.qty) || 0), 0);
+    const itemSummary = items.length
+      ? items.map(i => `<span>${i.inventoryId||'?'} × ${i.qty||0}${i.uom?' '+i.uom:''}</span>`).join('')
+      : '<span style="color:#aaa;">No items</span>';
+
+    const groupRow = `<tr class="proj-group-row${expanded?' expanded':''}" onclick="toggleProject('${p.id}')">
+      <td><span class="expand-icon">▶</span><span style="font-weight:500;">${p.name||'—'}</span></td>
+      <td>${p.account||'—'}</td>
+      <td>${p.needByDate ? fmtDate(p.needByDate) : '—'}</td>
+      <td><div class="items-summary">${itemSummary}</div></td>
+      <td style="text-align:right;">${totalQty ? totalQty.toLocaleString() : '—'}</td>
+      <td>${p.status ? `<span class="status-badge ${statusClass(p.status)}">${p.status}</span>` : '—'}</td>
+      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${p.notes||''}">${p.notes||'—'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-edit" onclick="event.stopPropagation();editProject('${p.id}')">Edit</button>
+        <button class="btn-delete" onclick="event.stopPropagation();deleteProject('${p.id}')">Delete</button>
+      </td>
+    </tr>`;
+
+    const detailRow = expanded && items.length ? `<tr class="proj-lines-row">
+      <td colspan="8">
+        <div class="proj-lines-inner">
+          <table class="proj-lines-table">
+            <thead><tr><th>#</th><th>Inventory ID</th><th>UOM</th><th style="text-align:right;">Qty</th></tr></thead>
+            <tbody>${items.map((item, idx) => `<tr>
+              <td style="color:#aaa;">${idx+1}</td>
+              <td style="font-weight:500;">${item.inventoryId||'—'}</td>
+              <td>${item.uom||'—'}</td>
+              <td style="text-align:right;">${item.qty ? parseFloat(item.qty).toLocaleString() : '—'}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </td>
+    </tr>` : '';
+
+    return groupRow + detailRow;
+  }).join('');
+
   container.innerHTML = `<div style="overflow-x:auto;"><table class="projects-table">
     <thead><tr>
       <th>Project name</th>
-      <th>Account</th>
-      <th>Est. order date</th>
-      <th>Inventory ID</th>
-      <th style="text-align:right;">Est. qty</th>
-      <th>Status</th>
-      <th>Notes</th>
-      <th style="width:80px;"></th>
+      <th style="width:140px;">Account</th>
+      <th style="width:110px;">Need by date</th>
+      <th>Items</th>
+      <th style="width:80px;text-align:right;">Total qty</th>
+      <th style="width:130px;">Status</th>
+      <th style="width:180px;">Notes</th>
+      <th style="width:90px;"></th>
     </tr></thead>
-    <tbody>${filtered.map(p => `<tr>
-      <td style="font-weight:500;">${p.name||'—'}</td>
-      <td>${p.account||'—'}</td>
-      <td>${p.orderDate ? fmtDate(p.orderDate) : '—'}</td>
-      <td>${p.inventoryId||'—'}</td>
-      <td style="text-align:right;">${p.qty ? parseInt(p.qty).toLocaleString() : '—'}</td>
-      <td>${p.status ? `<span class="status-badge ${statusClass(p.status)}">${p.status}</span>` : '—'}</td>
-      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${p.notes||''}">${p.notes||'—'}</td>
-      <td style="white-space:nowrap;">
-        <button class="btn-edit" onclick="editProject('${p.id}')">Edit</button>
-        <button class="btn-delete" onclick="deleteProject('${p.id}')">Delete</button>
-      </td>
-    </tr>`).join('')}</tbody>
+    <tbody>${rows}</tbody>
   </table></div>`;
+}
+
+// ── Line item form helpers ─────────────────────────────────────
+function addLineItem(inventoryId='', uom='', qty='') {
+  const container = document.getElementById('line-items-container');
+  const div = document.createElement('div');
+  div.className = 'line-item-row';
+  div.innerHTML = `
+    <input type="text" placeholder="Inventory ID" value="${inventoryId}" class="li-inventory" />
+    <input type="text" placeholder="EA, SY, SF..." value="${uom}" class="li-uom" />
+    <input type="number" placeholder="0" value="${qty}" min="0" class="li-qty" />
+    <button class="btn-remove-line" onclick="this.parentElement.remove()" title="Remove">×</button>
+  `;
+  container.appendChild(div);
+}
+
+function getLineItems() {
+  return Array.from(document.querySelectorAll('.line-item-row')).map(row => ({
+    inventoryId: row.querySelector('.li-inventory').value.trim(),
+    uom: row.querySelector('.li-uom').value.trim(),
+    qty: row.querySelector('.li-qty').value,
+  })).filter(i => i.inventoryId || i.qty);
 }
 
 function showAddForm() {
@@ -605,11 +695,11 @@ function showAddForm() {
   document.getElementById('form-title').textContent = 'Add upcoming project';
   document.getElementById('f-name').value = '';
   document.getElementById('f-account').value = '';
-  document.getElementById('f-orderdate').value = '';
-  document.getElementById('f-inventory').value = '';
-  document.getElementById('f-qty').value = '';
+  document.getElementById('f-needbydate').value = '';
   document.getElementById('f-status').value = 'Planning';
   document.getElementById('f-notes').value = '';
+  document.getElementById('line-items-container').innerHTML = '';
+  addLineItem();
   document.getElementById('project-form').style.display = 'block';
   document.getElementById('f-name').focus();
 }
@@ -621,11 +711,12 @@ function editProject(id) {
   document.getElementById('form-title').textContent = 'Edit project';
   document.getElementById('f-name').value = p.name || '';
   document.getElementById('f-account').value = p.account || '';
-  document.getElementById('f-orderdate').value = p.orderDate || '';
-  document.getElementById('f-inventory').value = p.inventoryId || '';
-  document.getElementById('f-qty').value = p.qty || '';
+  document.getElementById('f-needbydate').value = p.needByDate || '';
   document.getElementById('f-status').value = p.status || 'Planning';
   document.getElementById('f-notes').value = p.notes || '';
+  document.getElementById('line-items-container').innerHTML = '';
+  (p.items || []).forEach(i => addLineItem(i.inventoryId, i.uom, i.qty));
+  if (!p.items || !p.items.length) addLineItem();
   document.getElementById('project-form').style.display = 'block';
   document.getElementById('f-name').focus();
 }
@@ -639,14 +730,13 @@ async function saveProject() {
   const payload = {
     name: document.getElementById('f-name').value.trim(),
     account: document.getElementById('f-account').value.trim(),
-    orderDate: document.getElementById('f-orderdate').value,
-    inventoryId: document.getElementById('f-inventory').value.trim(),
-    qty: document.getElementById('f-qty').value,
+    needByDate: document.getElementById('f-needbydate').value,
     status: document.getElementById('f-status').value,
     notes: document.getElementById('f-notes').value.trim(),
+    items: getLineItems(),
   };
   if (!payload.name) { alert('Project name is required.'); return; }
-  const btn = document.querySelector('.btn-save');
+  const btn = document.getElementById('save-btn');
   btn.textContent = 'Saving...';
   btn.disabled = true;
   try {
