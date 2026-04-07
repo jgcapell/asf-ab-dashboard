@@ -124,7 +124,6 @@
   .proj-lines-table tr:last-child td { border-bottom: none; }
   .status-badge { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
   .status-pending { background: #faeeda; color: #854f0b; }
-  .status-confirmed { background: #e6f1fb; color: #185fa5; }
   .status-awaiting { background: #f1efe8; color: #555; }
   .status-placed { background: #eaf3de; color: #3b6d11; }
   .empty-state { text-align: center; padding: 3rem; color: #888; font-size: 14px; }
@@ -251,7 +250,6 @@
             <div class="form-field"><label>Status</label>
               <select id="f-status">
                 <option value="Pending Approval">Pending Approval</option>
-                <option value="Colors/Quantities Confirmed">Colors/Quantities Confirmed</option>
                 <option value="Awaiting Customer Order">Awaiting Customer Order</option>
                 <option value="Order Placed">Order Placed</option>
               </select>
@@ -751,7 +749,6 @@ function renderProjects() {
   const statusClass = s => {
     if (!s) return '';
     if (s === 'Pending Approval') return 'status-pending';
-    if (s === 'Colors/Quantities Confirmed') return 'status-confirmed';
     if (s === 'Awaiting Customer Order') return 'status-awaiting';
     if (s === 'Order Placed') return 'status-placed';
     return '';
