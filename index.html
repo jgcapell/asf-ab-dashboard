@@ -123,10 +123,10 @@
   .proj-lines-table td { padding: 5px 8px; border-bottom: 1px solid #f0f0f0; color: #1a1a1a; }
   .proj-lines-table tr:last-child td { border-bottom: none; }
   .status-badge { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
-  .status-planning { background: #e6f1fb; color: #185fa5; }
   .status-pending { background: #faeeda; color: #854f0b; }
-  .status-ready { background: #eaf3de; color: #3b6d11; }
-  .status-onhold { background: #f1efe8; color: #666; }
+  .status-confirmed { background: #e6f1fb; color: #185fa5; }
+  .status-awaiting { background: #f1efe8; color: #555; }
+  .status-placed { background: #eaf3de; color: #3b6d11; }
   .empty-state { text-align: center; padding: 3rem; color: #888; font-size: 14px; }
   .items-summary { font-size: 12px; color: #666; }
   .items-summary span { display: inline-block; background: #f1efe8; border-radius: 4px; padding: 1px 6px; margin: 1px 2px; font-size: 11px; }
@@ -208,6 +208,9 @@
             <option value="On Hold">On Hold</option>
             <option value="Open">Open</option>
           </select>
+          <select id="salesrep-filter" onchange="renderTable()" style="min-width:140px;">
+            <option value="">All sales reps</option>
+          </select>
         </div>
         <div class="table-wrap">
           <div id="table-container"><div class="loading">Loading...</div></div>
@@ -226,10 +229,10 @@
             <div class="form-field"><label>Need by date</label><input type="date" id="f-needbydate" /></div>
             <div class="form-field"><label>Status</label>
               <select id="f-status">
-                <option value="Planning">Planning</option>
-                <option value="Pending approval">Pending approval</option>
-                <option value="Ready to order">Ready to order</option>
-                <option value="On hold">On hold</option>
+                <option value="Pending Approval">Pending Approval</option>
+                <option value="Colors/Quantities Confirmed">Colors/Quantities Confirmed</option>
+                <option value="Awaiting Customer Order">Awaiting Customer Order</option>
+                <option value="Order Placed">Order Placed</option>
               </select>
             </div>
             <div class="form-field" style="grid-column: 1 / -1;"><label>Notes</label><textarea id="f-notes" placeholder="Additional notes..."></textarea></div>
@@ -339,6 +342,7 @@ async function fetchData() {
   renderKPIs();
   renderQtyTable();
   renderNoOATable();
+  populateSalesRepFilter();
   renderTable();
   const { start: s, today: t } = getDateRange();
   document.getElementById('date-range-label').textContent = `${s} → ${t} · ${allData.length.toLocaleString()} lines loaded`;
@@ -461,13 +465,23 @@ function getKpiFiltered() {
   return allData;
 }
 
+function populateSalesRepFilter() {
+  const reps = [...new Set(allData.map(r => (r.Description_2||'').trim()).filter(Boolean))].sort();
+  const sel = document.getElementById('salesrep-filter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All sales reps</option>' +
+    reps.map(r => `<option value="${r}"${r === current ? ' selected' : ''}>${r}</option>`).join('');
+}
+
 function getFiltered() {
   const search = (document.getElementById('search')?.value || '').toLowerCase();
   const status = document.getElementById('status-filter')?.value || '';
+  const salesRep = document.getElementById('salesrep-filter')?.value || '';
   return getKpiFiltered().filter(r => {
     const matchStatus = !status || (r.Status||'').trim() === status;
-    const matchSearch = !search || [r.OrderNbr, r.AccountName, r.InventoryID, r.SalesOrderNbr, r.VendorRef, r.Description].some(v => v && v.toString().toLowerCase().includes(search));
-    return matchStatus && matchSearch;
+    const matchSalesRep = !salesRep || (r.Description_2||'').trim() === salesRep;
+    const matchSearch = !search || [r.OrderNbr, r.AccountName, r.InventoryID, r.SalesOrderNbr, r.VendorRef, r.Description, r.Description_3].some(v => v && v.toString().toLowerCase().includes(search));
+    return matchStatus && matchSalesRep && matchSearch;
   });
 }
 
@@ -594,7 +608,11 @@ function renderProjects() {
   const search = (document.getElementById('project-search')?.value || '').toLowerCase();
   const filtered = projects.filter(p =>
     !search || [p.name, p.account, p.notes, p.status, ...(p.items||[]).map(i => i.inventoryId)].some(v => v && v.toLowerCase().includes(search))
-  );
+  ).sort((a, b) => {
+    const aPlaced = a.status === 'Order Placed' ? 1 : 0;
+    const bPlaced = b.status === 'Order Placed' ? 1 : 0;
+    return aPlaced - bPlaced;
+  });
   document.getElementById('project-count').textContent = `(${filtered.length} of ${projects.length})`;
   const container = document.getElementById('projects-container');
   if (!filtered.length) {
@@ -605,10 +623,10 @@ function renderProjects() {
   }
   const statusClass = s => {
     if (!s) return '';
-    if (s === 'Planning') return 'status-planning';
-    if (s === 'Pending approval') return 'status-pending';
-    if (s === 'Ready to order') return 'status-ready';
-    if (s === 'On hold') return 'status-onhold';
+    if (s === 'Pending Approval') return 'status-pending';
+    if (s === 'Colors/Quantities Confirmed') return 'status-confirmed';
+    if (s === 'Awaiting Customer Order') return 'status-awaiting';
+    if (s === 'Order Placed') return 'status-placed';
     return '';
   };
 
@@ -620,15 +638,16 @@ function renderProjects() {
       ? items.map(i => `<span>${i.inventoryId||'?'} × ${i.qty||0}${i.uom?' '+i.uom:''}</span>`).join('')
       : '<span style="color:#aaa;">No items</span>';
 
-    const groupRow = `<tr class="proj-group-row${expanded?' expanded':''}" onclick="toggleProject('${p.id}')">
-      <td><span class="expand-icon">▶</span><span style="font-weight:500;">${p.name||'—'}</span></td>
-      <td>${p.account||'—'}</td>
-      <td>${p.needByDate ? fmtDate(p.needByDate) : '—'}</td>
-      <td><div class="items-summary">${itemSummary}</div></td>
-      <td style="text-align:right;">${totalQty ? totalQty.toLocaleString() : '—'}</td>
-      <td>${p.status ? `<span class="status-badge ${statusClass(p.status)}">${p.status}</span>` : '—'}</td>
-      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${p.notes||''}">${p.notes||'—'}</td>
-      <td style="white-space:nowrap;">
+    const isPlaced = p.status === 'Order Placed';
+    const groupRow = `<tr class="proj-group-row${expanded?' expanded':''}" onclick="toggleProject('${p.id}')" style="${isPlaced?'background:#edf7ed;':''}">
+      <td style="${isPlaced?'background:#edf7ed;':''}"><span class="expand-icon">▶</span><span style="font-weight:500;">${p.name||'—'}</span></td>
+      <td style="${isPlaced?'background:#edf7ed;':''}">${p.account||'—'}</td>
+      <td style="${isPlaced?'background:#edf7ed;':''}">${p.needByDate ? fmtDate(p.needByDate) : '—'}</td>
+      <td style="${isPlaced?'background:#edf7ed;':''}"><div class="items-summary">${itemSummary}</div></td>
+      <td style="text-align:right;${isPlaced?'background:#edf7ed;':''}">${totalQty ? totalQty.toLocaleString() : '—'}</td>
+      <td style="${isPlaced?'background:#edf7ed;':''}">${p.status ? `<span class="status-badge ${statusClass(p.status)}">${p.status}</span>` : '—'}</td>
+      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${isPlaced?'background:#edf7ed;':''}" title="${p.notes||''}">${p.notes||'—'}</td>
+      <td style="white-space:nowrap;${isPlaced?'background:#edf7ed;':''}">
         <button class="btn-edit" onclick="event.stopPropagation();editProject('${p.id}')">Edit</button>
         <button class="btn-delete" onclick="event.stopPropagation();deleteProject('${p.id}')">Delete</button>
       </td>
@@ -713,7 +732,7 @@ function editProject(id) {
   document.getElementById('f-name').value = p.name || '';
   document.getElementById('f-account').value = p.account || '';
   document.getElementById('f-needbydate').value = p.needByDate || '';
-  document.getElementById('f-status').value = p.status || 'Planning';
+  document.getElementById('f-status').value = p.status || 'Pending Approval';
   document.getElementById('f-notes').value = p.notes || '';
   document.getElementById('line-items-container').innerHTML = '';
   (p.items || []).forEach(i => addLineItem(i.inventoryId, i.uom, i.qty));
