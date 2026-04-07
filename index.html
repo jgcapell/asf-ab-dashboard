@@ -42,21 +42,21 @@
   .data-table th { background: #f9f9f8; padding: 10px 12px; text-align: left; font-weight: 500; font-size: 12px; color: #666; border-bottom: 1px solid #e5e5e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .data-table td { padding: 9px 12px; border-bottom: 1px solid #e5e5e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
   .data-table tr:last-child td { border-bottom: none; }
-  .data-table tr.summary-row { cursor: pointer; }
-  .data-table tr.summary-row:hover td { background: #f9f9f8; }
-  .data-table tr.detail-row td { background: #f9f9f8; padding: 0; }
-  .detail-inner { padding: 12px 16px; }
-  .detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
-  .detail-item .dl { color: #888; font-size: 11px; margin-bottom: 2px; }
-  .detail-item .dv { color: #1a1a1a; font-size: 12px; word-break: break-word; white-space: normal; }
+  .data-table tr.group-row { cursor: pointer; background: #fff; }
+  .data-table tr.group-row:hover td { background: #f5f5f3; }
+  .data-table tr.group-row.expanded td { background: #f5f5f3; }
+  .data-table tr.line-header-row th { background: #eeecea; padding: 6px 12px; font-size: 11px; color: #555; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0; }
+  .data-table tr.line-row td { background: #fafaf9; padding: 7px 12px; font-size: 12px; border-bottom: 1px solid #eeeeee; }
+  .data-table tr.line-row:last-child td { border-bottom: 1px solid #e5e5e5; }
+  .data-table tr.line-row:hover td { background: #f0f0ee; }
+  .expand-icon { display: inline-block; font-size: 10px; margin-right: 6px; transition: transform 0.15s; color: #999; }
+  .expanded .expand-icon { transform: rotate(90deg); }
+  .loading { text-align: center; padding: 3rem; color: #888; font-size: 14px; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
   .badge-hold { background: #faeeda; color: #854f0b; }
   .badge-open { background: #eaf3de; color: #3b6d11; }
   .badge-late { background: #fcebeb; color: #a32d2d; }
   .badge-nooa { background: #fcebeb; color: #a32d2d; font-size: 10px; }
-  .expand-icon { display: inline-block; font-size: 10px; margin-right: 6px; transition: transform 0.15s; color: #999; }
-  .expanded .expand-icon { transform: rotate(90deg); }
-  .loading { text-align: center; padding: 3rem; color: #888; font-size: 14px; }
   .qty-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .qty-table th { font-size: 12px; font-weight: 500; color: #666; padding: 6px 8px; text-align: left; border-bottom: 1px solid #e5e5e5; }
   .qty-table td { padding: 6px 8px; border-bottom: 1px solid #e5e5e5; }
@@ -75,20 +75,13 @@
 </style>
 </head>
 <body>
-
 <div id="app">
   <div id="login-screen" class="login-overlay">
     <div class="login-card">
       <h2>Drop-Ship PO Dashboard</h2>
       <p>Sign in with your Acumatica credentials to view the dashboard.</p>
-      <div class="field">
-        <label>Username</label>
-        <input type="text" id="username" placeholder="Enter username" />
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="password" placeholder="Enter password" />
-      </div>
+      <div class="field"><label>Username</label><input type="text" id="username" placeholder="Enter username" /></div>
+      <div class="field"><label>Password</label><input type="password" id="password" placeholder="Enter password" /></div>
       <button class="btn-primary" id="login-btn" onclick="loadDashboard()">Sign in & load dashboard</button>
       <div class="error-msg" id="error-msg"></div>
     </div>
@@ -143,10 +136,10 @@
       </div>
 
       <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <div class="section-title" style="margin:0;">Order lines</div>
+        <div class="section-title" style="margin:0;">Orders</div>
         <span class="active-filter-label" id="active-filter-label"></span>
         <button class="clear-filter-btn" id="clear-filter-btn" onclick="clearKpiFilter()">Clear filter</button>
-        <input type="text" id="search" placeholder="Search order, account, inventory..." style="flex:1;min-width:180px;" oninput="renderTable()" />
+        <input type="text" id="search" placeholder="Search order, account, inventory, vendor ref..." style="flex:1;min-width:180px;" oninput="renderTable()" />
         <select id="status-filter" onchange="renderTable()">
           <option value="">All statuses</option>
           <option value="On Hold">On Hold</option>
@@ -165,7 +158,7 @@
 const PROXY = "https://abpoquery.greg-capell.workers.dev";
 let allData = [];
 let credentials = '';
-let expandedRows = new Set();
+let expandedOrders = new Set();
 let activeKpiFilter = null;
 
 function getDateRange() {
@@ -225,6 +218,7 @@ async function fetchData() {
 
 async function refreshData() {
   activeKpiFilter = null;
+  expandedOrders = new Set();
   updateKpiCardStates();
   document.getElementById('table-container').innerHTML = '<div class="loading">Refreshing...</div>';
   document.getElementById('qty-table-wrap').innerHTML = '<div class="loading">Loading...</div>';
@@ -288,8 +282,7 @@ function renderQtyTable() {
   wrap.innerHTML = `<div style="max-height:240px;overflow-y:auto;"><table class="qty-table">
     <thead><tr><th>Inventory ID</th><th>Open qty</th><th style="width:80px;"></th></tr></thead>
     <tbody>${sorted.map(([id,qty]) => `<tr>
-      <td>${id}</td>
-      <td>${Math.round(qty).toLocaleString()}</td>
+      <td>${id}</td><td>${Math.round(qty).toLocaleString()}</td>
       <td><div style="display:flex;align-items:center;gap:6px;"><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round((qty/max)*100)}%"></div></div></div></td>
     </tr>`).join('')}</tbody>
   </table></div>`;
@@ -349,64 +342,96 @@ function getFiltered() {
   });
 }
 
-function toggleRow(id) {
-  if (expandedRows.has(id)) expandedRows.delete(id);
-  else expandedRows.add(id);
+function toggleOrder(orderNbr) {
+  if (expandedOrders.has(orderNbr)) expandedOrders.delete(orderNbr);
+  else expandedOrders.add(orderNbr);
   renderTable();
+}
+
+function groupByOrder(lines) {
+  const groups = {};
+  const order = [];
+  lines.forEach(r => {
+    if (!groups[r.OrderNbr]) { groups[r.OrderNbr] = []; order.push(r.OrderNbr); }
+    groups[r.OrderNbr].push(r);
+  });
+  return order.map(nbr => ({ orderNbr: nbr, lines: groups[nbr] }));
 }
 
 function renderTable() {
   const filtered = getFiltered();
-  document.getElementById('row-count').textContent = `Showing ${filtered.length.toLocaleString()} of ${allData.length.toLocaleString()} lines`;
+  const groups = groupByOrder(filtered);
+  document.getElementById('row-count').textContent = `Showing ${groups.length.toLocaleString()} orders · ${filtered.length.toLocaleString()} lines`;
   const container = document.getElementById('table-container');
-  if (!filtered.length) { container.innerHTML = '<div class="loading">No results match your filters.</div>'; return; }
-  const cols = [
-    {key:'OrderNbr', label:'Order #', w:'90px'},
-    {key:'LineNbr', label:'Line', w:'45px'},
-    {key:'SalesOrderNbr', label:'SO #', w:'90px'},
-    {key:'AccountName', label:'Account', w:'130px'},
-    {key:'InventoryID', label:'Inventory ID', w:'100px'},
-    {key:'VendorRef', label:'Vendor ref', w:'100px'},
-    {key:'Status', label:'Status', w:'80px'},
-    {key:'Date', label:'Date', w:'90px'},
-    {key:'PromisedOn', label:'Promised', w:'90px'},
-  ];
-  const rows = filtered.map((r,i) => {
-    const rowId = `${r.OrderNbr}-${r.LineNbr}-${i}`;
-    const expanded = expandedRows.has(rowId);
-    const noOA = !r.VendorRef || r.VendorRef.toString().trim() === '';
-    const late = isLate(r.PromisedOn);
-    const mainRow = `<tr class="summary-row${expanded?' expanded':''}" onclick="toggleRow('${rowId}')">
-      <td><span class="expand-icon">▶</span><span style="font-family:monospace;font-size:12px;">${r.OrderNbr||'—'}</span></td>
-      <td>${r.LineNbr||'—'}</td>
-      <td style="font-family:monospace;font-size:12px;">${r.SalesOrderNbr||'—'}</td>
-      <td title="${r.AccountName||''}">${r.AccountName||'—'}</td>
-      <td>${r.InventoryID||'—'}</td>
-      <td>${noOA?'<span class="badge badge-nooa">No OA</span>':(r.VendorRef||'—')}</td>
-      <td>${(r.Status||'').trim()==='On Hold'?'<span class="badge badge-hold">On Hold</span>':(r.Status||'').trim()==='Open'?'<span class="badge badge-open">Open</span>':(r.Status||'—')}</td>
-      <td>${fmtDate(r.Date)}</td>
-      <td>${late?`<span class="badge badge-late">${fmtDate(r.PromisedOn)}</span>`:fmtDate(r.PromisedOn)}</td>
+  if (!groups.length) { container.innerHTML = '<div class="loading">No results match your filters.</div>'; return; }
+
+  const NUM_COLS = 7;
+
+  const rows = groups.map(({ orderNbr, lines }) => {
+    const expanded = expandedOrders.has(orderNbr);
+    const first = lines[0];
+    const totalQty = lines.reduce((s, r) => s + (parseFloat(r.POLine_baseOpenQty) || 0), 0);
+    const hasNoOA = lines.some(r => !r.VendorRef || r.VendorRef.toString().trim() === '');
+    const hasLate = lines.some(r => isLate(r.PromisedOn));
+    const statuses = [...new Set(lines.map(r => (r.Status||'').trim()))];
+    const vendorRefs = [...new Set(lines.map(r => (r.VendorRef||'').trim()).filter(Boolean))];
+
+    const statusBadges = statuses.map(s =>
+      s === 'On Hold' ? '<span class="badge badge-hold">On Hold</span>' :
+      s === 'Open' ? '<span class="badge badge-open">Open</span>' : s
+    ).join(' ');
+
+    const vendorRefDisplay = hasNoOA
+      ? (vendorRefs.length ? vendorRefs.join(', ') + ' <span class="badge badge-nooa">+ No OA</span>' : '<span class="badge badge-nooa">No OA</span>')
+      : vendorRefs.join(', ') || '—';
+
+    const groupRow = `<tr class="group-row${expanded?' expanded':''}" onclick="toggleOrder('${orderNbr}')">
+      <td><span class="expand-icon">▶</span><span style="font-family:monospace;font-size:12px;font-weight:500;">${orderNbr||'—'}</span></td>
+      <td title="${first.AccountName||''}">${first.AccountName||'—'}</td>
+      <td style="font-family:monospace;font-size:12px;">${first.SalesOrderNbr||'—'}</td>
+      <td>${vendorRefDisplay}</td>
+      <td>${statusBadges}</td>
+      <td>${fmtDate(first.Date)}</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums;">${lines.length} line${lines.length!==1?'s':''} · ${Math.round(totalQty).toLocaleString()} qty</td>
     </tr>`;
-    const detailRow = expanded ? `<tr class="detail-row"><td colspan="${cols.length}"><div class="detail-inner"><div class="detail-grid">
-      <div class="detail-item"><div class="dl">Order #</div><div class="dv">${r.OrderNbr||'—'}</div></div>
-      <div class="detail-item"><div class="dl">Line #</div><div class="dv">${r.LineNbr||'—'}</div></div>
-      <div class="detail-item"><div class="dl">Description</div><div class="dv">${r.Description||'—'}</div></div>
-      <div class="detail-item"><div class="dl">UOM</div><div class="dv">${r.UOM||'—'}</div></div>
-      <div class="detail-item"><div class="dl">Sales order #</div><div class="dv">${r.SalesOrderNbr||'—'}</div></div>
-      <div class="detail-item"><div class="dl">Date</div><div class="dv">${fmtDate(r.Date)}</div></div>
-      <div class="detail-item"><div class="dl">Promised on</div><div class="dv">${late?'<span class="badge badge-late">':''} ${fmtDate(r.PromisedOn)} ${late?'</span>':''}</div></div>
-      <div class="detail-item"><div class="dl">Last modified</div><div class="dv">${fmtDate(r.LastModifiedOn)}</div></div>
-      <div class="detail-item"><div class="dl">Account name</div><div class="dv">${r.AccountName||'—'}</div></div>
-      <div class="detail-item"><div class="dl">Description 2</div><div class="dv">${r.Description_2||'—'}</div></div>
-      <div class="detail-item"><div class="dl">Open qty</div><div class="dv">${r.POLine_baseOpenQty!=null?parseFloat(r.POLine_baseOpenQty).toLocaleString():'—'}</div></div>
-      <div class="detail-item"><div class="dl">Description 3</div><div class="dv">${r.Description_3||'—'}</div></div>
-      <div class="detail-item"><div class="dl">Vendor ref ${noOA?'<span class="badge badge-nooa">No OA</span>':''}</div><div class="dv">${r.VendorRef||'—'}</div></div>
-      <div class="detail-item"><div class="dl">Inventory ID</div><div class="dv">${r.InventoryID||'—'}</div></div>
-    </div></div></td></tr>` : '';
-    return mainRow + detailRow;
+
+    const lineRows = expanded ? `
+      <tr class="line-header-row">
+        <th style="padding-left:32px;">Line #</th>
+        <th>Inventory ID</th>
+        <th>Description</th>
+        <th>Vendor ref</th>
+        <th>Status</th>
+        <th>Promised</th>
+        <th style="text-align:right;">Open qty</th>
+      </tr>
+      ${lines.map(r => {
+        const noOA = !r.VendorRef || r.VendorRef.toString().trim() === '';
+        const late = isLate(r.PromisedOn);
+        return `<tr class="line-row">
+          <td style="padding-left:32px;font-family:monospace;">${r.LineNbr||'—'}</td>
+          <td>${r.InventoryID||'—'}</td>
+          <td title="${r.Description||''}" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;">${r.Description||'—'}</td>
+          <td>${noOA?'<span class="badge badge-nooa">No OA</span>':(r.VendorRef||'—')}</td>
+          <td>${(r.Status||'').trim()==='On Hold'?'<span class="badge badge-hold">On Hold</span>':(r.Status||'').trim()==='Open'?'<span class="badge badge-open">Open</span>':(r.Status||'—')}</td>
+          <td>${late?`<span class="badge badge-late">${fmtDate(r.PromisedOn)}</span>`:fmtDate(r.PromisedOn)}</td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums;">${r.POLine_baseOpenQty!=null?Math.round(parseFloat(r.POLine_baseOpenQty)).toLocaleString():'—'}</td>
+        </tr>`;
+      }).join('')}` : '';
+
+    return groupRow + lineRows;
   }).join('');
+
   container.innerHTML = `<div style="overflow-x:auto;"><table class="data-table">
-    <thead><tr>${cols.map(c=>`<th style="width:${c.w}">${c.label}</th>`).join('')}</tr></thead>
+    <thead><tr>
+      <th style="width:110px;">Order #</th>
+      <th style="width:140px;">Account</th>
+      <th style="width:100px;">SO #</th>
+      <th style="width:160px;">Vendor ref</th>
+      <th style="width:100px;">Status</th>
+      <th style="width:95px;">Date</th>
+      <th style="width:120px;text-align:right;">Lines / Qty</th>
+    </tr></thead>
     <tbody>${rows}</tbody>
   </table></div>`;
 }
