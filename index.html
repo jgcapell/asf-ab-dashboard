@@ -23,6 +23,12 @@
   .btn-primary:hover { background: #333; }
   .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
   .error-msg { font-size: 13px; color: #c0392b; margin-top: 0.75rem; text-align: center; display: none; }
+  .tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 1px solid #e5e5e5; }
+  .tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #888; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; user-select: none; }
+  .tab:hover { color: #1a1a1a; }
+  .tab.active { color: #1a1a1a; font-weight: 500; border-bottom-color: #1a1a1a; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
   .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
   .kpi-card { background: #f1efe8; border-radius: 8px; padding: 1rem; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s, background 0.15s; user-select: none; }
   .kpi-card:hover { border-color: #bbb; }
@@ -70,8 +76,36 @@
   .active-filter-label { font-size: 12px; color: #666; background: #f1efe8; border: 1px solid #ddd; border-radius: 99px; padding: 3px 10px; display: none; }
   .tag { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; background: #e6f1fb; color: #185fa5; margin-left: 8px; }
   .no-oa-tag { background: #fcebeb; color: #a32d2d; }
-  input[type=text], input[type=password], select { border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 13px; outline: none; background: #fff; }
-  input:focus, select:focus { border-color: #888; }
+  input[type=text], input[type=password], input[type=date], input[type=number], select, textarea { border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 13px; outline: none; background: #fff; }
+  input:focus, select:focus, textarea:focus { border-color: #888; }
+  .project-form { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
+  .project-form h3 { font-size: 14px; font-weight: 500; margin-bottom: 1rem; color: #1a1a1a; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 1rem; }
+  .form-field label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+  .form-field input, .form-field select, .form-field textarea { width: 100%; }
+  .form-field textarea { resize: vertical; min-height: 60px; }
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn-save { background: #1a1a1a; color: #fff; border: none; border-radius: 6px; padding: 8px 18px; font-size: 13px; cursor: pointer; }
+  .btn-save:hover { background: #333; }
+  .btn-cancel { background: #fff; color: #666; border: 1px solid #ddd; border-radius: 6px; padding: 8px 18px; font-size: 13px; cursor: pointer; }
+  .btn-cancel:hover { background: #f1efe8; }
+  .btn-add { background: #1a1a1a; color: #fff; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; cursor: pointer; }
+  .btn-add:hover { background: #333; }
+  .btn-edit { background: none; border: none; color: #378add; font-size: 12px; cursor: pointer; padding: 2px 6px; }
+  .btn-edit:hover { text-decoration: underline; }
+  .btn-delete { background: none; border: none; color: #c0392b; font-size: 12px; cursor: pointer; padding: 2px 6px; }
+  .btn-delete:hover { text-decoration: underline; }
+  .projects-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .projects-table th { background: #f9f9f8; padding: 10px 12px; text-align: left; font-weight: 500; font-size: 12px; color: #666; border-bottom: 1px solid #e5e5e5; }
+  .projects-table td { padding: 10px 12px; border-bottom: 1px solid #e5e5e5; vertical-align: middle; }
+  .projects-table tr:last-child td { border-bottom: none; }
+  .projects-table tr:hover td { background: #f9f9f8; }
+  .status-badge { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .status-planning { background: #e6f1fb; color: #185fa5; }
+  .status-pending { background: #faeeda; color: #854f0b; }
+  .status-ready { background: #eaf3de; color: #3b6d11; }
+  .status-onhold { background: #f1efe8; color: #666; }
+  .empty-state { text-align: center; padding: 3rem; color: #888; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -91,65 +125,113 @@
     <div class="dash">
       <div class="header">
         <div>
-          <h1>Drop-Ship PO line detail</h1>
+          <h1>Drop-Ship PO Dashboard</h1>
           <div class="header-sub" id="date-range-label"></div>
         </div>
         <button class="refresh-btn" onclick="refreshData()">Refresh data</button>
       </div>
 
-      <div class="kpi-grid">
-        <div class="kpi-card" id="kpi-card-hold" onclick="toggleKpiFilter('hold')">
-          <div class="kpi-label">Total on hold orders</div>
-          <div class="kpi-value" id="kpi-hold">—</div>
-          <div class="kpi-sub">Unique order numbers</div>
-          <div class="kpi-hint">Click to filter</div>
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('po')">PO Line Detail</div>
+        <div class="tab" onclick="switchTab('projects')">Upcoming Projects</div>
+      </div>
+
+      <!-- PO TAB -->
+      <div id="tab-po" class="tab-content active">
+        <div class="kpi-grid">
+          <div class="kpi-card" id="kpi-card-hold" onclick="toggleKpiFilter('hold')">
+            <div class="kpi-label">Total on hold orders</div>
+            <div class="kpi-value" id="kpi-hold">—</div>
+            <div class="kpi-sub">Unique order numbers</div>
+            <div class="kpi-hint">Click to filter</div>
+          </div>
+          <div class="kpi-card kpi-danger" id="kpi-card-nooa" onclick="toggleKpiFilter('nooa')">
+            <div class="kpi-label">Orders without OAs</div>
+            <div class="kpi-value" id="kpi-no-oa">—</div>
+            <div class="kpi-sub">Unique POs with no vendor ref</div>
+            <div class="kpi-hint">Click to filter</div>
+          </div>
+          <div class="kpi-card kpi-warning" id="kpi-card-late" onclick="toggleKpiFilter('late')">
+            <div class="kpi-label">Promised &gt; 3 months out</div>
+            <div class="kpi-value" id="kpi-late">—</div>
+            <div class="kpi-sub">Unique orders with late promise dates</div>
+            <div class="kpi-hint">Click to filter</div>
+          </div>
+          <div class="kpi-card" id="kpi-card-total" onclick="toggleKpiFilter('total')">
+            <div class="kpi-label">Total lines on order</div>
+            <div class="kpi-value" id="kpi-total">—</div>
+            <div class="kpi-sub">All loaded PO lines</div>
+            <div class="kpi-hint">Click to show all</div>
+          </div>
         </div>
-        <div class="kpi-card kpi-danger" id="kpi-card-nooa" onclick="toggleKpiFilter('nooa')">
-          <div class="kpi-label">Orders without OAs</div>
-          <div class="kpi-value" id="kpi-no-oa">—</div>
-          <div class="kpi-sub">Unique POs with no vendor ref</div>
-          <div class="kpi-hint">Click to filter</div>
+
+        <div class="bottom-grid">
+          <div class="panel">
+            <div class="section-title">Qty on order by inventory ID</div>
+            <div id="qty-table-wrap"><div class="loading">Loading...</div></div>
+          </div>
+          <div class="panel">
+            <div class="section-title">Orders without OAs <span class="tag no-oa-tag">No vendor ref</span></div>
+            <div id="no-oa-wrap"><div class="loading">Loading...</div></div>
+          </div>
         </div>
-        <div class="kpi-card kpi-warning" id="kpi-card-late" onclick="toggleKpiFilter('late')">
-          <div class="kpi-label">Promised &gt; 3 months out</div>
-          <div class="kpi-value" id="kpi-late">—</div>
-          <div class="kpi-sub">Unique orders with late promise dates</div>
-          <div class="kpi-hint">Click to filter</div>
+
+        <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div class="section-title" style="margin:0;">Orders</div>
+          <span class="active-filter-label" id="active-filter-label"></span>
+          <button class="clear-filter-btn" id="clear-filter-btn" onclick="clearKpiFilter()">Clear filter</button>
+          <input type="text" id="search" placeholder="Search order, account, inventory, vendor ref..." style="flex:1;min-width:180px;" oninput="renderTable()" />
+          <select id="status-filter" onchange="renderTable()">
+            <option value="">All statuses</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Open">Open</option>
+          </select>
         </div>
-        <div class="kpi-card" id="kpi-card-total" onclick="toggleKpiFilter('total')">
-          <div class="kpi-label">Total lines on order</div>
-          <div class="kpi-value" id="kpi-total">—</div>
-          <div class="kpi-sub">All loaded PO lines</div>
-          <div class="kpi-hint">Click to show all</div>
+        <div class="table-wrap">
+          <div id="table-container"><div class="loading">Loading...</div></div>
+        </div>
+        <div style="font-size:12px;color:#888;margin-top:8px;" id="row-count"></div>
+      </div>
+
+      <!-- PROJECTS TAB -->
+      <div id="tab-projects" class="tab-content">
+        <div class="project-form" id="project-form" style="display:none;">
+          <h3 id="form-title">Add upcoming project</h3>
+          <div class="form-grid">
+            <div class="form-field"><label>Project name</label><input type="text" id="f-name" placeholder="e.g. Main St Renovation" /></div>
+            <div class="form-field"><label>Customer / Account</label><input type="text" id="f-account" placeholder="Account name" /></div>
+            <div class="form-field"><label>Estimated order date</label><input type="date" id="f-orderdate" /></div>
+            <div class="form-field"><label>Product / Inventory ID</label><input type="text" id="f-inventory" placeholder="e.g. SVTPLANK-01" /></div>
+            <div class="form-field"><label>Estimated quantity</label><input type="number" id="f-qty" placeholder="0" min="0" /></div>
+            <div class="form-field"><label>Status</label>
+              <select id="f-status">
+                <option value="Planning">Planning</option>
+                <option value="Pending approval">Pending approval</option>
+                <option value="Ready to order">Ready to order</option>
+                <option value="On hold">On hold</option>
+              </select>
+            </div>
+            <div class="form-field" style="grid-column: 1 / -1;"><label>Notes</label><textarea id="f-notes" placeholder="Additional notes..."></textarea></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-cancel" onclick="cancelForm()">Cancel</button>
+            <button class="btn-save" onclick="saveProject()">Save project</button>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:12px;">
+          <div class="section-title" style="margin:0;">Upcoming projects <span id="project-count" style="font-size:12px;color:#888;font-weight:400;"></span></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" id="project-search" placeholder="Search projects..." style="font-size:13px;padding:5px 10px;" oninput="renderProjects()" />
+            <button class="btn-add" onclick="showAddForm()">+ Add project</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div id="projects-container"><div class="loading">Loading projects...</div></div>
         </div>
       </div>
 
-      <div class="bottom-grid">
-        <div class="panel">
-          <div class="section-title">Qty on order by inventory ID</div>
-          <div id="qty-table-wrap"><div class="loading">Loading...</div></div>
-        </div>
-        <div class="panel">
-          <div class="section-title">Orders without OAs <span class="tag no-oa-tag">No vendor ref</span></div>
-          <div id="no-oa-wrap"><div class="loading">Loading...</div></div>
-        </div>
-      </div>
-
-      <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <div class="section-title" style="margin:0;">Orders</div>
-        <span class="active-filter-label" id="active-filter-label"></span>
-        <button class="clear-filter-btn" id="clear-filter-btn" onclick="clearKpiFilter()">Clear filter</button>
-        <input type="text" id="search" placeholder="Search order, account, inventory, vendor ref..." style="flex:1;min-width:180px;" oninput="renderTable()" />
-        <select id="status-filter" onchange="renderTable()">
-          <option value="">All statuses</option>
-          <option value="On Hold">On Hold</option>
-          <option value="Open">Open</option>
-        </select>
-      </div>
-      <div class="table-wrap">
-        <div id="table-container"><div class="loading">Loading...</div></div>
-      </div>
-      <div style="font-size:12px;color:#888;margin-top:8px;" id="row-count"></div>
     </div>
   </div>
 </div>
@@ -160,7 +242,17 @@ let allData = [];
 let credentials = '';
 let expandedOrders = new Set();
 let activeKpiFilter = null;
+let projects = [];
+let editingProjectId = null;
 
+// ── Tab switching ──────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ['po','projects'][i] === tab));
+  document.getElementById('tab-po').classList.toggle('active', tab === 'po');
+  document.getElementById('tab-projects').classList.toggle('active', tab === 'projects');
+}
+
+// ── Auth ───────────────────────────────────────────────────────
 function getDateRange() {
   const today = new Date();
   const start = new Date(today);
@@ -180,6 +272,7 @@ async function loadDashboard() {
   document.getElementById('error-msg').style.display = 'none';
   try {
     await fetchData();
+    await loadProjects();
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('dashboard-screen').style.display = 'block';
   } catch(e) {
@@ -195,6 +288,7 @@ function showError(msg) {
   el.style.display = 'block';
 }
 
+// ── PO Data ────────────────────────────────────────────────────
 async function fetchData() {
   const { today, start } = getDateRange();
   const path = `/odata/ASF/DB-DS%20PO%20Line%20Detail?StartDate=${start}&EndDate=${today}`;
@@ -224,6 +318,7 @@ async function refreshData() {
   document.getElementById('qty-table-wrap').innerHTML = '<div class="loading">Loading...</div>';
   document.getElementById('no-oa-wrap').innerHTML = '<div class="loading">Loading...</div>';
   await fetchData();
+  await loadProjects();
 }
 
 function toggleKpiFilter(filter) {
@@ -365,16 +460,20 @@ function renderTable() {
   const container = document.getElementById('table-container');
   if (!groups.length) { container.innerHTML = '<div class="loading">No results match your filters.</div>'; return; }
 
-  const NUM_COLS = 10;
-
   const rows = groups.map(({ orderNbr, lines }) => {
     const expanded = expandedOrders.has(orderNbr);
     const first = lines[0];
     const totalQty = lines.reduce((s, r) => s + (parseFloat(r.POLine_baseOpenQty) || 0), 0);
     const hasNoOA = lines.some(r => !r.VendorRef || r.VendorRef.toString().trim() === '');
-    const hasLate = lines.some(r => isLate(r.PromisedOn));
     const statuses = [...new Set(lines.map(r => (r.Status||'').trim()))];
     const vendorRefs = [...new Set(lines.map(r => (r.VendorRef||'').trim()).filter(Boolean))];
+    const latestPromise = lines.reduce((latest, r) => {
+      if (!r.PromisedOn) return latest;
+      return (!latest || new Date(r.PromisedOn) > new Date(latest)) ? r.PromisedOn : latest;
+    }, null);
+    const promisedLate = latestPromise && isLate(latestPromise);
+    const desc2vals = [...new Set(lines.map(r => (r.Description_2||'').trim()).filter(Boolean))];
+    const desc3vals = [...new Set(lines.map(r => (r.Description_3||'').trim()).filter(Boolean))];
 
     const statusBadges = statuses.map(s =>
       s === 'On Hold' ? '<span class="badge badge-hold">On Hold</span>' :
@@ -384,14 +483,6 @@ function renderTable() {
     const vendorRefDisplay = hasNoOA
       ? (vendorRefs.length ? vendorRefs.join(', ') + ' <span class="badge badge-nooa">+ No OA</span>' : '<span class="badge badge-nooa">No OA</span>')
       : vendorRefs.join(', ') || '—';
-
-    const latestPromise = lines.reduce((latest, r) => {
-      if (!r.PromisedOn) return latest;
-      return (!latest || new Date(r.PromisedOn) > new Date(latest)) ? r.PromisedOn : latest;
-    }, null);
-    const promisedLate = latestPromise && isLate(latestPromise);
-    const desc2vals = [...new Set(lines.map(r => (r.Description_2||'').trim()).filter(Boolean))];
-    const desc3vals = [...new Set(lines.map(r => (r.Description_3||'').trim()).filter(Boolean))];
 
     const groupRow = `<tr class="group-row${expanded?' expanded':''}" onclick="toggleOrder('${orderNbr}')">
       <td><span class="expand-icon">▶</span><span style="font-family:monospace;font-size:12px;font-weight:500;">${orderNbr||'—'}</span></td>
@@ -422,11 +513,11 @@ function renderTable() {
         return `<tr class="line-row">
           <td style="padding-left:32px;font-family:monospace;">${r.LineNbr||'—'}</td>
           <td>${r.InventoryID||'—'}</td>
-          <td title="${r.Description||''}" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;">${r.Description||'—'}</td>
+          <td title="${r.Description||''}">${r.Description||'—'}</td>
           <td>${noOA?'<span class="badge badge-nooa">No OA</span>':(r.VendorRef||'—')}</td>
           <td>${(r.Status||'').trim()==='On Hold'?'<span class="badge badge-hold">On Hold</span>':(r.Status||'').trim()==='Open'?'<span class="badge badge-open">Open</span>':(r.Status||'—')}</td>
           <td>${late?`<span class="badge badge-late">${fmtDate(r.PromisedOn)}</span>`:fmtDate(r.PromisedOn)}</td>
-          <td style="text-align:right;font-variant-numeric:tabular-nums;">${r.POLine_baseOpenQty!=null?Math.round(parseFloat(r.POLine_baseOpenQty)).toLocaleString():'—'}</td>
+          <td style="text-align:right;">${r.POLine_baseOpenQty!=null?Math.round(parseFloat(r.POLine_baseOpenQty)).toLocaleString():'—'}</td>
         </tr>`;
       }).join('')}` : '';
 
@@ -448,6 +539,146 @@ function renderTable() {
     </tr></thead>
     <tbody>${rows}</tbody>
   </table></div>`;
+}
+
+// ── Projects ───────────────────────────────────────────────────
+async function loadProjects() {
+  try {
+    const resp = await fetch(PROXY + '/projects');
+    projects = await resp.json();
+    renderProjects();
+  } catch(e) {
+    document.getElementById('projects-container').innerHTML = '<div class="loading">Unable to load projects.</div>';
+  }
+}
+
+function renderProjects() {
+  const search = (document.getElementById('project-search')?.value || '').toLowerCase();
+  const filtered = projects.filter(p =>
+    !search || [p.name, p.account, p.inventoryId, p.notes, p.status].some(v => v && v.toLowerCase().includes(search))
+  );
+  document.getElementById('project-count').textContent = `(${filtered.length} of ${projects.length})`;
+  const container = document.getElementById('projects-container');
+  if (!filtered.length) {
+    container.innerHTML = projects.length === 0
+      ? '<div class="empty-state">No upcoming projects yet. Click "+ Add project" to get started.</div>'
+      : '<div class="empty-state">No projects match your search.</div>';
+    return;
+  }
+  const statusClass = s => {
+    if (!s) return '';
+    if (s === 'Planning') return 'status-planning';
+    if (s === 'Pending approval') return 'status-pending';
+    if (s === 'Ready to order') return 'status-ready';
+    if (s === 'On hold') return 'status-onhold';
+    return '';
+  };
+  container.innerHTML = `<div style="overflow-x:auto;"><table class="projects-table">
+    <thead><tr>
+      <th>Project name</th>
+      <th>Account</th>
+      <th>Est. order date</th>
+      <th>Inventory ID</th>
+      <th style="text-align:right;">Est. qty</th>
+      <th>Status</th>
+      <th>Notes</th>
+      <th style="width:80px;"></th>
+    </tr></thead>
+    <tbody>${filtered.map(p => `<tr>
+      <td style="font-weight:500;">${p.name||'—'}</td>
+      <td>${p.account||'—'}</td>
+      <td>${p.orderDate ? fmtDate(p.orderDate) : '—'}</td>
+      <td>${p.inventoryId||'—'}</td>
+      <td style="text-align:right;">${p.qty ? parseInt(p.qty).toLocaleString() : '—'}</td>
+      <td>${p.status ? `<span class="status-badge ${statusClass(p.status)}">${p.status}</span>` : '—'}</td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${p.notes||''}">${p.notes||'—'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-edit" onclick="editProject('${p.id}')">Edit</button>
+        <button class="btn-delete" onclick="deleteProject('${p.id}')">Delete</button>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function showAddForm() {
+  editingProjectId = null;
+  document.getElementById('form-title').textContent = 'Add upcoming project';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-account').value = '';
+  document.getElementById('f-orderdate').value = '';
+  document.getElementById('f-inventory').value = '';
+  document.getElementById('f-qty').value = '';
+  document.getElementById('f-status').value = 'Planning';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('project-form').style.display = 'block';
+  document.getElementById('f-name').focus();
+}
+
+function editProject(id) {
+  const p = projects.find(p => p.id === id);
+  if (!p) return;
+  editingProjectId = id;
+  document.getElementById('form-title').textContent = 'Edit project';
+  document.getElementById('f-name').value = p.name || '';
+  document.getElementById('f-account').value = p.account || '';
+  document.getElementById('f-orderdate').value = p.orderDate || '';
+  document.getElementById('f-inventory').value = p.inventoryId || '';
+  document.getElementById('f-qty').value = p.qty || '';
+  document.getElementById('f-status').value = p.status || 'Planning';
+  document.getElementById('f-notes').value = p.notes || '';
+  document.getElementById('project-form').style.display = 'block';
+  document.getElementById('f-name').focus();
+}
+
+function cancelForm() {
+  editingProjectId = null;
+  document.getElementById('project-form').style.display = 'none';
+}
+
+async function saveProject() {
+  const payload = {
+    name: document.getElementById('f-name').value.trim(),
+    account: document.getElementById('f-account').value.trim(),
+    orderDate: document.getElementById('f-orderdate').value,
+    inventoryId: document.getElementById('f-inventory').value.trim(),
+    qty: document.getElementById('f-qty').value,
+    status: document.getElementById('f-status').value,
+    notes: document.getElementById('f-notes').value.trim(),
+  };
+  if (!payload.name) { alert('Project name is required.'); return; }
+  const btn = document.querySelector('.btn-save');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  try {
+    if (editingProjectId) {
+      payload.id = editingProjectId;
+      await fetch(PROXY + '/projects', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const idx = projects.findIndex(p => p.id === editingProjectId);
+      if (idx !== -1) projects[idx] = { ...projects[idx], ...payload };
+    } else {
+      const resp = await fetch(PROXY + '/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const newP = await resp.json();
+      projects.push(newP);
+    }
+    cancelForm();
+    renderProjects();
+  } catch(e) {
+    alert('Error saving project. Please try again.');
+  } finally {
+    btn.textContent = 'Save project';
+    btn.disabled = false;
+  }
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this project?')) return;
+  try {
+    await fetch(PROXY + '/projects', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    projects = projects.filter(p => p.id !== id);
+    renderProjects();
+  } catch(e) {
+    alert('Error deleting project. Please try again.');
+  }
 }
 </script>
 </body>
