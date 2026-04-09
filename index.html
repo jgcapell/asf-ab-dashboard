@@ -67,8 +67,6 @@
   .qty-table th { font-size: 12px; font-weight: 500; color: #666; padding: 6px 8px; text-align: left; border-bottom: 1px solid #e5e5e5; }
   .qty-table td { padding: 6px 8px; border-bottom: 1px solid #e5e5e5; }
   .qty-table tr:last-child td { border-bottom: none; }
-  .bar-wrap { background: #e5e5e5; border-radius: 99px; height: 6px; flex: 1; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 99px; background: #378add; }
   .refresh-btn { font-size: 13px; padding: 6px 14px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
   .refresh-btn:hover { background: #f1efe8; }
   .clear-filter-btn { font-size: 12px; padding: 4px 10px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #666; display: none; }
@@ -189,8 +187,24 @@
         </div>
         <div class="bottom-grid">
           <div class="panel">
-            <div class="section-title">Qty on order by inventory ID</div>
-            <div id="qty-table-wrap"><div class="loading">Loading...</div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+              <div class="section-title" style="margin:0;">Excess / Unallocated production</div>
+              <button class="btn-add" onclick="showExcessForm()" style="font-size:12px;padding:4px 12px;">+ Add</button>
+            </div>
+            <div id="excess-form" style="display:none;background:#f9f9f8;border:1px solid #e5e5e5;border-radius:8px;padding:10px;margin-bottom:10px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">AB PO #</label><input type="text" id="ex-po" placeholder="PO number" style="width:100%;font-size:12px;" /></div>
+                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Inventory ID</label><input type="text" id="ex-inventory" placeholder="Inventory ID" style="width:100%;font-size:12px;" /></div>
+                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Qty</label><input type="number" id="ex-qty" placeholder="0" min="0" style="width:100%;font-size:12px;" /></div>
+                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Production date</label><input type="date" id="ex-date" style="width:100%;font-size:12px;" /></div>
+                <div style="grid-column:1/-1;"><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Notes</label><input type="text" id="ex-notes" placeholder="Optional notes" style="width:100%;font-size:12px;" /></div>
+              </div>
+              <div style="display:flex;gap:6px;justify-content:flex-end;">
+                <button class="btn-cancel" onclick="cancelExcessForm()" style="font-size:12px;padding:5px 12px;">Cancel</button>
+                <button class="btn-save" id="ex-save-btn" onclick="saveExcessItem()" style="font-size:12px;padding:5px 12px;">Save</button>
+              </div>
+            </div>
+            <div id="excess-wrap"><div class="loading">Loading...</div></div>
           </div>
           <div class="panel">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
@@ -330,6 +344,7 @@ async function loadDashboard() {
     await fetchData();
     await loadProjects();
     await loadHotList();
+    await loadExcess();
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('dashboard-screen').style.display = 'block';
   } catch(e) {
@@ -360,7 +375,7 @@ async function fetchData() {
     return status === 'On Hold' || status === 'Open';
   }).filter(r => (r.ItemClass || '').trim() === 'AMERICANBILTRITESVT');
   renderKPIs();
-  renderQtyTable();
+  renderExcessTable();
   populateSalesRepFilter();
   renderTable();
   const { start: s, today: t } = getDateRange();
@@ -372,10 +387,10 @@ async function refreshData() {
   expandedOrders = new Set();
   updateKpiCardStates();
   document.getElementById('table-container').innerHTML = '<div class="loading">Refreshing...</div>';
-  document.getElementById('qty-table-wrap').innerHTML = '<div class="loading">Loading...</div>';
   await fetchData();
   await loadProjects();
   await loadHotList();
+  await loadExcess();
 }
 
 function toggleKpiFilter(filter) {
@@ -421,23 +436,119 @@ function renderKPIs() {
   document.getElementById('kpi-total').textContent = allData.length.toLocaleString();
 }
 
-function renderQtyTable() {
-  const qtyMap = {};
-  allData.forEach(r => {
-    const id = r.InventoryID || '(none)';
-    qtyMap[id] = (qtyMap[id] || 0) + (parseFloat(r.POLine_baseOpenQty) || 0);
-  });
-  const sorted = Object.entries(qtyMap).sort((a,b) => b[1]-a[1]);
-  const max = sorted[0] ? sorted[0][1] : 1;
-  const wrap = document.getElementById('qty-table-wrap');
-  if (!sorted.length) { wrap.innerHTML = '<div style="font-size:13px;color:#888;padding:1rem 0;">No data</div>'; return; }
-  wrap.innerHTML = `<div style="max-height:240px;overflow-y:auto;"><table class="qty-table">
-    <thead><tr><th>Inventory ID</th><th>Open qty</th><th style="width:80px;"></th></tr></thead>
-    <tbody>${sorted.map(([id,qty]) => `<tr>
-      <td>${id}</td><td>${Math.round(qty).toLocaleString()}</td>
-      <td><div style="display:flex;align-items:center;gap:6px;"><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round((qty/max)*100)}%"></div></div></div></td>
-    </tr>`).join('')}</tbody>
-  </table></div>`;
+// ── Excess / Unallocated Production ───────────────────────────
+let excessList = [];
+let editingExcessId = null;
+
+async function loadExcess() {
+  try {
+    const resp = await fetch(PROXY + '/excess');
+    excessList = await resp.json();
+  } catch(e) {
+    excessList = [];
+  }
+  renderExcessTable();
+}
+
+function renderExcessTable() {
+  const wrap = document.getElementById('excess-wrap');
+  if (!excessList.length) {
+    wrap.innerHTML = '<div style="font-size:13px;color:#888;padding:0.75rem 0;">No items yet. Click + Add to get started.</div>';
+    return;
+  }
+  const totalQty = excessList.reduce((s, i) => s + (parseFloat(i.qty) || 0), 0);
+  wrap.innerHTML = `<div style="max-height:200px;overflow-y:auto;">
+    <table class="qty-table" style="font-size:12px;">
+      <thead><tr>
+        <th>AB PO #</th><th>Inventory ID</th><th style="text-align:right;">Qty</th><th>Prod. date</th><th>Notes</th><th style="width:60px;"></th>
+      </tr></thead>
+      <tbody>${excessList.map(item => `<tr>
+        <td style="font-family:monospace;font-weight:500;">${item.po||'—'}</td>
+        <td>${item.inventoryId||'—'}</td>
+        <td style="text-align:right;">${item.qty ? parseFloat(item.qty).toLocaleString() : '—'}</td>
+        <td>${fmtDate(item.productionDate)}</td>
+        <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${item.notes||''}">${item.notes||'—'}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn-edit" onclick="editExcessItem('${item.id}')">Edit</button>
+          <button class="btn-delete" onclick="deleteExcessItem('${item.id}')">Del</button>
+        </td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>
+  <div style="border-top:1px solid #e5e5e5;margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-size:12px;color:#666;">Total qty</span>
+    <span style="font-size:14px;font-weight:500;color:#1a1a1a;">${Math.round(totalQty).toLocaleString()}</span>
+  </div>`;
+}
+
+function showExcessForm() {
+  editingExcessId = null;
+  document.getElementById('ex-po').value = '';
+  document.getElementById('ex-inventory').value = '';
+  document.getElementById('ex-qty').value = '';
+  document.getElementById('ex-date').value = '';
+  document.getElementById('ex-notes').value = '';
+  document.getElementById('excess-form').style.display = 'block';
+  document.getElementById('ex-po').focus();
+}
+
+function editExcessItem(id) {
+  const item = excessList.find(i => i.id === id);
+  if (!item) return;
+  editingExcessId = id;
+  document.getElementById('ex-po').value = item.po || '';
+  document.getElementById('ex-inventory').value = item.inventoryId || '';
+  document.getElementById('ex-qty').value = item.qty || '';
+  document.getElementById('ex-date').value = item.productionDate || '';
+  document.getElementById('ex-notes').value = item.notes || '';
+  document.getElementById('excess-form').style.display = 'block';
+  document.getElementById('ex-po').focus();
+}
+
+function cancelExcessForm() {
+  editingExcessId = null;
+  document.getElementById('excess-form').style.display = 'none';
+}
+
+async function saveExcessItem() {
+  const payload = {
+    po: document.getElementById('ex-po').value.trim(),
+    inventoryId: document.getElementById('ex-inventory').value.trim(),
+    qty: document.getElementById('ex-qty').value,
+    productionDate: document.getElementById('ex-date').value,
+    notes: document.getElementById('ex-notes').value.trim(),
+  };
+  if (!payload.po && !payload.inventoryId) { alert('AB PO # or Inventory ID is required.'); return; }
+  const btn = document.getElementById('ex-save-btn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+  try {
+    if (editingExcessId) {
+      payload.id = editingExcessId;
+      await fetch(PROXY + '/excess', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const idx = excessList.findIndex(i => i.id === editingExcessId);
+      if (idx !== -1) excessList[idx] = { ...excessList[idx], ...payload };
+    } else {
+      const resp = await fetch(PROXY + '/excess', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      excessList.push(await resp.json());
+    }
+    cancelExcessForm();
+    renderExcessTable();
+  } catch(e) {
+    alert('Error saving. Please try again.');
+  } finally {
+    btn.textContent = 'Save'; btn.disabled = false;
+  }
+}
+
+async function deleteExcessItem(id) {
+  if (!confirm('Remove this item?')) return;
+  try {
+    await fetch(PROXY + '/excess', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    excessList = excessList.filter(i => i.id !== id);
+    renderExcessTable();
+  } catch(e) {
+    alert('Error deleting. Please try again.');
+  }
 }
 
 // ── Hot List ───────────────────────────────────────────────────
@@ -623,7 +734,12 @@ function groupByOrder(lines) {
     if (!groups[r.OrderNbr]) { groups[r.OrderNbr] = []; order.push(r.OrderNbr); }
     groups[r.OrderNbr].push(r);
   });
-  return order.map(nbr => ({ orderNbr: nbr, lines: groups[nbr] }));
+  return order.map(nbr => ({ orderNbr: nbr, lines: groups[nbr] }))
+    .sort((a, b) => {
+      const dateA = a.lines[0]?.Date ? new Date(a.lines[0].Date) : new Date(0);
+      const dateB = b.lines[0]?.Date ? new Date(b.lines[0].Date) : new Date(0);
+      return dateB - dateA;
+    });
 }
 
 function renderTable() {
