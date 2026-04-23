@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASF Inventory Command</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:       #020c1a;
+    --surface:  #071524;
+    --border:   #0d2744;
+    --border2:  #0a1e32;
+    --muted:    #2d4a6b;
+    --dim:      #334155;
+    --text:     #cbd5e1;
+    --bright:   #f1f5f9;
+    --accent:   #38bdf8;
+    --critical: #ef4444;
+    --warn:     #f97316;
+    --caution:  #eab308;
+    --ok:       #22c55e;
+    --radius:   6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Mono', 'Courier New', monospace; background: var(--bg); color: var(--text); min-height: 100vh; }
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@800&display=swap');
+
+  /* ── Loading ── */
+  #loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 14px; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .loading-text { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Login ── */
+  #login-screen { display: none; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-card { width: 380px; padding: 40px 36px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; text-align: center; }
+  .login-logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--bright); margin-bottom: 4px; }
+  .login-sub-title { font-size: 10px; color: var(--dim); letter-spacing: 0.12em; margin-bottom: 32px; }
+  .login-btn { width: 100%; padding: 12px; background: #0d3060; border: 1px solid #1e4976; color: var(--accent); border-radius: var(--radius); font-size: 12px; font-family: inherit; font-weight: 600; letter-spacing: 0.08em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: background 0.2s; }
+  .login-btn:hover { background: #122d5c; }
+  .login-btn svg { flex-shrink: 0; }
+  .login-note { font-size: 10px; color: var(--muted); margin-top: 16px; line-height: 1.6; }
+  .error-box { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 10px 14px; border-radius: var(--radius); font-size: 11px; margin-bottom: 20px; display: none; text-align: left; }
+
+  /* ── Dashboard ── */
+  #dashboard { display: none; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, var(--bg), #071524, var(--bg)); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .header-left .title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--bright); letter-spacing: -0.02em; }
+  .header-left .subtitle { font-size: 10px; color: var(--dim); margin-top: 2px; letter-spacing: 0.1em; }
+  .header-right { display: flex; gap: 8px; align-items: center; }
+  .btn { background: transparent; border: 1px solid var(--border); color: var(--dim); padding: 6px 12px; border-radius: var(--radius); font-size: 10px; font-family: inherit; cursor: pointer; letter-spacing: 0.08em; transition: all 0.15s; white-space: nowrap; }
+  .btn:hover { border-color: var(--muted); color: var(--text); }
+  .btn-primary { background: #071e38; border-color: #1e4976; color: var(--accent); display: flex; align-items: center; gap: 6px; }
+  .btn-primary:hover { background: #0d2744; }
+  .btn-primary:disabled { color: var(--dim); cursor: wait; }
+  .spin { display: inline-block; animation: spin 1s linear infinite; }
+
+  /* Progress bar */
+  #progress-bar-wrap { background: #030d1c; border-bottom: 1px solid var(--border); padding: 10px 24px; display: none; }
+  .progress-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--dim); margin-bottom: 5px; }
+  .progress-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #1e4976, var(--accent)); border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+
+  /* Debug log */
+  #debug-log { background: #030d1c; border-bottom: 1px solid var(--border); padding: 10px 24px; max-height: 180px; overflow-y: auto; display: none; }
+  .log-header { font-size: 9px; color: var(--ok); letter-spacing: 0.12em; margin-bottom: 4px; }
+  .log-line { font-size: 10px; padding: 1px 0; font-family: monospace; color: var(--dim); }
+  .log-line.ok    { color: var(--ok); }
+  .log-line.error { color: var(--critical); }
+  .log-line.warn  { color: var(--warn); }
+
+  /* Error banner */
+  #error-banner { background: rgba(239,68,68,0.1); border-bottom: 1px solid rgba(239,68,68,0.3); color: #fca5a5; padding: 8px 24px; font-size: 11px; display: none; align-items: center; gap: 14px; }
+
+  /* Status pills */
+  #status-pills { display: none; gap: 6px; padding: 12px 24px; flex-wrap: wrap; border-bottom: 1px solid var(--border); align-items: center; }
+  .pill { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.12s; border: 1px solid var(--border); background: var(--surface); color: #475569; user-select: none; }
+  .pill .dot { font-size: 8px; }
+  .pill-count { color: var(--muted); font-weight: 400; }
+  .item-count { margin-left: auto; color: var(--muted); font-size: 10px; }
+
+  /* Controls */
+  #controls { display: none; gap: 8px; padding: 10px 24px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--border2); }
+  .ctrl-input, .ctrl-select { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: var(--radius); font-size: 11px; font-family: inherit; outline: none; cursor: pointer; }
+  .ctrl-input { width: 240px; cursor: text; }
+  .ctrl-input::placeholder { color: var(--muted); }
+  .ctrl-select option { background: var(--surface); }
+  .sort-dir-btn { background: var(--surface); border: 1px solid var(--border); color: #475569; padding: 6px 10px; border-radius: var(--radius); font-size: 12px; font-family: inherit; cursor: pointer; }
+
+  /* Table */
+  #table-wrap { overflow-x: auto; padding: 0 24px 40px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  thead th { text-align: left; padding: 7px 9px; color: var(--muted); font-weight: 600; font-size: 9px; letter-spacing: 0.12em; white-space: nowrap; background: var(--bg); cursor: pointer; user-select: none; border-bottom: 1px solid var(--border); }
+  thead th:hover { color: var(--accent); }
+  thead th.active { color: var(--accent); }
+  thead th.no-sort { cursor: default; }
+  thead th.no-sort:hover { color: var(--muted); }
+  tbody tr { border-bottom: 1px solid #071524; }
+  tbody tr:hover td { background: #0a1f36; }
+  tbody td { padding: 7px 9px; }
+
+  /* Badges */
+  .badge { padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; }
+  .badge-critical    { background: rgba(239,68,68,0.1);  color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+  .badge-reorder-now { background: rgba(249,115,22,0.1); color: #f97316; border: 1px solid rgba(249,115,22,0.25); }
+  .badge-reorder-soon{ background: rgba(234,179,8,0.1);  color: #eab308; border: 1px solid rgba(234,179,8,0.25); }
+  .badge-adequate    { background: rgba(34,197,94,0.1);  color: #22c55e; border: 1px solid rgba(34,197,94,0.25); }
+  .badge-no-movement { background: rgba(100,116,139,0.1);color: #64748b; border: 1px solid rgba(100,116,139,0.25); }
+
+  /* Bar */
+  .bar-wrap { display: flex; align-items: center; gap: 6px; min-width: 100px; }
+  .bar-track { flex: 1; height: 5px; background: #1e293b; border-radius: 3px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .bar-val   { font-size: 10px; color: #64748b; min-width: 32px; text-align: right; }
+
+  /* Empty */
+  .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 11px; }
+
+  /* Loading placeholder */
+  #loading-placeholder { text-align: center; padding: 70px 0; color: var(--muted); display: none; }
+  #loading-placeholder .big-spin { font-size: 32px; display: inline-block; animation: spin 1.5s linear infinite; margin-bottom: 14px; }
+  #loading-placeholder .lp-title { font-size: 11px; letter-spacing: 0.1em; color: var(--muted); }
+  #loading-placeholder .lp-sub   { font-size: 10px; color: var(--border2); margin-top: 6px; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0a1628; }
+  ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Initializing...</div>
+</div>
+
+<!-- Login screen -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">All South Flooring</div>
+    <div class="login-sub-title">INVENTORY COMMAND CENTER</div>
+    <div id="login-error" class="error-box"></div>
+    <button class="login-btn" onclick="startLogin()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+        <polyline points="10 17 15 12 10 7"/>
+        <line x1="15" y1="12" x2="3" y2="12"/>
+      </svg>
+      SIGN IN WITH ACUMATICA
+    </button>
+    <div class="login-note">Your credentials are handled directly by Acumatica.<br>This dashboard never stores your password.</div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="title">ASF INVENTORY COMMAND</div>
+      <div class="subtitle" id="header-subtitle">LIVE · ACUMATICA OData · 17 CLASSES</div>
+    </div>
+    <div class="header-right">
+      <button class="btn" onclick="toggleLog()">DEBUG LOG</button>
+      <button class="btn btn-primary" id="refresh-btn" onclick="loadData()">
+        <span id="refresh-icon">⟳</span> REFRESH
+      </button>
+      <button class="btn" onclick="logout()">SIGN OUT</button>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div id="progress-bar-wrap">
+    <div class="progress-labels">
+      <span id="progress-label">Loading...</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+
+  <!-- Debug log -->
+  <div id="debug-log">
+    <div class="log-header">QUERY LOG</div>
+    <div id="log-lines"></div>
+  </div>
+
+  <!-- Error banner -->
+  <div id="error-banner">
+    <span id="error-text"></span>
+    <span style="color:#f87171;cursor:pointer;text-decoration:underline" onclick="toggleLog()">debug log</span>
+  </div>
+
+  <!-- Status pills -->
+  <div id="status-pills">
+    <div class="pill" id="pill-critical"     onclick="toggleFilter('critical')"    ><span class="dot" style="color:#ef4444">●</span> CRITICAL     <span class="pill-count" id="cnt-critical">0</span></div>
+    <div class="pill" id="pill-reorder-now"  onclick="toggleFilter('reorder-now')" ><span class="dot" style="color:#f97316">●</span> REORDER NOW  <span class="pill-count" id="cnt-reorder-now">0</span></div>
+    <div class="pill" id="pill-reorder-soon" onclick="toggleFilter('reorder-soon')"><span class="dot" style="color:#eab308">●</span> REORDER SOON <span class="pill-count" id="cnt-reorder-soon">0</span></div>
+    <div class="pill" id="pill-adequate"     onclick="toggleFilter('adequate')"    ><span class="dot" style="color:#22c55e">●</span> ADEQUATE     <span class="pill-count" id="cnt-adequate">0</span></div>
+    <div class="pill" id="pill-no-movement"  onclick="toggleFilter('no-movement')" ><span class="dot" style="color:#64748b">●</span> NO MOVEMENT  <span class="pill-count" id="cnt-no-movement">0</span></div>
+    <div class="item-count" id="item-count">0 items</div>
+  </div>
+
+  <!-- Controls -->
+  <div id="controls">
+    <input class="ctrl-input" id="search-input" placeholder="Search SKU or description..." oninput="applyFilters()">
+    <select class="ctrl-select" id="class-filter" onchange="applyFilters()">
+      <option value="">All Classes</option>
+    </select>
+    <select class="ctrl-select" id="sort-select" onchange="applyFilters()">
+      <option value="priority">Replenishment Priority</option>
+      <option value="oh">On Hand</option>
+      <option value="avg">Avg Monthly Demand</option>
+      <option value="id">SKU A–Z</option>
+      <option value="desc">Description</option>
+      <option value="qty6">6-Mo Qty</option>
+      <option value="amt6">6-Mo Revenue</option>
+    </select>
+    <button class="sort-dir-btn" id="sort-dir-btn" onclick="toggleSortDir()">↑</button>
+  </div>
+
+  <!-- Table area -->
+  <div id="table-wrap">
+    <div id="loading-placeholder">
+      <div class="big-spin">⟳</div>
+      <div class="lp-title">FETCHING FROM ACUMATICA</div>
+      <div class="lp-sub">17 parallel OData queries · rows appear as each class loads</div>
+    </div>
+    <table id="inv-table" style="display:none">
+      <thead>
+        <tr>
+          <th class="no-sort">STATUS</th>
+          <th onclick="setSort('id')">SKU</th>
+          <th onclick="setSort('desc')">DESCRIPTION</th>
+          <th onclick="setSort('itemClass')">CLASS</th>
+          <th onclick="setSort('oh')" style="text-align:right">ON HAND</th>
+          <th onclick="setSort('av')" style="text-align:right">AVAILABLE</th>
+          <th onclick="setSort('po')" style="text-align:right">ON PO</th>
+          <th onclick="setSort('bo')" style="text-align:right">BACKORD</th>
+          <th onclick="setSort('qty6')" style="text-align:right">6-MO QTY</th>
+          <th onclick="setSort('amt6')" style="text-align:right">6-MO REV</th>
+          <th onclick="setSort('avg')" style="text-align:right">AVG/MO</th>
+          <th class="no-sort">DEPTH</th>
+        </tr>
+      </thead>
+      <tbody id="inv-tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const CONFIG = {
+  acumaticaUrl: 'https://allsouthflooring.acumatica.com',
+  clientId:     '0BD9FD66-3C29-7814-F513-DB09C75A8561@ASF',
+  clientSecret: 'MaDwg9sL9kB_dbM61OBgZQ',
+  scopes:       'api offline_access openid profile email',
+  redirectUri:  window.location.origin + window.location.pathname,
+  odataBase:    'https://allsouthflooring.acumatica.com/OData/ASF',
+};
+
+const ALL_CLASSES = [
+  "ALLCOVERINGS    LAMINATE      ",
+  "ALLCOVERINGS    SPCCLICK      ",
+  "ACTIVEQUICKSHIP TILES         ",
+  "BBL             LAMINATE      ",
+  "BENCHWICK       SPC           ",
+  "LEGGETT&PLATT   UNDERLAYMENT  ",
+  "MAXXON          SURFACEPREP   ",
+  "NOX             LVT           ",
+  "NOX             EVT           ",
+  "RESPONSIVE      DRYBACKLVT    ",
+  "RESPONSIVE      MOLDINGS      ",
+  "RESPONSIVE      SPCCLICK      ",
+  "RESPONSIVE      WPCCLICK      ",
+  "STANDARDCARPETS CARPETTILE    ",
+  "TAYLOR          ADHESIVES     ",
+  "USMILLS         LAMINATE      ",
+  "USMILLS         MOLDINGS      "
+];
+
+const SIX_MONTHS_AGO = (() => {
+  const d = new Date(); d.setMonth(d.getMonth() - 6);
+  return d.toISOString().slice(0, 10);
+})();
+
+// ─── AUTH STATE ──────────────────────────────────────────────────────────────
+let auth = { accessToken: null, refreshToken: null };
+
+function startLogin() {
+  const state = Math.random().toString(36).substring(2);
+  sessionStorage.setItem('oauth_state', state);
+  const p = new URLSearchParams({
+    client_id:     CONFIG.clientId,
+    response_type: 'code',
+    redirect_uri:  CONFIG.redirectUri,
+    scope:         CONFIG.scopes,
+    state,
+  });
+  window.location.href = `${CONFIG.acumaticaUrl}/identity/connect/authorize?${p}`;
+}
+
+async function handleCallback(code, state) {
+  const saved = sessionStorage.getItem('oauth_state');
+  if (state !== saved) { showLoginError('OAuth state mismatch. Please try again.'); return; }
+  setLoadingText('Signing you in...');
+  try {
+    const resp = await fetch(`${CONFIG.acumaticaUrl}/identity/connect/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type:    'authorization_code',
+        code,
+        redirect_uri:  CONFIG.redirectUri,
+        client_id:     CONFIG.clientId,
+        client_secret: CONFIG.clientSecret,
+      }),
+    });
+    if (!resp.ok) { const t = await resp.text(); throw new Error(`Token exchange failed (${resp.status}): ${t.slice(0,200)}`); }
+    const tokens = await resp.json();
+    auth.accessToken  = tokens.access_token;
+    auth.refreshToken = tokens.refresh_token;
+    window.history.replaceState({}, '', window.location.pathname);
+    showDashboard();
+    loadData();
+  } catch (e) {
+    showLoginError(e.message);
+  }
+}
+
+async function refreshToken() {
+  const resp = await fetch(`${CONFIG.acumaticaUrl}/identity/connect/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type:    'refresh_token',
+      refresh_token: auth.refreshToken,
+      client_id:     CONFIG.clientId,
+      client_secret: CONFIG.clientSecret,
+    }),
+  });
+  if (!resp.ok) { logout(); throw new Error('Session expired. Please log in again.'); }
+  const t = await resp.json();
+  auth.accessToken  = t.access_token;
+  auth.refreshToken = t.refresh_token || auth.refreshToken;
+}
+
+function logout() {
+  auth = { accessToken: null, refreshToken: null };
+  allRows = []; filteredRows = [];
+  document.getElementById('dashboard').style.display    = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  hideLoadingOverlay();
+}
+
+// ─── OData fetch with auto-pagination ────────────────────────────────────────
+async function odataGet(path, params = {}) {
+  const url = new URL(`${CONFIG.odataBase}/${path}`);
+  url.searchParams.set('$format', 'json');
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+
+  const all = [];
+  let next = url.toString();
+  while (next) {
+    const res = await fetch(next, {
+      headers: { Authorization: `Bearer ${auth.accessToken}`, Accept: 'application/json' }
+    });
+    if (res.status === 401 && auth.refreshToken) {
+      await refreshToken();
+      // retry once
+      const res2 = await fetch(next, { headers: { Authorization: `Bearer ${auth.accessToken}`, Accept: 'application/json' } });
+      if (!res2.ok) throw new Error(`OData ${res2.status}`);
+      const j2 = await res2.json();
+      all.push(...(j2.value || []));
+      next = j2['@odata.nextLink'] || null;
+      continue;
+    }
+    if (!res.ok) { const t = await res.text(); throw new Error(`OData ${res.status}: ${t.slice(0,150)}`); }
+    const j = await res.json();
+    all.push(...(j.value || (Array.isArray(j) ? j : [])));
+    next = j['@odata.nextLink'] || null;
+  }
+  return all;
+}
+
+// ─── Data loading ─────────────────────────────────────────────────────────────
+let allRows = [], filteredRows = [];
+let sortKey = 'priority', sortDir = 1;
+let activeFilter = null;
+
+async function loadData() {
+  setLoadingState(true);
+  clearError();
+  clearLog();
+  allRows = []; filteredRows = [];
+  renderTable([]);
+  document.getElementById('loading-placeholder').style.display = 'block';
+  document.getElementById('inv-table').style.display = 'none';
+
+  let doneClasses = 0;
+  const total = ALL_CLASSES.length + 1;
+
+  try {
+    addLog(`Launching ${ALL_CLASSES.length} parallel inventory queries...`);
+
+    // Phase 1: parallel per-class queries
+    const results = await Promise.allSettled(ALL_CLASSES.map(async cls => {
+      const safe = cls.replace(/'/g, "''");
+      const rows = await odataGet('DB-On hand inventory summary', {
+        '$select': 'InventoryID,InventoryDescription,ItemClass,ItemStatus,SiteOnHand,SiteAvailable,QtyPurchaseOrders,QtySOBackordered,UnitofMeasure',
+        '$filter': `ItemClass eq '${safe}'`
+      });
+      doneClasses++;
+      setProgress(doneClasses, total, `INVENTORY — ${doneClasses} / ${ALL_CLASSES.length} classes`);
+      addLog(`✓ ${cls.trim()} — ${rows.length} rows`, 'ok');
+      return rows;
+    }));
+
+    const inventory = results.flatMap((r, i) => {
+      if (r.status === 'fulfilled') return r.value;
+      addLog(`✗ FAILED: ${ALL_CLASSES[i].trim()} — ${r.reason?.message || r.reason}`, 'error');
+      return [];
+    });
+
+    addLog(`✓ Inventory total: ${inventory.length} rows`, 'ok');
+
+    // Phase 2: sales
+    setProgress(doneClasses, total, `SALES — fetching since ${SIX_MONTHS_AGO}...`);
+    addLog(`Fetching sales data since ${SIX_MONTHS_AGO}...`);
+
+    const salesRaw = await odataGet('InvoicedItems', {
+      '$select': 'InventoryID,Quantity,ExtAmount,InvoiceDate',
+      '$filter': `InvoiceDate ge datetime'${SIX_MONTHS_AGO}T00:00:00'`
+    });
+    addLog(`✓ Sales rows: ${salesRaw.length} — aggregating...`, 'ok');
+
+    // Aggregate sales client-side
+    const salesMap = {};
+    for (const s of salesRaw) {
+      const id = (s.InventoryID || '').trim(); if (!id) continue;
+      if (!salesMap[id]) salesMap[id] = { qty: 0, amt: 0, min: Infinity, max: -Infinity };
+      salesMap[id].qty += Number(s.Quantity  || 0);
+      salesMap[id].amt += Number(s.ExtAmount || 0);
+      const t = s.InvoiceDate ? new Date(s.InvoiceDate).getTime() : null;
+      if (t) { salesMap[id].min = Math.min(salesMap[id].min, t); salesMap[id].max = Math.max(salesMap[id].max, t); }
+    }
+    for (const id in salesMap) {
+      const v = salesMap[id];
+      const t1 = new Date(v.min), t2 = new Date(v.max);
+      const mo = Math.max((t2.getFullYear()-t1.getFullYear())*12+(t2.getMonth()-t1.getMonth())+1, 1);
+      salesMap[id].avg = salesMap[id].qty / mo;
+    }
+
+    // Build rows
+    allRows = inventory.map(inv => {
+      const id = (inv.InventoryID || '').trim();
+      const sd = salesMap[id] || { qty: 0, amt: 0, avg: 0 };
+      const oh = Number(inv.SiteOnHand        || 0);
+      const po = Number(inv.QtyPurchaseOrders || 0);
+      const bo = Number(inv.QtySOBackordered  || 0);
+      const av = Number(inv.SiteAvailable     || 0);
+      return {
+        id, desc: (inv.InventoryDescription || '').trim(),
+        itemClass: (inv.ItemClass || '').trim(),
+        uom: (inv.UnitofMeasure || '').trim(),
+        oh, av, po, bo,
+        avg: sd.avg, qty6: sd.qty, amt6: sd.amt,
+        status: calcStatus(oh, sd.avg, po, bo)
+      };
+    });
+
+    setProgress(total, total, 'COMPLETE');
+    const ts = new Date().toLocaleTimeString();
+    document.getElementById('header-subtitle').textContent = `LIVE · ACUMATICA OData · 17 CLASSES · ${ts}`;
+    addLog('All data loaded.', 'ok');
+    buildClassFilter();
+    updateStatusCounts();
+    applyFilters();
+
+  } catch (e) {
+    showError(e.message);
+    addLog('ERROR: ' + e.message, 'error');
+  } finally {
+    setLoadingState(false);
+    document.getElementById('loading-placeholder').style.display = 'none';
+    document.getElementById('inv-table').style.display = allRows.length ? 'table' : 'none';
+  }
+}
+
+// ─── Replenishment ────────────────────────────────────────────────────────────
+function calcStatus(oh, avg, po, bo) {
+  if (avg <= 0) return { key: 'no-movement',  label: 'No Movement', priority: 4 };
+  const weeks = (oh / avg) * 4.33, net = oh + po - bo;
+  if (net <= 0 || weeks < 1) return { key: 'critical',     label: 'Critical',     priority: 0 };
+  if (weeks < 3)             return { key: 'reorder-now',  label: 'Reorder Now',  priority: 1 };
+  if (weeks < 6)             return { key: 'reorder-soon', label: 'Reorder Soon', priority: 2 };
+  return                            { key: 'adequate',     label: 'Adequate',     priority: 3 };
+}
+
+// ─── Filtering / Sorting ──────────────────────────────────────────────────────
+function applyFilters() {
+  const search = document.getElementById('search-input').value.toLowerCase().trim();
+  const cls    = document.getElementById('class-filter').value;
+  sortKey      = document.getElementById('sort-select').value;
+
+  filteredRows = allRows.filter(r => {
+    if (search && !r.id.toLowerCase().includes(search) && !r.desc.toLowerCase().includes(search)) return false;
+    if (cls && r.itemClass !== cls) return false;
+    if (activeFilter && r.status.key !== activeFilter) return false;
+    return true;
+  });
+
+  filteredRows.sort((a, b) => {
+    let av = sortKey === 'priority' ? a.status.priority : a[sortKey];
+    let bv = sortKey === 'priority' ? b.status.priority : b[sortKey];
+    if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv||'').toLowerCase(); }
+    return (av < bv ? -1 : av > bv ? 1 : 0) * sortDir;
+  });
+
+  renderTable(filteredRows);
+  document.getElementById('item-count').textContent = `${filteredRows.length} / ${allRows.length} ITEMS`;
+  updateSortHeaders();
+}
+
+let sortDirAsc = true;
+function toggleSortDir() {
+  sortDirAsc = !sortDirAsc;
+  sortDir = sortDirAsc ? 1 : -1;
+  document.getElementById('sort-dir-btn').textContent = sortDirAsc ? '↑' : '↓';
+  applyFilters();
+}
+
+function setSort(key) {
+  document.getElementById('sort-select').value = key;
+  applyFilters();
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('active'));
+}
+
+function toggleFilter(key) {
+  activeFilter = (activeFilter === key) ? null : key;
+  document.querySelectorAll('.pill').forEach(p => {
+    p.style.background = ''; p.style.borderColor = ''; p.style.color = '';
+  });
+  if (activeFilter) {
+    const colors = { critical: '#ef4444', 'reorder-now': '#f97316', 'reorder-soon': '#eab308', adequate: '#22c55e', 'no-movement': '#64748b' };
+    const c = colors[activeFilter];
+    const el = document.getElementById(`pill-${activeFilter}`);
+    if (el) { el.style.background = c + '25'; el.style.borderColor = c + '88'; el.style.color = c; }
+  }
+  applyFilters();
+}
+
+function buildClassFilter() {
+  const sel = document.getElementById('class-filter');
+  const classes = [...new Set(allRows.map(r => r.itemClass).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">All Classes</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+function updateStatusCounts() {
+  const c = { critical: 0, 'reorder-now': 0, 'reorder-soon': 0, adequate: 0, 'no-movement': 0 };
+  allRows.forEach(r => { if (c[r.status.key] !== undefined) c[r.status.key]++; });
+  document.getElementById('cnt-critical').textContent     = `(${c.critical})`;
+  document.getElementById('cnt-reorder-now').textContent  = `(${c['reorder-now']})`;
+  document.getElementById('cnt-reorder-soon').textContent = `(${c['reorder-soon']})`;
+  document.getElementById('cnt-adequate').textContent     = `(${c.adequate})`;
+  document.getElementById('cnt-no-movement').textContent  = `(${c['no-movement']})`;
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function renderTable(rows) {
+  const maxOH = Math.max(...rows.map(r => r.oh), 1);
+  const barColors = { critical:'#ef4444','reorder-now':'#f97316','reorder-soon':'#eab308',adequate:'#22c55e','no-movement':'#64748b' };
+
+  const tbody = document.getElementById('inv-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="12" class="empty-state">No items match your filters.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const pct  = Math.min((r.oh / maxOH) * 100, 100).toFixed(1);
+    const color = barColors[r.status.key];
+    const ohColor  = r.oh > 0 ? '#cbd5e1' : '#ef4444';
+    const avColor  = r.av > 0 ? '#22c55e' : '#ef4444';
+    const poColor  = r.po > 0 ? '#38bdf8' : '#1e3a5f';
+    const boColor  = r.bo > 0 ? '#f97316' : '#1e3a5f';
+    const qty6html = r.qty6 > 0 ? r.qty6.toFixed(0) : '<span style="color:#1e3a5f">—</span>';
+    const amt6html = r.amt6 > 0 ? `$${r.amt6.toLocaleString('en-US',{maximumFractionDigits:0})}` : '<span style="color:#1e3a5f">—</span>';
+    const avgHtml  = r.avg  > 0 ? r.avg.toFixed(1) : '<span style="color:#1e3a5f">—</span>';
+
+    return `<tr>
+      <td><span class="badge badge-${r.status.key}">${r.status.label}</span></td>
+      <td style="color:#38bdf8;font-weight:500;white-space:nowrap">${r.id}</td>
+      <td style="color:#94a3b8;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.desc}">${r.desc||'—'}</td>
+      <td style="color:#334155;font-size:10px;white-space:nowrap">${r.itemClass||'—'}</td>
+      <td style="color:${ohColor};text-align:right;font-weight:${r.oh===0?700:400}">${r.oh.toFixed(0)}<span style="color:#2d4a6b;font-size:9px;margin-left:3px">${r.uom}</span></td>
+      <td style="color:${avColor};text-align:right">${r.av.toFixed(0)}</td>
+      <td style="color:${poColor};text-align:right">${r.po.toFixed(0)}</td>
+      <td style="color:${boColor};text-align:right">${r.bo.toFixed(0)}</td>
+      <td style="color:#64748b;text-align:right">${qty6html}</td>
+      <td style="color:#64748b;text-align:right">${amt6html}</td>
+      <td style="color:#94a3b8;text-align:right;font-weight:500">${avgHtml}</td>
+      <td>
+        <div class="bar-wrap">
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+          <span class="bar-val">${r.oh.toFixed(0)}</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── UI helpers ───────────────────────────────────────────────────────────────
+function setLoadingState(on) {
+  const btn = document.getElementById('refresh-btn');
+  const icon = document.getElementById('refresh-icon');
+  btn.disabled = on;
+  icon.className = on ? 'spin' : '';
+  icon.textContent = '⟳';
+  document.getElementById('progress-bar-wrap').style.display = on ? 'block' : 'none';
+  if (allRows.length > 0 || !on) {
+    document.getElementById('status-pills').style.display = 'flex';
+    document.getElementById('controls').style.display = 'flex';
+  }
+}
+
+function setProgress(done, total, label) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progress-fill').style.width  = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+  document.getElementById('progress-pct').textContent   = pct + '%';
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-banner');
+  document.getElementById('error-text').textContent = '⚠ ' + msg;
+  el.style.display = 'flex';
+}
+
+function clearError() { document.getElementById('error-banner').style.display = 'none'; }
+
+function showLoginError(msg) {
+  hideLoadingOverlay();
+  document.getElementById('loading-overlay').style.display = 'none';
+  document.getElementById('login-screen').style.display    = 'flex';
+  const el = document.getElementById('login-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+function addLog(msg, type = '') {
+  const div = document.createElement('div');
+  div.className = 'log-line' + (type ? ' ' + type : '');
+  div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  document.getElementById('log-lines').appendChild(div);
+  document.getElementById('debug-log').scrollTop = 9999;
+}
+
+function clearLog() { document.getElementById('log-lines').innerHTML = ''; }
+
+let logVisible = false;
+function toggleLog() {
+  logVisible = !logVisible;
+  document.getElementById('debug-log').style.display = logVisible ? 'block' : 'none';
+  document.querySelector('.btn[onclick="toggleLog()"]').textContent = logVisible ? 'HIDE LOG' : 'DEBUG LOG';
+}
+
+function showDashboard() {
+  hideLoadingOverlay();
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display    = 'block';
+}
+
+function setLoadingText(t) { document.getElementById('loading-text').textContent = t; }
+function hideLoadingOverlay() { document.getElementById('loading-overlay').style.display = 'none'; }
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+(async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const code  = params.get('code');
+  const state = params.get('state');
+  const error = params.get('error');
+
+  if (error) {
+    showLoginError('Login error: ' + (params.get('error_description') || error));
+    return;
+  }
+
+  if (code && state) {
+    await handleCallback(code, state);
+    return;
+  }
+
+  // No auth — show login
+  hideLoadingOverlay();
+  document.getElementById('login-screen').style.display = 'flex';
+})();
+</script>
+</body>
+</html>
