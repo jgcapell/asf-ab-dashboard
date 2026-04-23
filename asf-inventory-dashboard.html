@@ -261,7 +261,8 @@ const CONFIG = {
   clientSecret: 'djA-sMyV_8128aNE8g5IKg',
   scopes:       'api offline_access openid profile email',
   redirectUri:  window.location.origin + window.location.pathname,
-  odataBase:    'https://allsouthflooring.acumatica.com/OData/ASF',
+  // Cloudflare Worker — proxies token exchange + OData to bypass CORS
+  workerUrl:    'https://asf-inventory-dashboard.greg-capell.workers.dev',
 };
 
 const ALL_CLASSES = [
@@ -310,7 +311,7 @@ async function handleCallback(code, state) {
   if (state !== saved) { showLoginError('OAuth state mismatch. Please try again.'); return; }
   setLoadingText('Signing you in...');
   try {
-    const resp = await fetch(`${CONFIG.acumaticaUrl}/identity/connect/token`, {
+    const resp = await fetch(`${CONFIG.workerUrl}/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -334,7 +335,7 @@ async function handleCallback(code, state) {
 }
 
 async function refreshToken() {
-  const resp = await fetch(`${CONFIG.acumaticaUrl}/identity/connect/token`, {
+  const resp = await fetch(`${CONFIG.workerUrl}/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -360,13 +361,21 @@ function logout() {
 
 // ─── OData fetch with auto-pagination ────────────────────────────────────────
 async function odataGet(path, params = {}) {
-  const url = new URL(`${CONFIG.odataBase}/${path}`);
+  // Route through Cloudflare Worker to bypass CORS
+  const url = new URL(`${CONFIG.workerUrl}/odata/${encodeURIComponent(path)}`);
   url.searchParams.set('$format', 'json');
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
   const all = [];
   let next = url.toString();
   while (next) {
+    // For nextLink URLs (from Acumatica pagination), re-route through worker
+    if (next.includes('allsouthflooring.acumatica.com')) {
+      const nextUrl = new URL(next);
+      const workerNext = new URL(`${CONFIG.workerUrl}/odata/${encodeURIComponent(nextUrl.pathname.replace('/OData/ASF/', ''))}`);
+      nextUrl.searchParams.forEach((v, k) => workerNext.searchParams.set(k, v));
+      next = workerNext.toString();
+    }
     const res = await fetch(next, {
       headers: { Authorization: `Bearer ${auth.accessToken}`, Accept: 'application/json' }
     });
