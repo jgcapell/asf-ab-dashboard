@@ -871,9 +871,9 @@ async function loadData() {
     step(`OPPORTUNITIES — ${D.opportunities.length} rows`);
 
     // 5. Aggregate — split using _year tag set during fetch
-    D.curSales   = D.sales.filter(r => r._year === fetchYear);
-    D.priorSales = D.sales.filter(r => r._year === priorYear);
-    D.trailing12 = aggregateByPeriod(D.sales); // still use both for trailing chart
+    D.curSales   = D.sales.filter(r => r._year === curFyLabel);
+    D.priorSales = D.sales.filter(r => r._year === priFyLabel);
+    D.trailing12 = aggregateByPeriod(D.sales); // both years for trailing chart
     D.salesByClass = aggregateByClass(D.curSales);
     step('AGGREGATION COMPLETE');
 
