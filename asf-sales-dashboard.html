@@ -63,6 +63,25 @@
   .hbtn.primary:hover { background: #4a7db8; }
   .hbtn.primary:disabled { opacity: 0.5; cursor: wait; }
 
+  /* Global customer filter */
+  #cust-filter-wrap { display: none; align-items: center; gap: 8px; }
+  #cust-filter-wrap label { font-size: 10px; color: rgba(255,255,255,0.55); font-weight: 600; letter-spacing: 0.07em; white-space: nowrap; }
+  .cust-filter-combo { position: relative; }
+  #global-cust-input { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #fff; padding: 5px 28px 5px 10px; border-radius: 6px; font-size: 11px; font-family: inherit; font-weight: 500; outline: none; width: 180px; }
+  #global-cust-input::placeholder { color: rgba(255,255,255,0.4); }
+  #global-cust-input:focus { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.18); }
+  .cust-clear-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; display: none; }
+  .cust-clear-btn:hover { color: #fff; }
+  #cust-dropdown { position: absolute; top: calc(100% + 4px); left: 0; width: 260px; background: #fff; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(30,80,128,0.18); z-index: 1000; max-height: 240px; overflow-y: auto; display: none; }
+  .cust-drop-item { padding: 8px 12px; font-size: 12px; color: var(--text); cursor: pointer; border-bottom: 1px solid var(--border2); font-weight: 500; }
+  .cust-drop-item:last-child { border-bottom: none; }
+  .cust-drop-item:hover { background: #eef4fb; color: var(--asf-navy); }
+  .cust-drop-item strong { color: var(--asf-blue); }
+  /* Active customer filter banner */
+  #cust-filter-banner { background: rgba(91,143,204,0.10); border-bottom: 1px solid rgba(91,143,204,0.22); padding: 6px 28px; font-size: 11px; color: var(--asf-navy); font-weight: 600; display: none; align-items: center; gap: 10px; }
+  #cust-filter-banner button { background: none; border: 1px solid rgba(30,80,128,0.25); color: var(--asf-navy); border-radius: 4px; padding: 2px 8px; font-size: 10px; font-family: inherit; font-weight: 700; cursor: pointer; }
+  #cust-filter-banner button:hover { background: rgba(30,80,128,0.08); }
+
   /* Rep selector in header */
   #rep-selector-wrap { display: none; align-items: center; gap: 8px; }
   #rep-selector-wrap label { font-size: 10px; color: rgba(255,255,255,0.55); font-weight: 600; letter-spacing: 0.07em; white-space: nowrap; }
@@ -226,6 +245,15 @@
       </div>
     </div>
     <div class="header-right">
+      <div id="cust-filter-wrap">
+        <label>CUSTOMER:</label>
+        <div class="cust-filter-combo">
+          <input id="global-cust-input" type="text" placeholder="All customers…"
+                 oninput="onCustFilterInput()" onfocus="showCustDropdown()" autocomplete="off">
+          <button class="cust-clear-btn" id="cust-clear-btn" onclick="clearCustFilter()" title="Clear">✕</button>
+          <div id="cust-dropdown"></div>
+        </div>
+      </div>
       <div id="rep-selector-wrap">
         <label for="global-rep-select">VIEW REP:</label>
         <select id="global-rep-select" onchange="onRepFilterChange()">
@@ -256,6 +284,11 @@
     <div id="log-lines"></div>
   </div>
 
+  <div id="cust-filter-banner">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <span>Filtered by customer: <strong id="cust-banner-name"></strong></span>
+    <button onclick="clearCustFilter()">✕ Clear</button>
+  </div>
   <div id="rep-lock-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     <span id="rep-lock-text">Viewing your data only</span>
@@ -302,10 +335,10 @@
         <div class="card">
           <div class="card-hdr"><span class="card-title">Annual Budget / BHAG</span></div>
           <div class="card-body">
-            <div class="kpi-val" style="font-size:20px;color:var(--asf-navy)">$17.71M</div>
-            <div class="kpi-sub">Budget target (FY 2025)</div>
-            <div class="kpi-val" style="font-size:17px;color:var(--asf-green);margin-top:8px">$19.66M</div>
-            <div class="kpi-sub">BHAG target (FY 2025)</div>
+            <div class="kpi-val" style="font-size:20px;color:var(--asf-navy)" id="kpi-annual-budget">$17.71M</div>
+            <div class="kpi-sub" id="kpi-annual-budget-sub">Budget target (FY 2025)</div>
+            <div class="kpi-val" style="font-size:17px;color:var(--asf-green);margin-top:8px" id="kpi-annual-bhag">$19.66M</div>
+            <div class="kpi-sub" id="kpi-annual-bhag-sub">BHAG target (FY 2025)</div>
           </div>
         </div>
       </div>
@@ -409,7 +442,7 @@
           <div class="card-body"><div class="kpi-val" id="cust-kpi-count">—</div><div class="kpi-sub">active accounts</div></div>
         </div>
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Avg Days Past Due</span></div>
+          <div class="card-hdr"><span class="card-title">Avg Days to Pay</span></div>
           <div class="card-body"><div class="kpi-val" id="cust-kpi-days" style="color:var(--yellow)">—</div><div class="kpi-sub">across all customers</div></div>
         </div>
         <div class="card">
@@ -439,7 +472,7 @@
               <th>Sales Rep</th>
               <th style="text-align:right">YTD Sales</th>
               <th style="text-align:right">Invoices</th>
-              <th style="text-align:right">AR Days Past Due</th>
+              <th style="text-align:right">Avg Days to Pay</th>
               <th style="text-align:right">Credit Limit</th>
               <th>Terms</th>
               <th style="text-align:right">Displays Placed</th>
@@ -530,22 +563,35 @@ const CONFIG = {
 // ─── BUDGET / BHAG DATA (from 2025-2026_Budget_BHAG.xlsx) ────────────────────
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-const BUDGET_MONTHLY = [
-  1298733.33, 1298733.33, 1298733.33,
-  1394957.67, 1394957.67, 1394957.67,
-  1681859.67, 1681859.67, 1681859.67,
-  1527782.67, 1527782.67, 1527782.67,
-];
-const BHAG_MONTHLY = [
-  1441481.47, 1441481.47, 1441481.47,
-  1548282.15, 1548282.15, 1548282.15,
-  1866718.51, 1866718.51, 1866718.51,
-  1695706.39, 1695706.39, 1695706.39,
-];
-
-// Cumulative
+// Company-wide cumulative targets (seasonal weights: Q1=22%, Q2=23.63%, Q3=28.49%, Q4=25.88%)
+const BUDGET_MONTHLY = [1298733.33,1298733.33,1298733.33,1394957.67,1394957.67,1394957.67,1681859.67,1681859.67,1681859.67,1527782.67,1527782.67,1527782.67];
+const BHAG_MONTHLY   = [1441481.47,1441481.47,1441481.47,1548282.15,1548282.15,1548282.15,1866718.51,1866718.51,1866718.51,1695706.39,1695706.39,1695706.39];
 const BUDGET_CUM = BUDGET_MONTHLY.reduce((acc,v,i) => { acc.push((acc[i-1]||0)+v); return acc; }, []);
 const BHAG_CUM   = BHAG_MONTHLY.reduce((acc,v,i)   => { acc.push((acc[i-1]||0)+v); return acc; }, []);
+
+// Per-rep annual budget + BHAG, distributed by seasonal weights
+const REP_TARGETS = {
+  'Anthony Deel':    { sub:'000-24', annualBudget:1400000,  annualBhag:1571744.95, budgetCum:[102666.67,205333.34,308000.01,418273.34,528546.67,638820.0,771773.33,904726.66,1037679.99,1158453.32,1279226.65,1399999.98], bhagCum:[115261.3,230522.6,345783.9,469585.01,593386.12,717187.23,866450.61,1015713.99,1164977.37,1300566.57,1436155.77,1571744.97] },
+  'Austin Jones':    { sub:'000-32', annualBudget:855000,   annualBhag:1178808.71, budgetCum:[62700.0,125400.0,188100.0,255445.5,322791.0,390136.5,471333.0,552529.5,633726.0,707484.0,781242.0,855000.0], bhagCum:[86445.97,172891.94,259337.91,352188.74,445039.57,537890.4,649837.93,761785.46,873732.99,975424.89,1077116.79,1178808.69] },
+  'Bob Brown':       { sub:'000-25', annualBudget:520000,   annualBhag:589404.35,  budgetCum:[38133.33,76266.66,114399.99,155358.66,196317.33,237276.0,286658.67,336041.34,385424.01,430282.68,475141.35,520000.02], bhagCum:[43222.99,86445.98,129668.97,176094.39,222519.81,268945.23,324919.0,380892.77,436866.54,487712.49,538558.44,589404.39] },
+  'Bobby Townsend':  { sub:'000-39', annualBudget:1000000,  annualBhag:1080574.65, budgetCum:[73333.33,146666.66,219999.99,298766.66,377533.33,456300.0,551266.67,646233.34,741200.01,827466.68,913733.35,1000000.02], bhagCum:[79242.14,158484.28,237726.42,322839.68,407952.94,493066.2,595684.77,698303.34,800921.91,894139.48,987357.05,1080574.62] },
+  'Jason Beamer':    { sub:'000-44', annualBudget:500000,   annualBhag:628697.98,  budgetCum:[36666.67,73333.34,110000.01,149383.34,188766.67,228150.0,275633.33,323116.66,370599.99,413733.32,456866.65,499999.98], bhagCum:[46104.52,92209.04,138313.56,187834.0,237354.44,286874.88,346580.23,406285.58,465990.93,520226.61,574462.29,628697.97] },
+  'Damon Lockhart':  { sub:'000-36', annualBudget:750000,   annualBhag:1178808.71, budgetCum:[55000.0,110000.0,165000.0,224075.0,283150.0,342225.0,413450.0,484675.0,555900.0,620600.0,685300.0,750000.0], bhagCum:[86445.97,172891.94,259337.91,352188.74,445039.57,537890.4,649837.93,761785.46,873732.99,975424.89,1077116.79,1178808.69] },
+  'Derrick Almond':  { sub:'000-33', annualBudget:1075000,  annualBhag:1192564.81, budgetCum:[78833.33,157666.66,236499.99,321174.16,405848.33,490522.5,592611.67,694700.84,796790.01,889526.68,982263.35,1075000.02], bhagCum:[87454.75,174909.5,262364.25,356298.6,450232.95,544167.3,657421.2,770675.1,883929.0,986807.59,1089686.18,1192564.77] },
+  'Jennifer Paredes':{ sub:'000-41', annualBudget:750000,   annualBhag:832021.96,  budgetCum:[55000.0,110000.0,165000.0,224075.0,283150.0,342225.0,413450.0,484675.0,555900.0,620600.0,685300.0,750000.0], bhagCum:[61014.94,122029.88,183044.82,248580.42,314116.02,379651.62,458665.97,537680.32,616694.67,688470.43,760246.19,832021.95] },
+  'Jeremy Diggs':    { sub:'000-34', annualBudget:2000000,  annualBhag:2161149.3,  budgetCum:[146666.67,293333.34,440000.01,597533.34,755066.67,912600.0,1102533.33,1292466.66,1482399.99,1654933.32,1827466.65,1999999.98], bhagCum:[158484.28,316968.56,475452.84,645679.37,815905.9,986132.43,1191369.58,1396606.73,1601843.88,1788279.03,1974714.18,2161149.33] },
+  'Mitchell Jones':  { sub:'000-35', annualBudget:930000,   annualBhag:982340.59,  budgetCum:[68200.0,136400.0,204600.0,277853.0,351106.0,424359.0,512678.0,600997.0,689316.0,769544.0,849772.0,930000.0], bhagCum:[72038.31,144076.62,216114.93,293490.62,370866.31,448242.0,541531.61,634821.22,728110.83,812854.08,897597.33,982340.58] },
+  'Nikki Petriello': { sub:'000-23', annualBudget:1500000,  annualBhag:1664043.92, budgetCum:[110000.0,220000.0,330000.0,448150.0,566300.0,684450.0,826900.0,969350.0,1111800.0,1241200.0,1370600.0,1500000.0], bhagCum:[122029.89,244059.78,366089.67,497160.86,628232.05,759303.24,917331.94,1075360.64,1233389.34,1376940.86,1520492.38,1664043.9] },
+  'Sean Mitchell':   { sub:'000-22', annualBudget:5200000,  annualBhag:5402873.25, budgetCum:[381333.33,762666.66,1143999.99,1553586.66,1963173.33,2372760.0,2866586.67,3360413.34,3854240.01,4302826.68,4751413.35,5200000.02], bhagCum:[396210.71,792421.42,1188632.13,1614198.45,2039764.77,2465331.09,2978423.95,3491516.81,4004609.67,4470697.54,4936785.41,5402873.28] },
+  'Tom Goldston':    { sub:'000-27', annualBudget:600000,   annualBhag:687638.41,  budgetCum:[44000.0,88000.0,132000.0,179260.0,226520.0,273780.0,330760.0,387740.0,444720.0,496480.0,548240.0,600000.0], bhagCum:[50426.82,100853.64,151280.46,205443.45,259606.44,313769.43,379072.16,444374.89,509677.62,568997.89,628318.16,687638.43] },
+  'Michael McLeod':  { sub:'000-30', annualBudget:250000,   annualBhag:300000.0,   budgetCum:[18333.33,36666.66,54999.99,74691.66,94383.33,114075.0,137816.67,161558.34,185300.01,206866.68,228433.35,250000.02], bhagCum:[22000.0,44000.0,66000.0,89630.0,113260.0,136890.0,165380.0,193870.0,222360.0,248240.0,274120.0,300000.0] },
+};
+
+// Helper: get budget/bhag cumulative arrays for a given rep (or company-wide)
+function getTargets(repName) {
+  if (repName && REP_TARGETS[repName]) return REP_TARGETS[repName];
+  return { annualBudget: 17710000, annualBhag: 19656566, budgetCum: BUDGET_CUM, bhagCum: BHAG_CUM };
+}
 
 const TRAILING_AGO = (() => { const d=new Date(); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); })();
 const CUR_YEAR = new Date().getFullYear();
@@ -701,6 +747,76 @@ function onRepFilterChange() {
   renderOpportunities();
 }
 
+// ─── GLOBAL CUSTOMER FILTER ───────────────────────────────────────────────────
+let activeCustomer = null; // null = all customers
+
+function getActiveCustFilter() { return activeCustomer; }
+
+function populateCustFilter() {
+  // Build sorted unique customer list from sales data (respecting rep filter)
+  const activeRep = getActiveRepFilter();
+  const src = activeRep ? D.sales.filter(r => r.SalesRep === activeRep) : D.sales;
+  return [...new Set(src.map(r => (r.CustomerName||'').trim()).filter(Boolean))].sort();
+}
+
+function onCustFilterInput() {
+  const val = document.getElementById('global-cust-input').value.trim();
+  document.getElementById('cust-clear-btn').style.display = val ? 'block' : 'none';
+  showCustDropdown();
+}
+
+function showCustDropdown() {
+  const input = document.getElementById('global-cust-input');
+  const query = input.value.toLowerCase().trim();
+  const customers = populateCustFilter();
+  const matches = query
+    ? customers.filter(c => c.toLowerCase().includes(query)).slice(0, 12)
+    : customers.slice(0, 12);
+
+  const dd = document.getElementById('cust-dropdown');
+  if (!matches.length) { dd.style.display = 'none'; return; }
+
+  dd.innerHTML = matches.map(c => {
+    const hi = query
+      ? c.replace(new RegExp('(' + query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + ')', 'gi'), '<strong>$1</strong>')
+      : c;
+    return `<div class="cust-drop-item" data-name="${c.replace(/"/g,'&quot;')}" onmousedown="selectCustomer(this.dataset.name)">${hi}</div>`;
+  }).join('');
+  dd.style.display = 'block';
+}
+
+function selectCustomer(name) {
+  activeCustomer = name;
+  document.getElementById('global-cust-input').value = name;
+  document.getElementById('cust-clear-btn').style.display = 'block';
+  document.getElementById('cust-dropdown').style.display = 'none';
+  // Show banner
+  document.getElementById('cust-filter-banner').style.display = 'flex';
+  document.getElementById('cust-banner-name').textContent = name;
+  // Re-render all tabs
+  renderOverview();
+  renderCustomerData();
+  renderOpportunities();
+}
+
+function clearCustFilter() {
+  activeCustomer = null;
+  document.getElementById('global-cust-input').value = '';
+  document.getElementById('cust-clear-btn').style.display = 'none';
+  document.getElementById('cust-dropdown').style.display = 'none';
+  document.getElementById('cust-filter-banner').style.display = 'none';
+  renderOverview();
+  renderCustomerData();
+  renderOpportunities();
+}
+
+// Hide dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.cust-filter-combo')) {
+    document.getElementById('cust-dropdown').style.display = 'none';
+  }
+});
+
 async function doRefreshToken() {
   const resp = await fetch(`${CONFIG.workerUrl}/token`, {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -713,8 +829,11 @@ async function doRefreshToken() {
 function logout() {
   auth = { accessToken: null, refreshToken: null };
   USER = { username:null, displayName:null, email:null, roles:[], isManager:false, salespersonId:null, salespersonName:null };
+  activeCustomer = null;
   document.getElementById('rep-lock-banner').style.display='none';
+  document.getElementById('cust-filter-banner').style.display='none';
   document.getElementById('rep-selector-wrap').style.display='none';
+  document.getElementById('cust-filter-wrap').style.display='none';
   document.getElementById('user-badge').style.display='none';
   document.getElementById('dashboard').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
@@ -748,7 +867,7 @@ async function tryFetch(label, endpoint, params) {
 }
 
 // ─── DATA STORE ───────────────────────────────────────────────────────────────
-let D = { sales:[], ar:[], displays:[], opportunities:[], trailing12:[], salesByClass:[] };
+let D = { sales:[], ar:[], displays:[], opportunities:[], trailing12:[], salesByClass:[], arInvoices:[] };
 
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
 async function loadData() {
@@ -765,11 +884,19 @@ async function loadData() {
     });
     step(`SALES — ${D.sales.length} rows`);
 
-    // 2. AR / Credit data
+    // 2. AR / Credit data (credit settings)
     D.ar = await tryFetch('AR Days', 'GC-CustomerCreditLimit', {
       '$select':'CustomerID,CustomerName,Terms,CreditDaysPastDue,CreditLimit,CreditVerification',
     });
     step(`AR — ${D.ar.length} rows`);
+
+    // 2b. AR Invoice history to calculate actual avg days to pay
+    // Fetch closed AR invoices with DocDate and DocDesc to compute days paid
+    D.arInvoices = await tryFetch('AR Invoice History', 'BI-ARInvoices', {
+      '$select':'CustomerID,CustomerName,ReferenceNbr,InvoiceDate,DueDate,InvoiceStatus,ExtAmount,Salesperson',
+      '$filter':`InvoiceDate ge datetime'${TRAILING_AGO}T00:00:00'`,
+    });
+    addLog(`AR Invoices: ${D.arInvoices.length} rows`, 'ok');
 
     // 3. Displays placed
     D.displays = await tryFetch('Displays Placed', 'GC-TargetCustomers', {
@@ -796,8 +923,14 @@ async function loadData() {
     if (USER.isManager) {
       const reps = [...new Set(D.sales.map(r=>r.SalesRep).filter(Boolean))].sort();
       const sel = document.getElementById('global-rep-select');
-      const cur = sel.value; // preserve selection on refresh
+      const cur = sel.value;
       sel.innerHTML = '<option value="">All Reps</option>' + reps.map(r=>`<option${r===cur?' selected':''}>${r}</option>`).join('');
+    }
+    // Customer filter is always available — input is type-ahead, no pre-population needed
+    // But if a customer was previously selected and data refreshed, re-validate it exists
+    if (activeCustomer) {
+      const allCusts = [...new Set(D.sales.map(r=>(r.CustomerName||'').trim()).filter(Boolean))];
+      if (!allCusts.includes(activeCustomer)) clearCustFilter();
     }
 
     renderOverview();
@@ -842,27 +975,46 @@ const fmtPct = (n,d) => { if(!d||d===0) return '—'; return ((n/d)*100).toFixed
 let chartYTD=null, chartT12=null;
 
 function renderOverview() {
-  // Apply rep filter
+  // Apply rep + customer filters
   const activeRep = getActiveRepFilter();
-  const repSales = activeRep ? D.sales.filter(r => r.SalesRep === activeRep) : D.sales;
+  const activeCust = getActiveCustFilter();
+  const repSales = D.sales
+    .filter(r => !activeRep  || r.SalesRep    === activeRep)
+    .filter(r => !activeCust || (r.CustomerName||'').trim() === activeCust);
 
-  // Determine YTD actual from InvoicedItems (current fiscal year)
-  const ytdRows = repSales.filter(r => {
-    const p = r.FinancialPeriod||''; return p.endsWith(`-${CUR_YEAR}`) || p.endsWith(`-${CUR_YEAR.toString().slice(-2)}`);
-  });
+  // Detect current fiscal year from most recent period in the data
+  // FinancialPeriod format: "MM-YYYY" e.g. "01-2025", "10-2025"
+  const allPeriods = repSales.map(r => r.FinancialPeriod||'').filter(Boolean);
+  const mostRecentPeriod = allPeriods.sort().reverse()[0] || '';
+  const fiscalYear = mostRecentPeriod ? mostRecentPeriod.split('-')[1] : String(CUR_YEAR);
+  addLog(`Fiscal year detected: ${fiscalYear} from period ${mostRecentPeriod}`);
 
-  // Determine how many months of data we have this year
+  // YTD = all periods in the detected fiscal year
+  const ytdRows = repSales.filter(r => (r.FinancialPeriod||'').endsWith(`-${fiscalYear}`));
+
+  // Determine months completed (period numbers 01-12)
   const periodsThisYear = [...new Set(ytdRows.map(r => r.FinancialPeriod||'').filter(Boolean))].sort();
   const monthsIn = periodsThisYear.length || 1;
-  const lastMonthIdx = Math.min(monthsIn - 1, 11);
+  // Last period number (1-based month index)
+  const lastPeriodNum = periodsThisYear.length
+    ? parseInt(periodsThisYear[periodsThisYear.length-1].split('-')[0]) - 1
+    : 0;
+  const lastMonthIdx = Math.min(lastPeriodNum, 11);
 
   const ytdActual = ytdRows.reduce((s,r) => s+(+r.ExtAmount||0), 0);
-  const budgetYTD = BUDGET_CUM[lastMonthIdx];
-  const bhagYTD   = BHAG_CUM[lastMonthIdx];
+
+  // Use per-rep targets if a rep is selected, otherwise company-wide
+  const targets  = getTargets(activeRep);
+  const budgetYTD = targets.budgetCum[lastMonthIdx];
+  const bhagYTD   = targets.bhagCum[lastMonthIdx];
 
   // KPIs
   document.getElementById('kpi-ytd-actual').textContent = fmtK(ytdActual);
-  document.getElementById('kpi-ytd-sub').textContent = `through ${MONTHS[lastMonthIdx]} ${CUR_YEAR} (${monthsIn} periods)`;
+  document.getElementById('kpi-ytd-sub').textContent = `through ${MONTHS[lastMonthIdx]} ${fiscalYear} (${monthsIn} periods)`;
+  document.getElementById('kpi-annual-budget').textContent = fmtK(targets.annualBudget);
+  document.getElementById('kpi-annual-budget-sub').textContent = `Budget target (FY ${fiscalYear})${activeRep ? ' · '+activeRep : ''}`;
+  document.getElementById('kpi-annual-bhag').textContent = fmtK(targets.annualBhag);
+  document.getElementById('kpi-annual-bhag-sub').textContent = `BHAG target (FY ${fiscalYear})${activeRep ? ' · '+activeRep : ''}`;
 
   const vsBudget = ytdActual - budgetYTD;
   const vsBhag   = ytdActual - bhagYTD;
@@ -897,7 +1049,7 @@ function renderOverview() {
   periodsThisYear.forEach(p => {
     const mo = parseInt(p.split('-')[0]) - 1;
     if(mo >= 0 && mo <= 11) {
-      const sum = repSales.filter(r => r.FinancialPeriod === p && (r.FinancialPeriod||'').endsWith(`-${CUR_YEAR}`)).reduce((s,r) => s+(+r.ExtAmount||0), 0);
+      const sum = repSales.filter(r => r.FinancialPeriod === p).reduce((s,r) => s+(+r.ExtAmount||0), 0);
       actualByMonth[mo] = (actualByMonth[mo]||0) + sum;
     }
   });
@@ -1024,9 +1176,14 @@ function pill(good, label) {
 let custData = []; // merged per-customer
 
 function renderCustomerData() {
-  const activeRep = getActiveRepFilter();
-  const repSales  = activeRep ? D.sales.filter(r => r.SalesRep === activeRep) : D.sales;
-  const repDisp   = activeRep ? D.displays.filter(r => r.DefaultSalesperson === activeRep) : D.displays;
+  const activeRep  = getActiveRepFilter();
+  const activeCust = getActiveCustFilter();
+  const repSales  = D.sales
+    .filter(r => !activeRep  || r.SalesRep === activeRep)
+    .filter(r => !activeCust || (r.CustomerName||'').trim() === activeCust);
+  const repDisp   = D.displays
+    .filter(r => !activeRep  || r.DefaultSalesperson === activeRep)
+    .filter(r => !activeCust || (r.CustomerName||'').trim() === activeCust);
 
   // Aggregate YTD sales per customer from sales rows
   const salesMap = {};
@@ -1038,9 +1195,30 @@ function renderCustomerData() {
     if(r.SalesRep && r.SalesRep !== '—') salesMap[name].rep = r.SalesRep;
   });
 
-  // Merge AR data
+  // Merge AR credit settings
   const arMap = {};
   D.ar.forEach(r => { arMap[(r.CustomerName||'').trim()] = r; });
+
+  // Calculate avg days to pay from invoice history
+  // DueDate - InvoiceDate gap as proxy for payment terms; overdue = past DueDate
+  // Avg days to pay = average of (today - InvoiceDate) for open invoices
+  //                  or (DueDate - InvoiceDate) for closed, capped at actual
+  const daysToPayMap = {};
+  const today = new Date();
+  (D.arInvoices || []).forEach(r => {
+    const name = (r.CustomerName||'').trim(); if(!name) return;
+    const inv = r.InvoiceDate ? new Date(r.InvoiceDate) : null;
+    const due = r.DueDate     ? new Date(r.DueDate)     : null;
+    if (!inv || isNaN(inv)) return;
+    // Days from invoice to due date = payment terms
+    // Days from invoice to today (if open) or due date = actual days
+    const refDate = (r.InvoiceStatus === 'Open' || !due) ? today : due;
+    const days = Math.round((refDate - inv) / (1000*60*60*24));
+    if (days < 0 || days > 365) return; // skip outliers
+    if (!daysToPayMap[name]) daysToPayMap[name] = { total: 0, count: 0 };
+    daysToPayMap[name].total += days;
+    daysToPayMap[name].count++;
+  });
 
   // Merge displays data (count per customer)
   const dispMap = {};
@@ -1053,11 +1231,14 @@ function renderCustomerData() {
 
   // Build merged list
   custData = Object.values(salesMap).map(s => {
-    const ar = arMap[s.name] || {};
-    const dp = dispMap[s.name] || { count: 0 };
+    const ar  = arMap[s.name] || {};
+    const dp  = dispMap[s.name] || { count: 0 };
+    const dtp = daysToPayMap[s.name];
+    const avgDaysToPay = dtp && dtp.count > 0 ? Math.round(dtp.total / dtp.count) : null;
     return {
       name: s.name, rep: s.rep, ytd: s.ytd, invoices: s.invoices,
-      days: parseInt(ar.CreditDaysPastDue)||0,
+      avgDaysToPay,                           // calculated from invoice history
+      daysPastDue: parseInt(ar.CreditDaysPastDue)||0, // AR setting (kept for color coding)
       limit: parseFloat(ar.CreditLimit)||0,
       terms: ar.Terms||'—',
       displays: dp.count,
@@ -1078,10 +1259,11 @@ function renderCustomerData() {
     document.getElementById('cust-rep-filter').style.display = 'none';
   }
   document.getElementById('cust-kpi-count').textContent = custData.length;
-  const avgDays = custData.length ? Math.round(custData.reduce((s,r)=>s+r.days,0)/custData.length) : 0;
+  const daysArr = custData.filter(r=>r.avgDaysToPay!==null).map(r=>r.avgDaysToPay);
+  const avgDays = daysArr.length ? Math.round(daysArr.reduce((a,b)=>a+b,0)/daysArr.length) : 0;
   const kpiDays = document.getElementById('cust-kpi-days');
-  kpiDays.textContent = avgDays+'d';
-  kpiDays.style.color = avgDays > 60 ? 'var(--red)' : avgDays > 30 ? 'var(--yellow)' : 'var(--asf-green)';
+  kpiDays.textContent = avgDays ? avgDays+'d' : '—';
+  kpiDays.style.color = avgDays > 45 ? 'var(--red)' : avgDays > 30 ? 'var(--yellow)' : 'var(--asf-green)';
   const totalDisp = custData.reduce((s,r)=>s+r.displays,0);
   document.getElementById('cust-kpi-disp').textContent = totalDisp;
 
@@ -1113,13 +1295,14 @@ function renderCustomerTable() {
 
   document.getElementById('cust-count').textContent = `${rows.length} / ${custData.length} customers`;
   document.getElementById('cust-tbody').innerHTML = rows.length ? rows.map(r => {
-    const dayCol = r.days > 60 ? 'var(--red)' : r.days > 30 ? 'var(--yellow)' : 'var(--asf-green)';
+    const d2p = r.avgDaysToPay !== null ? r.avgDaysToPay : r.daysPastDue;
+    const dayCol = d2p > 45 ? 'var(--red)' : d2p > 30 ? 'var(--yellow)' : 'var(--asf-green)';
     return `<tr>
       <td style="font-weight:600;color:var(--asf-navy)">${r.name}</td>
       <td style="color:var(--dim)">${r.rep}</td>
       <td style="text-align:right;color:var(--asf-blue);font-weight:600">${fmt$(r.ytd)}</td>
       <td style="text-align:right;color:var(--dim)">${r.invoices}</td>
-      <td style="text-align:right;font-weight:700;color:${dayCol}">${r.days}d</td>
+      <td style="text-align:right;font-weight:700;color:${dayCol}">${r.avgDaysToPay !== null ? r.avgDaysToPay+'d' : '—'}</td>
       <td style="text-align:right;color:var(--dim)">${fmt$(r.limit)}</td>
       <td><span class="badge b-dim">${r.terms}</span></td>
       <td style="text-align:right;color:${r.displays>0?'var(--asf-green)':'var(--muted)'};font-weight:${r.displays>0?'700':'400'}">${r.displays||'—'}</td>
@@ -1129,14 +1312,19 @@ function renderCustomerTable() {
 
 // ─── OPPORTUNITIES ────────────────────────────────────────────────────────────
 function renderOpportunities() {
-  const activeRep = getActiveRepFilter();
-  // For opportunities, match on Owner field. Try exact match, else fallback to salesperson name.
-  const rows = activeRep
-    ? D.opportunities.filter(r => {
-        const owner = (r.Owner||'').trim();
-        return owner === activeRep || owner.toLowerCase() === (activeRep||'').toLowerCase();
-      })
-    : D.opportunities;
+  const activeRep  = getActiveRepFilter();
+  const activeCust = getActiveCustFilter();
+  // For opportunities, match on Owner field for rep filter, AccountName for customer filter
+  const rows = D.opportunities.filter(r => {
+    if (activeRep) {
+      const owner = (r.Owner||'').trim();
+      if (owner !== activeRep && owner.toLowerCase() !== activeRep.toLowerCase()) return false;
+    }
+    if (activeCust) {
+      if ((r.AccountName||'').trim() !== activeCust) return false;
+    }
+    return true;
+  });
   const pipeline = rows.reduce((s,r)=>s+(+r.Total||0),0);
   const weighted = rows.reduce((s,r)=>s+((+r.Total||0)*(+(r.Probability||0)/100)),0);
   const avgProb  = rows.length ? rows.reduce((s,r)=>s+(+(r.Probability||0)),0)/rows.length : 0;
@@ -1187,16 +1375,16 @@ function renderOppTable() {
   const stage  = document.getElementById('opp-stage-filter').value;
   const owner  = document.getElementById('opp-rep-filter').value;
 
-  const activeRep2 = getActiveRepFilter();
+  const activeRep2  = getActiveRepFilter();
+  const activeCust2 = getActiveCustFilter();
   let rows = D.opportunities.filter(r => {
-    // Apply global rep lock for non-managers
     if (activeRep2) {
       const o = (r.Owner||'').trim();
       if (o !== activeRep2 && o.toLowerCase() !== activeRep2.toLowerCase()) return false;
     }
+    if (activeCust2 && (r.AccountName||'').trim() !== activeCust2) return false;
     if(search && !((r.AccountName||'').toLowerCase().includes(search)||(r.OpportunityID||'').toLowerCase().includes(search))) return false;
     if(stage && r.Stage !== stage) return false;
-    // Manager's per-tab rep filter
     if(USER.isManager && owner && r.Owner !== owner) return false;
     return true;
   });
@@ -1263,6 +1451,8 @@ function showDashboard() {
   if (USER.isManager) {
     document.getElementById('rep-selector-wrap').style.display='flex';
   }
+  // Customer filter available to everyone
+  document.getElementById('cust-filter-wrap').style.display='flex';
 }
 function setLoadTxt(t) { document.getElementById('load-txt').textContent=t; }
 function hideOverlay() { document.getElementById('loading-overlay').style.display='none'; }
