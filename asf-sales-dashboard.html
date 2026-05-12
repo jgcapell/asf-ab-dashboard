@@ -62,6 +62,8 @@
   .hbtn.primary { background: var(--asf-blue); border-color: var(--asf-blue); color: #fff; display: flex; align-items: center; gap: 6px; }
   .hbtn.primary:hover { background: #4a7db8; }
   .hbtn.primary:disabled { opacity: 0.5; cursor: wait; }
+  .cust-dd-item { padding: 8px 12px; font-size: 12px; color: var(--text); cursor: pointer; border-bottom: 1px solid var(--border2); font-weight: 500; }
+  .cust-dd-item:last-child { border-bottom: none; }
   .btn-sm { padding: 6px 14px; border-radius: 6px; font-size: 11px; font-family: inherit; font-weight: 600; cursor: pointer; border: none; background: var(--asf-navy); color: #fff; transition: background 0.15s; }
   .btn-sm:hover { background: #174068; }
 
@@ -437,7 +439,8 @@
             <div style="font-size:11px;color:var(--muted)">Filter the item class chart and table to a specific customer.</div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <input class="ctrl-input" id="cust-tab-search" placeholder="Type customer name…"
-                     oninput="onCustTabSearch()" autocomplete="off" style="width:100%;max-width:280px">
+                     oninput="onCustTabSearch()" onfocus="onCustTabFocus()" onblur="onCustTabBlur()"
+                     autocomplete="off" style="width:100%;max-width:280px">
               <button class="btn-sm" onclick="clearCustTabFilter()">Clear</button>
             </div>
             <div id="cust-tab-dropdown" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;max-height:180px;overflow-y:auto;display:none"></div>
@@ -803,34 +806,49 @@ async function loadData() {
   const step = lbl => { done++; setProgress(done,STEPS,lbl); };
 
   try {
-    // 1. Sales history — two date-range fetches (current + prior YTD)
+    // 1. Sales history — two date-range fetches (current + prior fiscal YTD)
+    //    ASF Fiscal Year starts November 1 (FY2026 = Nov 2025 – Oct 2026)
     //    FiscalYear OData filter not supported; use InvoiceDate range instead
-    const fetchYear  = String(CUR_YEAR);
-    const priorYear  = String(CUR_YEAR - 1);
-    const todayStr   = new Date().toISOString().slice(0,10);          // e.g. "2026-05-12"
-    const curStart   = fetchYear  + '-01-01';
-    const priStart   = priorYear  + '-01-01';
-    const priEnd     = priorYear  + '-' + todayStr.slice(5);          // same MM-DD last year
+    const FY_OFFSET_MONTHS = 2;  // FY starts 2 months before calendar year (Nov = month 11 of prior cal year)
+
+    // Current FY: Nov 1 of (CUR_YEAR-1) through today
+    const curFyLabel = String(CUR_YEAR);
+    const priFyLabel = String(CUR_YEAR - 1);
+    const todayDate  = new Date();
+    const todayStr   = todayDate.toISOString().slice(0, 10);
+
+    // Current FY start = Nov 1 of previous calendar year
+    const curStart = `${CUR_YEAR - 1}-11-01`;
+
+    // Prior FY: Nov 1 of (CUR_YEAR-2) through the same elapsed days
+    const priStart = `${CUR_YEAR - 2}-11-01`;
+    // Prior FY end = same date one fiscal year ago (todayStr shifted back 1 year)
+    const priorEndDate = new Date(todayDate);
+    priorEndDate.setFullYear(priorEndDate.getFullYear() - 1);
+    const priEnd = priorEndDate.toISOString().slice(0, 10);
 
     const SALES_COLS = 'ReferenceNbr,CustomerName,InvoiceDate,PaymentDate,SalesRep,ExtAmount,ExtCost,ExtProfit,ItemClass,Quantity,FinancialPeriod,FiscalYear,DisplayingDealers';
 
+    addLog(`Fetching FY${curFyLabel}: ${curStart} → ${todayStr}`);
+    addLog(`Fetching FY${priFyLabel} YTD: ${priStart} → ${priEnd}`);
+
     const [curRows, priRows] = await Promise.all([
-      tryFetch('Sales (Current YTD)', 'InvoicedItems', {
+      tryFetch(`Sales FY${curFyLabel}`, 'InvoicedItems', {
         '$select':  SALES_COLS,
         '$filter':  `InvoiceDate ge datetime'${curStart}T00:00:00' and InvoiceDate le datetime'${todayStr}T23:59:59'`,
         '$orderby': 'InvoiceDate desc',
       }),
-      tryFetch('Sales (Prior YTD)', 'InvoicedItems', {
+      tryFetch(`Sales FY${priFyLabel} YTD`, 'InvoicedItems', {
         '$select':  SALES_COLS,
         '$filter':  `InvoiceDate ge datetime'${priStart}T00:00:00' and InvoiceDate le datetime'${priEnd}T23:59:59'`,
         '$orderby': 'InvoiceDate desc',
       }),
     ]);
 
-    curRows.forEach(r => r._year = fetchYear);
-    priRows.forEach(r => r._year = priorYear);
+    curRows.forEach(r => r._year = curFyLabel);
+    priRows.forEach(r => r._year = priFyLabel);
     D.sales = [...curRows, ...priRows];
-    step(`SALES — ${curRows.length} current + ${priRows.length} prior YTD rows`);
+    step(`SALES — ${curRows.length} FY${curFyLabel} + ${priRows.length} FY${priFyLabel} YTD rows`);
 
     // 2. AR / Credit data (credit settings)
     D.ar = await tryFetch('AR Days', 'GC-CustomerCreditLimit', {
@@ -898,12 +916,19 @@ function aggregateByPeriod(rows) {
     m[p].profit += +r.ExtProfit||0;
   });
   // Sort chronologically and convert period key to readable label
+  // FinancialPeriod = YYYYPP where PP is fiscal period (01=Nov, 02=Dec, 03=Jan...12=Oct)
+  // Calendar month index = (PP + 9) % 12
   return Object.values(m)
     .sort((a,b) => a.period.localeCompare(b.period))
     .map(d => {
-      const yr = d.period.slice(0,4), mo = parseInt(d.period.slice(4))-1;
-      return { ...d, label: MONTHS[mo] + ' ' + yr };
-    });
+      const fy  = d.period.slice(0,4);
+      const pp  = parseInt(d.period.slice(4));
+      const calMoIdx = (pp + 9) % 12;  // 0-indexed calendar month
+      // Calendar year: periods 01-02 (Nov/Dec) belong to FY start year minus 1
+      const calYr = (pp <= 2) ? parseInt(fy) - 1 : parseInt(fy);
+      return { ...d, label: MONTHS[calMoIdx] + ' ' + calYr, sortKey: calYr * 100 + calMoIdx };
+    })
+    .sort((a,b) => a.sortKey - b.sortKey);  // re-sort by actual calendar date
 }
 
 function aggregateByClass(rows) {
@@ -928,8 +953,8 @@ let chartYTD=null, chartT12=null;
 function renderOverview() {
   // Apply rep filter
   const activeRep = getActiveRepFilter();
-  const fetchYear = String(CUR_YEAR);
-  const priorYear = String(CUR_YEAR - 1);
+  const fetchYear = String(CUR_YEAR);       // FY label e.g. "2026"
+  const priorYear = String(CUR_YEAR - 1);   // prior FY label e.g. "2025"
   const allRepSales = D.sales.filter(r => !activeRep || r.SalesRep === activeRep);
   const repSales = allRepSales.filter(r => r._year === fetchYear);
 
@@ -1143,8 +1168,8 @@ let custData = []; // merged per-customer
 
 function renderCustomerData() {
   const activeRep   = getActiveRepFilter();
-  const fetchYear   = String(CUR_YEAR);
-  const priorYear   = String(CUR_YEAR - 1);
+  const fetchYear   = String(CUR_YEAR);      // current FY label
+  const priorYear   = String(CUR_YEAR - 1);  // prior FY label
   const repSales    = D.sales.filter(r => !activeRep || r.SalesRep === activeRep);
   const curRepSales = repSales.filter(r => r._year === fetchYear);
   const priRepSales = repSales.filter(r => r._year === priorYear);
@@ -1259,6 +1284,7 @@ function renderCustomerData() {
 
 // ─── CUSTOMER TAB FILTER ─────────────────────────────────────────────────────
 let activeCustTab = null;
+let custDropdownMousedown = false; // prevents blur from closing dropdown before click fires
 
 function onCustTabSearch() {
   const q = document.getElementById('cust-tab-search').value.toLowerCase().trim();
@@ -1266,24 +1292,44 @@ function onCustTabSearch() {
   const allCusts = [...new Set(D.sales
     .filter(r => !activeRep || r.SalesRep === activeRep)
     .map(r => (r.CustomerName||'').trim()).filter(Boolean))].sort();
-  const matches = q ? allCusts.filter(c => c.toLowerCase().includes(q)).slice(0,10) : [];
+  const matches = q ? allCusts.filter(c => c.toLowerCase().includes(q)).slice(0, 12) : [];
+  renderCustDropdown(matches);
+}
+
+function renderCustDropdown(matches) {
   const dd = document.getElementById('cust-tab-dropdown');
-  if (!matches.length) { dd.style.display='none'; return; }
+  if (!matches.length) { dd.style.display = 'none'; return; }
   dd.innerHTML = matches.map(c =>
-    `<div style="padding:7px 12px;font-size:12px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border2);font-weight:500"
-          onmousedown="selectCustTab('${c.replace(/'/g,"\'")}')"
-          onmouseover="this.style.background='#eef4fb'" onmouseout="this.style.background=''">${c}</div>`
+    `<div class="cust-dd-item" data-name="${c.replace(/"/g,'&quot;')}">${c}</div>`
   ).join('');
-  dd.style.display='block';
+  // Attach click listeners directly — avoids mousedown/blur race condition
+  dd.querySelectorAll('.cust-dd-item').forEach(el => {
+    el.addEventListener('mousedown', e => { e.preventDefault(); selectCustTab(el.dataset.name); });
+    el.addEventListener('mouseover', () => el.style.background = '#eef4fb');
+    el.addEventListener('mouseout',  () => el.style.background = '');
+  });
+  dd.style.display = 'block';
+}
+
+function onCustTabFocus() {
+  // Show top matches on focus if no active filter
+  if (!activeCustTab) onCustTabSearch();
+}
+
+function onCustTabBlur() {
+  // Small delay lets mousedown fire first
+  setTimeout(() => {
+    document.getElementById('cust-tab-dropdown').style.display = 'none';
+  }, 150);
 }
 
 function selectCustTab(name) {
   activeCustTab = name;
   document.getElementById('cust-tab-search').value = name;
-  document.getElementById('cust-tab-dropdown').style.display='none';
+  document.getElementById('cust-tab-dropdown').style.display = 'none';
   const active = document.getElementById('cust-tab-active');
-  active.textContent = '🔍 Showing: ' + name;
-  active.style.display='block';
+  active.textContent = '🔍 ' + name;
+  active.style.display = 'block';
   renderCustItemClassBars();
   renderCustomerTable();
 }
@@ -1291,15 +1337,15 @@ function selectCustTab(name) {
 function clearCustTabFilter() {
   activeCustTab = null;
   document.getElementById('cust-tab-search').value = '';
-  document.getElementById('cust-tab-dropdown').style.display='none';
-  document.getElementById('cust-tab-active').style.display='none';
+  document.getElementById('cust-tab-dropdown').style.display = 'none';
+  document.getElementById('cust-tab-active').style.display = 'none';
   renderCustItemClassBars();
   renderCustomerTable();
 }
 
 function renderCustItemClassBars() {
   const activeRep  = getActiveRepFilter();
-  const fetchYear  = String(CUR_YEAR);
+  const fetchYear  = String(CUR_YEAR);  // current FY label
   let src = D.sales.filter(r =>
     (!activeRep || r.SalesRep === activeRep) &&
     r._year === fetchYear
