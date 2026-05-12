@@ -938,7 +938,13 @@ async function loadData() {
 function aggregateByPeriod(rows) {
   const m = {};
   rows.forEach(r => {
-    const p = (r.FinancialPeriod||'').trim(); if(!p) return;
+    // Use FinancialPeriod if available and valid, otherwise derive from InvoiceDate
+    let p = (r.FinancialPeriod||'').trim();
+    if (!p || !/^\d{2}-\d{4}$/.test(p)) {
+      const d = r.InvoiceDate ? new Date(r.InvoiceDate) : null;
+      if (!d || isNaN(d)) return;
+      p = String(d.getMonth()+1).padStart(2,'0') + '-' + d.getFullYear();
+    }
     if(!m[p]) m[p] = {period:p, sales:0, cost:0, profit:0};
     m[p].sales  += +r.ExtAmount||0;
     m[p].cost   += +r.ExtCost||0;
@@ -974,24 +980,55 @@ function renderOverview() {
     .filter(r => !activeRep  || r.SalesRep    === activeRep)
     .filter(r => !activeCust || (r.CustomerName||'').trim() === activeCust);
 
-  // Detect current fiscal year from most recent period in the data
-  // FinancialPeriod format: "MM-YYYY" e.g. "01-2025", "10-2025"
-  const allPeriods = repSales.map(r => r.FinancialPeriod||'').filter(Boolean);
-  const mostRecentPeriod = allPeriods.sort().reverse()[0] || '';
-  const fiscalYear = mostRecentPeriod ? mostRecentPeriod.split('-')[1] : String(CUR_YEAR);
-  addLog(`Fiscal year detected: ${fiscalYear} from period ${mostRecentPeriod}`);
+  // Log a sample row so we can verify field names coming from InvoicedItems
+  if (repSales.length > 0) {
+    addLog('Sample InvoicedItems row fields: ' + Object.keys(repSales[0]).join(', '));
+    addLog('Sample values: FP=' + repSales[0].FinancialPeriod + ' Date=' + repSales[0].InvoiceDate + ' Amt=' + repSales[0].ExtAmount);
+  } else {
+    addLog('WARNING: repSales is empty — InvoicedItems returned no rows', 'error');
+  }
 
-  // YTD = all periods in the detected fiscal year
-  const ytdRows = repSales.filter(r => (r.FinancialPeriod||'').endsWith(`-${fiscalYear}`));
+  // Detect fiscal year from FinancialPeriod ("MM-YYYY") OR fall back to InvoiceDate year
+  // Try FinancialPeriod first
+  const allPeriods = repSales.map(r => (r.FinancialPeriod||'').trim()).filter(p => /^\d{2}-\d{4}$/.test(p));
+  const mostRecentPeriod = [...allPeriods].sort().reverse()[0] || '';
 
-  // Determine months completed (period numbers 01-12)
-  const periodsThisYear = [...new Set(ytdRows.map(r => r.FinancialPeriod||'').filter(Boolean))].sort();
+  let fiscalYear, lastMonthIdx, periodsThisYear, ytdRows;
+
+  if (mostRecentPeriod) {
+    // FinancialPeriod is populated — use it
+    fiscalYear = mostRecentPeriod.split('-')[1];
+    addLog(`Using FinancialPeriod — fiscal year: ${fiscalYear}`);
+    ytdRows = repSales.filter(r => (r.FinancialPeriod||'').endsWith(`-${fiscalYear}`));
+    periodsThisYear = [...new Set(ytdRows.map(r => r.FinancialPeriod||'').filter(Boolean))].sort();
+    const lastPeriodNum = periodsThisYear.length
+      ? parseInt(periodsThisYear[periodsThisYear.length-1].split('-')[0]) - 1
+      : 0;
+    lastMonthIdx = Math.min(lastPeriodNum, 11);
+  } else {
+    // FinancialPeriod missing — fall back to InvoiceDate year
+    // Find the most recent InvoiceDate year present in the data
+    const years = repSales
+      .map(r => r.InvoiceDate ? new Date(r.InvoiceDate).getFullYear() : null)
+      .filter(y => y && !isNaN(y));
+    fiscalYear = years.length ? String(Math.max(...years)) : String(CUR_YEAR);
+    addLog(`FinancialPeriod missing — falling back to InvoiceDate year: ${fiscalYear}`);
+    ytdRows = repSales.filter(r => {
+      const d = r.InvoiceDate ? new Date(r.InvoiceDate) : null;
+      return d && !isNaN(d) && String(d.getFullYear()) === fiscalYear;
+    });
+    // Build synthetic periods from InvoiceDate month
+    periodsThisYear = [...new Set(ytdRows.map(r => {
+      const d = new Date(r.InvoiceDate);
+      return String(d.getMonth() + 1).padStart(2,'0') + '-' + fiscalYear;
+    }).filter(Boolean))].sort();
+    const lastPeriodNum = periodsThisYear.length
+      ? parseInt(periodsThisYear[periodsThisYear.length-1].split('-')[0]) - 1
+      : 0;
+    lastMonthIdx = Math.min(lastPeriodNum, 11);
+  }
+
   const monthsIn = periodsThisYear.length || 1;
-  // Last period number (1-based month index)
-  const lastPeriodNum = periodsThisYear.length
-    ? parseInt(periodsThisYear[periodsThisYear.length-1].split('-')[0]) - 1
-    : 0;
-  const lastMonthIdx = Math.min(lastPeriodNum, 11);
 
   const ytdActual = ytdRows.reduce((s,r) => s+(+r.ExtAmount||0), 0);
 
@@ -1019,7 +1056,7 @@ function renderOverview() {
   document.getElementById('kpi-bhag-pill').innerHTML = pill(vsBhag >= 0, vsBhag >= 0 ? fmtPct(vsBhag,bhagYTD)+' ahead' : fmtPct(-vsBhag,bhagYTD)+' behind');
 
   // Gauges
-  const asOf = `As of ${MONTHS[lastMonthIdx]} ${CUR_YEAR}`;
+  const asOf = `As of ${MONTHS[lastMonthIdx]} ${fiscalYear}`;
   document.getElementById('gauge-as-of').textContent = asOf;
 
   const bPct = Math.min((ytdActual/budgetYTD)*100, 110);
@@ -1041,7 +1078,14 @@ function renderOverview() {
   periodsThisYear.forEach(p => {
     const mo = parseInt(p.split('-')[0]) - 1;
     if(mo >= 0 && mo <= 11) {
-      const sum = repSales.filter(r => r.FinancialPeriod === p).reduce((s,r) => s+(+r.ExtAmount||0), 0);
+      // Match by FinancialPeriod if present, otherwise by InvoiceDate month
+      const sum = ytdRows.filter(r => {
+        if (mostRecentPeriod) return r.FinancialPeriod === p;
+        const d = r.InvoiceDate ? new Date(r.InvoiceDate) : null;
+        if (!d || isNaN(d)) return false;
+        const synth = String(d.getMonth()+1).padStart(2,'0') + '-' + fiscalYear;
+        return synth === p;
+      }).reduce((s,r) => s+(+r.ExtAmount||0), 0);
       actualByMonth[mo] = (actualByMonth[mo]||0) + sum;
     }
   });
