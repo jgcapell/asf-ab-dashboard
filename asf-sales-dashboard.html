@@ -867,12 +867,12 @@ async function tryFetch(label, endpoint, params) {
 }
 
 // ─── DATA STORE ───────────────────────────────────────────────────────────────
-let D = { sales:[], ar:[], displays:[], opportunities:[], trailing12:[], salesByClass:[], arInvoices:[] };
+let D = { sales:[], ar:[], displays:[], opportunities:[], trailing12:[], salesByClass:[] };
 
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
 async function loadData() {
   setLoading(true); clearErr(); clearLog();
-  const STEPS = 5; let done = 0;
+  const STEPS = 4; let done = 0;
   const step = lbl => { done++; setProgress(done,STEPS,lbl); };
 
   try {
@@ -889,14 +889,6 @@ async function loadData() {
       '$select':'CustomerID,CustomerName,Terms,CreditDaysPastDue,CreditLimit,CreditVerification',
     });
     step(`AR — ${D.ar.length} rows`);
-
-    // 2b. AR Invoice history to calculate actual avg days to pay
-    // Fetch closed AR invoices with DocDate and DocDesc to compute days paid
-    D.arInvoices = await tryFetch('AR Invoice History', 'BI-ARInvoices', {
-      '$select':'CustomerID,CustomerName,ReferenceNbr,InvoiceDate,DueDate,InvoiceStatus,ExtAmount,Salesperson',
-      '$filter':`InvoiceDate ge datetime'${TRAILING_AGO}T00:00:00'`,
-    });
-    addLog(`AR Invoices: ${D.arInvoices.length} rows`, 'ok');
 
     // 3. Displays placed
     D.displays = await tryFetch('Displays Placed', 'GC-TargetCustomers', {
@@ -1199,21 +1191,24 @@ function renderCustomerData() {
   const arMap = {};
   D.ar.forEach(r => { arMap[(r.CustomerName||'').trim()] = r; });
 
-  // Calculate avg days to pay from invoice history
-  // DueDate - InvoiceDate gap as proxy for payment terms; overdue = past DueDate
-  // Avg days to pay = average of (today - InvoiceDate) for open invoices
-  //                  or (DueDate - InvoiceDate) for closed, capped at actual
+  // Calculate avg days to pay from InvoicedItems (D.sales)
+  // Each row has InvoiceDate; we aggregate unique invoices per customer
+  // and compute average days from invoice date to today as a proxy for
+  // days outstanding / days to pay. Unique by ReferenceNbr to avoid
+  // double-counting multi-line invoices.
   const daysToPayMap = {};
   const today = new Date();
-  (D.arInvoices || []).forEach(r => {
-    const name = (r.CustomerName||'').trim(); if(!name) return;
+  const seenInvoices = new Set();
+  D.sales.forEach(r => {
+    const name = (r.CustomerName||'').trim();
+    const ref  = (r.ReferenceNbr||'').trim();
+    if (!name || !ref) return;
+    const key = name + '|' + ref;
+    if (seenInvoices.has(key)) return; // deduplicate multi-line invoices
+    seenInvoices.add(key);
     const inv = r.InvoiceDate ? new Date(r.InvoiceDate) : null;
-    const due = r.DueDate     ? new Date(r.DueDate)     : null;
     if (!inv || isNaN(inv)) return;
-    // Days from invoice to due date = payment terms
-    // Days from invoice to today (if open) or due date = actual days
-    const refDate = (r.InvoiceStatus === 'Open' || !due) ? today : due;
-    const days = Math.round((refDate - inv) / (1000*60*60*24));
+    const days = Math.round((today - inv) / (1000 * 60 * 60 * 24));
     if (days < 0 || days > 365) return; // skip outliers
     if (!daysToPayMap[name]) daysToPayMap[name] = { total: 0, count: 0 };
     daysToPayMap[name].total += days;
