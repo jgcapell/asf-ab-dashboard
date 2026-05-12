@@ -125,8 +125,17 @@
 
   /* KPI cards */
   .kpi-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 8px; }
-  .kpi-val { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; color: var(--asf-navy); letter-spacing: -0.02em; line-height: 1; }
-  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 6px; font-weight: 500; }
+  .kpi-val {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(16px, 3.5vw, 28px);
+    font-weight: 800;
+    color: var(--asf-navy);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 6px; font-weight: 500; line-height: 1.4; }
   .kpi-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 99px; font-size: 10px; font-weight: 700; margin-top: 8px; }
   .pill-green { background: rgba(90,158,69,0.12); color: #3a7a28; border: 1px solid rgba(90,158,69,0.3); }
   .pill-red   { background: rgba(184,50,40,0.10); color: var(--red); border: 1px solid rgba(184,50,40,0.25); }
@@ -270,7 +279,7 @@
   <div id="nav-tabs" style="display:flex">
     <button class="tab active" data-tab="overview" onclick="showTab(this)">Sales Overview</button>
     <button class="tab" data-tab="customers" onclick="showTab(this)">Customer Summary</button>
-    <button class="tab" data-tab="opportunities" onclick="showTab(this)">Opportunities</button>
+    <button class="tab" data-tab="opportunities" onclick="showTab(this)">Activities &amp; Opportunities</button>
   </div>
 
   <!-- ═══════════════════════════════════ TAB: SALES OVERVIEW -->
@@ -485,12 +494,12 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════ TAB: OPPORTUNITIES -->
+  <!-- ═══════════════════════════════════ TAB: ACTIVITIES & OPPORTUNITIES -->
   <div id="pane-opportunities" class="tab-pane">
     <div class="page">
 
       <!-- KPI row -->
-      <div class="row cols-3">
+      <div class="row cols-4">
         <div class="card">
           <div class="card-hdr"><span class="card-title">Open Pipeline</span></div>
           <div class="card-body"><div class="kpi-val" id="opp-kpi-pipeline" style="color:var(--asf-blue)">—</div><div class="kpi-sub" id="opp-kpi-sub">open deals</div></div>
@@ -500,20 +509,54 @@
           <div class="card-body"><div class="kpi-val" id="opp-kpi-weighted" style="color:var(--asf-green)">—</div><div class="kpi-sub">probability-adjusted</div></div>
         </div>
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Avg Probability</span></div>
-          <div class="card-body"><div class="kpi-val" id="opp-kpi-prob" style="color:var(--asf-navy)">—</div><div class="kpi-sub">across open deals</div></div>
+          <div class="card-hdr"><span class="card-title">Activities (Last 7 Days)</span></div>
+          <div class="card-body"><div class="kpi-val" id="act-kpi-7d" style="color:var(--asf-navy)">—</div><div class="kpi-sub" id="act-kpi-7d-sub">logged interactions</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Tasks Due (Next 7 Days)</span></div>
+          <div class="card-body"><div class="kpi-val" id="task-kpi-7d" style="color:var(--yellow)">—</div><div class="kpi-sub">open tasks</div></div>
         </div>
       </div>
 
-      <!-- Pipeline by stage bars -->
+      <!-- Activities last 7 days + Tasks due next 7 days -->
       <div class="row cols-2">
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Activities — Last 7 Days</span><span class="card-badge" id="act-7d-badge"></span></div>
+          <div class="card-scroll" style="max-height:320px">
+            <div id="act-7d-feed" style="padding:10px 14px"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Tasks Due — Next 7 Days</span><span class="card-badge" id="task-7d-badge"></span></div>
+          <div class="card-scroll" style="max-height:320px">
+            <div id="task-7d-feed" style="padding:10px 14px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customers with activity in last 120 days + Pipeline by stage/rep -->
+      <div class="row cols-2">
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Customers with Activity — Last 120 Days</span><span class="card-badge" id="act-120d-badge"></span></div>
+          <div class="ctrl-bar">
+            <input class="ctrl-input" id="act-120d-search" placeholder="Search customer…" oninput="renderAct120Table()">
+            <div class="row-count" id="act-120d-count"></div>
+          </div>
+          <div class="card-scroll">
+            <table>
+              <thead><tr>
+                <th>Customer</th>
+                <th>Last Activity</th>
+                <th>Owner</th>
+                <th>Summary</th>
+              </tr></thead>
+              <tbody id="act-120d-tbody"></tbody>
+            </table>
+          </div>
+        </div>
         <div class="card">
           <div class="card-hdr"><span class="card-title">Pipeline by Stage</span></div>
           <div class="card-body" id="opp-stage-bars"></div>
-        </div>
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Pipeline by Sales Rep</span></div>
-          <div class="card-body" id="opp-rep-bars"></div>
         </div>
       </div>
 
@@ -531,6 +574,7 @@
             <thead><tr>
               <th>Opp ID</th>
               <th>Account</th>
+              <th>Owner</th>
               <th>Stage</th>
               <th>Status</th>
               <th>Probability</th>
@@ -797,12 +841,12 @@ async function tryFetch(label, endpoint, params) {
 }
 
 // ─── DATA STORE ───────────────────────────────────────────────────────────────
-let D = { sales:[], ar:[], displays:[], opportunities:[], trailing12:[], salesByClass:[], priorSales:[] };
+let D = { sales:[], ar:[], displays:[], opportunities:[], activities:[], tasks:[], contacts:{}, trailing12:[], trailing12rows:[], salesByClass:[], priorSales:[] };
 
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
 async function loadData() {
   setLoading(true); clearErr(); clearLog();
-  const STEPS = 4; let done = 0;
+  const STEPS = 6; let done = 0;
   const step = lbl => { done++; setProgress(done,STEPS,lbl); };
 
   try {
@@ -832,23 +876,27 @@ async function loadData() {
     addLog(`Fetching FY${curFyLabel}: ${curStart} → ${todayStr}`);
     addLog(`Fetching FY${priFyLabel} YTD: ${priStart} → ${priEnd}`);
 
+    // Full prior FY end = Oct 31 of (CUR_YEAR-1) — covers the whole prior fiscal year
+    // This fills the trailing 12 gap (Jun–Oct prior year) and also covers prior YTD
+    const priorFyEnd = `${CUR_YEAR - 1}-10-31`;
+
     const [curRows, priRows] = await Promise.all([
       tryFetch(`Sales FY${curFyLabel}`, 'InvoicedItems', {
         '$select':  SALES_COLS,
         '$filter':  `InvoiceDate ge datetime'${curStart}T00:00:00' and InvoiceDate le datetime'${todayStr}T23:59:59'`,
         '$orderby': 'InvoiceDate desc',
       }),
-      tryFetch(`Sales FY${priFyLabel} YTD`, 'InvoicedItems', {
+      tryFetch(`Sales FY${priFyLabel} (full year)`, 'InvoicedItems', {
         '$select':  SALES_COLS,
-        '$filter':  `InvoiceDate ge datetime'${priStart}T00:00:00' and InvoiceDate le datetime'${priEnd}T23:59:59'`,
+        '$filter':  `InvoiceDate ge datetime'${priStart}T00:00:00' and InvoiceDate le datetime'${priorFyEnd}T23:59:59'`,
         '$orderby': 'InvoiceDate desc',
       }),
     ]);
 
-    curRows.forEach(r => r._year = curFyLabel);
-    priRows.forEach(r => r._year = priFyLabel);
+    curRows.forEach(r => { r._year = curFyLabel; r._fyFull = true; });
+    priRows.forEach(r => { r._year = priFyLabel; r._fyFull = true; });
     D.sales = [...curRows, ...priRows];
-    step(`SALES — ${curRows.length} FY${curFyLabel} + ${priRows.length} FY${priFyLabel} YTD rows`);
+    step(`SALES — ${curRows.length} FY${curFyLabel} + ${priRows.length} FY${priFyLabel} rows`);
 
     // 2. AR / Credit data (credit settings)
     D.ar = await tryFetch('AR Days', 'GC-CustomerCreditLimit', {
@@ -862,18 +910,61 @@ async function loadData() {
     });
     step(`DISPLAYS — ${D.displays.length} rows`);
 
-    // 4. Opportunities
-    D.opportunities = await tryFetch('Opportunities', 'CR-Opportunities2018R1', {
-      '$select':'OpportunityID,AccountName,Stage,Status,Total,EstimatedCloseDate,Probability,Description,Owner',
-      '$filter': "Status ne 'Won' and Status ne 'Lost'",
-      '$orderby':'Total desc',
+    // 4. Opportunities — use BI-Opportunities which has Employee name resolved
+    //    Plus DisplayName from CR-Opportunities for owner name matching SalesRep
+    D.opportunities = await tryFetch('Opportunities', 'BI-Opportunities', {
+      '$select':'Opportunity,Customer,Employee,Stage,Status,Amount,Estimated,DateCreated',
+      '$filter': "Status eq 'Open'",
+      '$orderby':'Amount desc',
     });
     step(`OPPORTUNITIES — ${D.opportunities.length} rows`);
 
-    // 5. Aggregate — split using _year tag set during fetch
+    // 4b. Activities (last 120 days covers all windows: 7d, 120d)
+    const act120Start = (() => { const d=new Date(); d.setDate(d.getDate()-120); return d.toISOString().slice(0,10); })();
+    D.activities = await tryFetch('Activities', 'GC-ActivityTracking', {
+      '$select':'ID,AccountName,Summary,Owner,StartDate,RelatedEntityType,Description',
+      '$filter': `StartDate ge datetime'${act120Start}T00:00:00'`,
+      '$orderby':'StartDate desc',
+    });
+
+    // 4c. Tasks (open, due within next 7 days + recently completed)
+    const taskStart = (() => { const d=new Date(); d.setDate(d.getDate()-30); return d.toISOString().slice(0,10); })();
+    const taskEnd   = (() => { const d=new Date(); d.setDate(d.getDate()+7);  return d.toISOString().slice(0,10); })();
+    D.tasks = await tryFetch('Tasks', 'EP-Tasks', {
+      '$select':'ID,Summary,Owner,Login,AccountName,DueDate,Status,StartDate,Category',
+      '$filter': `DueDate ge datetime'${taskStart}T00:00:00' and DueDate le datetime'${taskEnd}T23:59:59'`,
+      '$orderby':'DueDate asc',
+    });
+
+    // 4d. Contacts lookup: Owner int → name for activities
+    //     Load from CR-Contacts for employees only (those with a Login)
+    const contactRows = await tryFetch('Contacts (owners)', 'CR-Contacts2018R1', {
+      '$select':'ContactID,FirstName,LastName,Login,OwnerName',
+      '$filter': "Login ne ''",
+      '$top':'200',
+    });
+    D.contacts = {};
+    contactRows.forEach(r => {
+      const id = parseInt(r.ContactID);
+      if (!isNaN(id)) {
+        const name = [r.FirstName, r.LastName].filter(Boolean).join(' ').trim() || r.OwnerName || r.Login || '';
+        D.contacts[id] = name;
+      }
+    });
+    addLog(`Contact lookup: ${Object.keys(D.contacts).length} entries`);
+
+    // 5. Aggregate — split data
     D.curSales   = D.sales.filter(r => r._year === curFyLabel);
-    D.priorSales = D.sales.filter(r => r._year === priFyLabel);
-    D.trailing12 = aggregateByPeriod(D.sales); // both years for trailing chart
+    // Prior YTD = same elapsed period as current (up to priEnd date) for apples-to-apples
+    D.priorSales = D.sales.filter(r => r._year === priFyLabel && r.InvoiceDate <= priEnd + 'T23:59:59Z');
+    // Trailing 12: dynamically filter to exactly 12 months before today
+    const t12StartDate = new Date(todayDate);
+    t12StartDate.setFullYear(t12StartDate.getFullYear() - 1);
+    t12StartDate.setDate(t12StartDate.getDate() + 1); // exclusive: day after same date last year
+    const t12StartStr = t12StartDate.toISOString().slice(0, 10);
+    D.trailing12rows = D.sales.filter(r => r.InvoiceDate >= t12StartStr + 'T00:00:00Z');
+    D.trailing12 = aggregateByPeriod(D.trailing12rows);
+    addLog(`Trailing 12M: ${t12StartStr} → ${todayStr} (${D.trailing12rows.length} rows)`);
     D.salesByClass = aggregateByClass(D.curSales);
     step('AGGREGATION COMPLETE');
 
@@ -944,6 +1035,8 @@ function aggregateByClass(rows) {
 // ─── FORMATTERS ───────────────────────────────────────────────────────────────
 const fmt$ = n => { const v=parseFloat(n); if(isNaN(v)) return '$0'; return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(v); };
 const fmtK = n => { const v=parseFloat(n); if(isNaN(v)) return '$0'; if(Math.abs(v)>=1e6) return '$'+(v/1e6).toFixed(2)+'M'; if(Math.abs(v)>=1e3) return '$'+(v/1e3).toFixed(1)+'K'; return '$'+v.toFixed(0); };
+// fmtKpi: for KPI cards — always abbreviates to keep values short
+const fmtKpi = n => { const v=parseFloat(n); if(isNaN(v)) return '$0'; if(Math.abs(v)>=1e6) return '$'+(v/1e6).toFixed(2)+'M'; if(Math.abs(v)>=1e3) return '$'+(v/1e3).toFixed(0)+'K'; return '$'+v.toFixed(0); };
 const fmtDate = d => { if(!d) return '—'; const dt=new Date(d); if(isNaN(dt)) return d; return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); };
 const fmtPct = (n,d) => { if(!d||d===0) return '—'; return ((n/d)*100).toFixed(1)+'%'; };
 
@@ -992,20 +1085,20 @@ function renderOverview() {
   const bhagYTD   = targets.bhagCum[lastMonthIdx];
 
   // KPIs
-  document.getElementById('kpi-ytd-actual').textContent = fmtK(ytdActual);
+  document.getElementById('kpi-ytd-actual').textContent = fmtKpi(ytdActual);
   document.getElementById('kpi-ytd-sub').textContent = `through ${MONTHS[lastMonthIdx]} ${fiscalYear} (${monthsIn} periods)`;
-  document.getElementById('kpi-annual-budget').textContent = fmtK(targets.annualBudget);
+  document.getElementById('kpi-annual-budget').textContent = fmtKpi(targets.annualBudget);
   document.getElementById('kpi-annual-budget-sub').textContent = `Budget target (FY ${fiscalYear})${activeRep ? ' · '+activeRep : ''}`;
-  document.getElementById('kpi-annual-bhag').textContent = fmtK(targets.annualBhag);
+  document.getElementById('kpi-annual-bhag').textContent = fmtKpi(targets.annualBhag);
   document.getElementById('kpi-annual-bhag-sub').textContent = `BHAG target (FY ${fiscalYear})${activeRep ? ' · '+activeRep : ''}`;
 
   const vsBudget = ytdActual - budgetYTD;
   const vsBhag   = ytdActual - bhagYTD;
-  document.getElementById('kpi-vs-budget').textContent = fmt$(Math.abs(vsBudget));
+  document.getElementById('kpi-vs-budget').textContent = fmtKpi(Math.abs(vsBudget));
   document.getElementById('kpi-vs-budget-sub').textContent = `${vsBudget >= 0 ? 'AHEAD of' : 'BEHIND'} budget (${fmtK(budgetYTD)} target)`;
   document.getElementById('kpi-budget-pill').innerHTML = pill(vsBudget >= 0, vsBudget >= 0 ? fmtPct(vsBudget,budgetYTD)+' ahead' : fmtPct(-vsBudget,budgetYTD)+' behind');
 
-  document.getElementById('kpi-vs-bhag').textContent = fmt$(Math.abs(vsBhag));
+  document.getElementById('kpi-vs-bhag').textContent = fmtKpi(Math.abs(vsBhag));
   document.getElementById('kpi-vs-bhag-sub').textContent = `${vsBhag >= 0 ? 'AHEAD of' : 'BEHIND'} BHAG (${fmtK(bhagYTD)} target)`;
   document.getElementById('kpi-bhag-pill').innerHTML = pill(vsBhag >= 0, vsBhag >= 0 ? fmtPct(vsBhag,bhagYTD)+' ahead' : fmtPct(-vsBhag,bhagYTD)+' behind');
 
@@ -1091,10 +1184,11 @@ function renderOverview() {
     },
   });
 
-  // Trailing 12 bar chart — use allRepSales (both years) for full 12-month view
-  // Aggregate all periods, sort chronologically, then take last 12
-  const t12DataFull = aggregateByPeriod(allRepSales);
-  const t12Data     = t12DataFull.slice(-12); // last 12 periods in chronological order
+  // Trailing 12 bar chart — use pre-filtered trailing12rows, re-filter by rep
+  const t12RepRows = D.trailing12rows
+    ? D.trailing12rows.filter(r => !activeRep || r.SalesRep === activeRep)
+    : allRepSales;
+  const t12Data = aggregateByPeriod(t12RepRows); // already a true 12-month window
   const cls12Data   = aggregateByClass(repSales);
   const t12Labels   = t12Data.map(d => d.label || d.period);
   const t12Sales    = t12Data.map(d => d.sales);
@@ -1440,101 +1534,178 @@ function renderCustomerTable() {
 }
 
 // ─── OPPORTUNITIES ────────────────────────────────────────────────────────────
+// ─── HELPER: resolve Owner int → name for activities ─────────────────────────
+function ownerName(id) {
+  if (!id) return '—';
+  return D.contacts[parseInt(id)] || 'ID:' + id;
+}
+
+// ─── HELPER: fuzzy match owner name to active rep filter ─────────────────────
+function ownerMatchesRep(name, activeRep) {
+  if (!activeRep) return true;
+  if (!name || name === '—') return false;
+  const n = name.toLowerCase(), r = activeRep.toLowerCase();
+  const parts = r.split(' ');
+  return n.includes(r) || parts.some(p => p.length > 2 && n.includes(p));
+}
+
 function renderOpportunities() {
   const activeRep = getActiveRepFilter();
-  const rows = D.opportunities.filter(r => {
-    if (activeRep) {
-      const owner = (r.Owner||'').trim();
-      if (owner !== activeRep && owner.toLowerCase() !== activeRep.toLowerCase()) return false;
-    }
-    return true;
-  });
-  const pipeline = rows.reduce((s,r)=>s+(+r.Total||0),0);
-  const weighted = rows.reduce((s,r)=>s+((+r.Total||0)*(+(r.Probability||0)/100)),0);
-  const avgProb  = rows.length ? rows.reduce((s,r)=>s+(+(r.Probability||0)),0)/rows.length : 0;
+  const today  = new Date();
+  const ago7   = new Date(today); ago7.setDate(ago7.getDate() - 7);
+  const ago120 = new Date(today); ago120.setDate(ago120.getDate() - 120);
+  const next7  = new Date(today); next7.setDate(next7.getDate() + 7);
 
-  document.getElementById('opp-kpi-pipeline').textContent = fmtK(pipeline);
-  document.getElementById('opp-kpi-sub').textContent      = `${rows.length} open deals`;
-  document.getElementById('opp-kpi-weighted').textContent = fmtK(weighted);
-  document.getElementById('opp-kpi-prob').textContent     = avgProb.toFixed(0)+'%';
+  // ── Opportunities
+  const oppRows = D.opportunities;
+  const pipeline = oppRows.reduce((s,r)=>s+(+r.Amount||0),0);
+  document.getElementById('opp-kpi-pipeline').textContent = fmtKpi(pipeline);
+  document.getElementById('opp-kpi-sub').textContent = `${oppRows.length} open deals`;
+  document.getElementById('opp-kpi-weighted').textContent = fmtKpi(pipeline * 0.5);
 
-  // Stage bars
+  // ── Activity KPIs
+  const acts7d = D.activities.filter(r => r.StartDate && new Date(r.StartDate) >= ago7
+    && ownerMatchesRep(ownerName(r.Owner), activeRep));
+  document.getElementById('act-kpi-7d').textContent = acts7d.length;
+  document.getElementById('act-kpi-7d-sub').textContent = 'last 7 days';
+
+  // ── Task KPIs
+  const tasks7d = D.tasks.filter(r =>
+    r.DueDate && new Date(r.DueDate) >= today && new Date(r.DueDate) <= next7
+    && r.Status !== 'Completed' && r.Status !== 'Canceled'
+    && ownerMatchesRep(r.Owner||'', activeRep));
+  document.getElementById('task-kpi-7d').textContent = tasks7d.length;
+
+  // ── Stage bars
+  const SCOLORS = ['#1e5080','#5b8fcc','#5a9e45','#c4890a','#6b52b8','#c4621a'];
   const stageMap = {};
-  rows.forEach(r => { const s=r.Stage||'Unknown'; stageMap[s]=(stageMap[s]||0)+(+r.Total||0); });
+  oppRows.forEach(r => { const s=r.Stage||'Unknown'; stageMap[s]=(stageMap[s]||0)+(+r.Amount||0); });
   const stageData = Object.entries(stageMap).sort((a,b)=>b[1]-a[1]);
-  const stageMax = stageData[0]?.[1]||1;
-  const SCOLORS=['#1e5080','#5b8fcc','#5a9e45','#c4890a','#6b52b8','#c4621a'];
-  document.getElementById('opp-stage-bars').innerHTML = stageData.map((([s,v],i) => {
+  const stageMax  = stageData[0]?.[1]||1;
+  document.getElementById('opp-stage-bars').innerHTML = stageData.map(([s,v],i) => {
     const pct=(v/stageMax)*100;
     return `<div class="bar-row"><div class="bar-lbl">${s}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${SCOLORS[i%SCOLORS.length]}">${pct>22?`<span class="bar-fill-lbl">${fmtK(v)}</span>`:''}</div></div>${pct<=22?`<div class="bar-val-out">${fmtK(v)}</div>`:''}</div>`;
-  })).join('');
-
-  // Rep bars
-  const repMap = {};
-  rows.forEach(r => { const o=r.Owner||'Unassigned'; repMap[o]=(repMap[o]||0)+(+r.Total||0); });
-  const repData = Object.entries(repMap).sort((a,b)=>b[1]-a[1]);
-  const repMax = repData[0]?.[1]||1;
-  document.getElementById('opp-rep-bars').innerHTML = repData.slice(0,10).map(([o,v],i) => {
-    const pct=(v/repMax)*100;
-    return `<div class="bar-row"><div class="bar-lbl">${o}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${SCOLORS[i%SCOLORS.length]}">${pct>22?`<span class="bar-fill-lbl">${fmtK(v)}</span>`:''}</div></div>${pct<=22?`<div class="bar-val-out">${fmtK(v)}</div>`:''}</div>`;
   }).join('');
 
-  // Build filters — always from full dataset so managers can switch
-  const allOwners = [...new Set(D.opportunities.map(r=>r.Owner).filter(Boolean))].sort();
+  // ── Activities last 7 days feed
+  document.getElementById('act-7d-badge').textContent = acts7d.length + ' activities';
+  document.getElementById('act-7d-feed').innerHTML = acts7d.length
+    ? acts7d.map(r => `
+        <div style="padding:9px 0;border-bottom:1px solid var(--border2)">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+            <span style="font-weight:700;font-size:12px;color:var(--asf-navy)">${r.AccountName||'—'}</span>
+            ${r.RelatedEntityType?`<span class="badge b-dim">${r.RelatedEntityType}</span>`:''}
+            <span style="margin-left:auto;font-size:10px;color:var(--muted)">${fmtDate(r.StartDate)}</span>
+          </div>
+          <div style="font-size:11px;color:var(--dim)">${r.Summary||r.Description||'No summary'}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Owner: ${ownerName(r.Owner)}</div>
+        </div>`).join('')
+    : '<div class="empty">No activities in the last 7 days.</div>';
+
+  // ── Tasks due next 7 days feed
+  document.getElementById('task-7d-badge').textContent = tasks7d.length + ' tasks';
+  document.getElementById('task-7d-feed').innerHTML = tasks7d.length
+    ? tasks7d.map(r => {
+        const due = new Date(r.DueDate);
+        const daysUntil = Math.ceil((due - today) / (1000*60*60*24));
+        const dueLabel = daysUntil < 0
+          ? `<span style="color:var(--red);font-weight:700">Overdue</span>`
+          : daysUntil === 0
+            ? `<span style="color:var(--yellow);font-weight:700">Due today</span>`
+            : `<span style="color:var(--dim)">Due in ${daysUntil}d</span>`;
+        return `<div style="padding:9px 0;border-bottom:1px solid var(--border2)">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+            <span style="font-weight:700;font-size:12px;color:var(--asf-navy)">${r.AccountName||r.Summary||'—'}</span>
+            <span class="badge b-dim">${r.Status||'Open'}</span>
+            <span style="margin-left:auto;font-size:10px">${dueLabel} · ${fmtDate(r.DueDate)}</span>
+          </div>
+          <div style="font-size:11px;color:var(--dim)">${r.Summary||'No summary'}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Owner: ${r.Owner||'—'}</div>
+        </div>`;
+      }).join('')
+    : '<div class="empty">No tasks due in the next 7 days.</div>';
+
+  // ── Customers active 120 days
+  renderAct120Table();
+
+  // ── Opp filters
   const stages = [...new Set(D.opportunities.map(r=>r.Stage).filter(Boolean))].sort();
-  document.getElementById('opp-stage-filter').innerHTML = '<option value="">All Stages</option>'+stages.map(s=>`<option>${s}</option>`).join('');
+  document.getElementById('opp-stage-filter').innerHTML =
+    '<option value="">All Stages</option>'+stages.map(s=>`<option>${s}</option>`).join('');
   if (USER.isManager) {
-    const repSel = document.getElementById('opp-rep-filter');
-    repSel.innerHTML = '<option value="">All Owners</option>'+allOwners.map(o=>`<option>${o}</option>`).join('');
-    repSel.style.display = '';
+    document.getElementById('opp-rep-filter').style.display = '';
   } else {
     document.getElementById('opp-rep-filter').style.display = 'none';
   }
-
   renderOppTable();
 }
 
-function renderOppTable() {
-  const search = document.getElementById('opp-search').value.toLowerCase();
-  const stage  = document.getElementById('opp-stage-filter').value;
-  const owner  = document.getElementById('opp-rep-filter').value;
+// ─── CUSTOMERS WITH ACTIVITY LAST 120 DAYS ───────────────────────────────────
+function renderAct120Table() {
+  const activeRep = getActiveRepFilter();
+  const today     = new Date();
+  const ago120    = new Date(today); ago120.setDate(today.getDate() - 120);
 
-  const activeRep2 = getActiveRepFilter();
-  let rows = D.opportunities.filter(r => {
-    if (activeRep2) {
-      const o = (r.Owner||'').trim();
-      if (o !== activeRep2 && o.toLowerCase() !== activeRep2.toLowerCase()) return false;
+  const custMap = {};
+  D.activities.forEach(r => {
+    if (!r.StartDate || new Date(r.StartDate) < ago120) return;
+    const oName = ownerName(r.Owner);
+    if (!ownerMatchesRep(oName, activeRep)) return;
+    const name = (r.AccountName||'').trim(); if (!name) return;
+    if (!custMap[name] || new Date(r.StartDate) > new Date(custMap[name].StartDate)) {
+      custMap[name] = { ...r, _ownerName: oName };
     }
-    if(search && !((r.AccountName||'').toLowerCase().includes(search)||(r.OpportunityID||'').toLowerCase().includes(search))) return false;
-    if(stage && r.Stage !== stage) return false;
-    if(USER.isManager && owner && r.Owner !== owner) return false;
+  });
+
+  const custList = Object.values(custMap).sort((a,b) => new Date(b.StartDate) - new Date(a.StartDate));
+  document.getElementById('act-120d-badge').textContent = custList.length + ' customers';
+
+  const search = (document.getElementById('act-120d-search')?.value||'').toLowerCase();
+  const filtered = search ? custList.filter(r => r.AccountName.toLowerCase().includes(search)) : custList;
+  document.getElementById('act-120d-count').textContent = `${filtered.length} / ${custList.length} customers`;
+
+  document.getElementById('act-120d-tbody').innerHTML = filtered.length
+    ? filtered.map(r => `<tr>
+        <td style="font-weight:600;color:var(--asf-navy)">${r.AccountName}</td>
+        <td style="color:var(--dim);white-space:nowrap">${fmtDate(r.StartDate)}</td>
+        <td style="color:var(--dim)">${r._ownerName}</td>
+        <td style="color:var(--muted);font-size:11px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+            title="${(r.Summary||r.Description||'').replace(/"/g,'&quot;')}">${r.Summary||r.Description||'—'}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" class="empty">No matching customers.</td></tr>';
+}
+
+function renderOppTable() {
+  const search    = document.getElementById('opp-search').value.toLowerCase();
+  const stage     = document.getElementById('opp-stage-filter').value;
+  const activeRep = getActiveRepFilter();
+
+  let rows = D.opportunities.filter(r => {
+    if (search && !((r.Customer||'').toLowerCase().includes(search)||(r.Opportunity||'').toLowerCase().includes(search))) return false;
+    if (stage && r.Stage !== stage) return false;
     return true;
   });
 
   document.getElementById('opp-count').textContent = `${rows.length} / ${D.opportunities.length} deals`;
 
-  const stageCls = s => { const v=(s||'').toLowerCase(); return v.includes('won')?'b-green':v.includes('prospect')||v.includes('qualif')?'b-blue':v.includes('proposal')||v.includes('negot')?'b-yellow':v.includes('lost')?'b-red':'b-dim'; };
+  const stageCls = s => {
+    const v=(s||'').toLowerCase();
+    return v.includes('won')?'b-green':v.includes('prospect')||v.includes('bid')||v.includes('qualif')?'b-blue':v.includes('proposal')||v.includes('negot')?'b-yellow':v.includes('lost')?'b-red':'b-dim';
+  };
 
-  document.getElementById('opp-tbody').innerHTML = rows.length ? rows.map(r => {
-    const prob = +r.Probability||0;
-    const weighted = ((+r.Total||0) * prob/100);
-    return `<tr>
-      <td style="color:var(--asf-blue);font-weight:600;white-space:nowrap">${r.OpportunityID||'—'}</td>
-      <td style="font-weight:500">${r.AccountName||'—'}</td>
+  document.getElementById('opp-tbody').innerHTML = rows.length ? rows.map(r => `<tr>
+      <td style="color:var(--asf-blue);font-weight:600;white-space:nowrap">${r.Opportunity||'—'}</td>
+      <td style="font-weight:500">${r.Customer||'—'}</td>
+      <td style="color:var(--dim)">${r.Employee||'—'}</td>
       <td><span class="badge ${stageCls(r.Stage)}">${r.Stage||'—'}</span></td>
       <td><span class="badge b-dim">${r.Status||'—'}</span></td>
-      <td>
-        <div class="prob-wrap">
-          <div class="prob-track"><div class="prob-fill" style="width:${prob}%"></div></div>
-          <span style="font-size:10px;color:var(--muted);font-weight:600">${prob}%</span>
-        </div>
-      </td>
-      <td style="color:var(--dim);white-space:nowrap">${fmtDate(r.EstimatedCloseDate)}</td>
-      <td style="text-align:right;color:var(--asf-navy);font-weight:700">${fmt$(r.Total)}</td>
-      <td style="text-align:right;color:var(--asf-green);font-weight:600">${fmt$(weighted)}</td>
-      <td style="color:var(--muted);font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.Description||''}">${r.Description||'—'}</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="9" class="empty">No matching opportunities.</td></tr>';
+      <td>—</td>
+      <td style="color:var(--dim);white-space:nowrap">${fmtDate(r.Estimated)}</td>
+      <td style="text-align:right;color:var(--asf-navy);font-weight:700">${fmt$(r.Amount)}</td>
+      <td style="text-align:right;color:var(--asf-green);font-weight:600">—</td>
+      <td></td>
+    </tr>`).join('')
+    : '<tr><td colspan="10" class="empty">No matching opportunities.</td></tr>';
 }
 
 // ─── TAB NAV ──────────────────────────────────────────────────────────────────
