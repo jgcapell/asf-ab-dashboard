@@ -509,7 +509,7 @@
           <div class="card-body"><div class="kpi-val" id="opp-kpi-weighted" style="color:var(--asf-green)">—</div><div class="kpi-sub">probability-adjusted</div></div>
         </div>
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Activities (Last 7 Days)</span></div>
+          <div class="card-hdr"><span class="card-title">Activities (±7 Days)</span></div>
           <div class="card-body"><div class="kpi-val" id="act-kpi-7d" style="color:var(--asf-navy)">—</div><div class="kpi-sub" id="act-kpi-7d-sub">logged interactions</div></div>
         </div>
         <div class="card">
@@ -521,7 +521,7 @@
       <!-- Activities last 7 days + Tasks due next 7 days -->
       <div class="row cols-2">
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Activities — Last 7 Days</span><span class="card-badge" id="act-7d-badge"></span></div>
+          <div class="card-hdr"><span class="card-title">Activities — Last &amp; Next 7 Days</span><span class="card-badge" id="act-7d-badge"></span></div>
           <div class="card-scroll" style="max-height:320px">
             <div id="act-7d-feed" style="padding:10px 14px"></div>
           </div>
@@ -636,6 +636,12 @@ function getTargets(repName) {
   if (repName && REP_TARGETS[repName]) return REP_TARGETS[repName];
   return { annualBudget: 17710000, annualBhag: 19656566, budgetCum: BUDGET_CUM, bhagCum: BHAG_CUM };
 }
+
+// Reps excluded from the global filter dropdown
+const EXCLUDED_REPS = new Set([
+  'Jeremy Diggs', 'Mike Garvey', 'Emily Johnson',
+  'Katie Haynes', 'Jennifer Paredes', 'Chris Galinetti', 'Zanna Kelly'
+]);
 
 const TRAILING_AGO = (() => { const d=new Date(); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); })();
 const CUR_YEAR = new Date().getFullYear();
@@ -919,12 +925,15 @@ async function loadData() {
     });
     step(`OPPORTUNITIES — ${D.opportunities.length} rows`);
 
-    // 4b. Activities (last 120 days covers all windows: 7d, 120d)
-    const act120Start = (() => { const d=new Date(); d.setDate(d.getDate()-120); return d.toISOString().slice(0,10); })();
+    // 4b. Activities — fetch a broad window (past 120 + future 30 days)
+    //     StartDate on GC-ActivityTracking is the scheduled/activity date (can be future)
+    const actWinStart = (() => { const d=new Date(); d.setDate(d.getDate()-120); return d.toISOString().slice(0,10); })();
+    const actWinEnd   = (() => { const d=new Date(); d.setDate(d.getDate()+30);  return d.toISOString().slice(0,10); })();
     D.activities = await tryFetch('Activities', 'GC-ActivityTracking', {
       '$select':'ID,AccountName,Summary,Owner,StartDate,RelatedEntityType,Description',
-      '$filter': `StartDate ge datetime'${act120Start}T00:00:00'`,
+      '$filter': `StartDate ge datetime'${actWinStart}T00:00:00' and StartDate le datetime'${actWinEnd}T23:59:59'`,
       '$orderby':'StartDate desc',
+      '$top':'500',
     });
 
     // 4c. Tasks (open, due within next 7 days + recently completed)
@@ -988,7 +997,9 @@ async function loadData() {
 
     // Populate global rep selector (managers only)
     if (USER.isManager) {
-      const reps = [...new Set(D.sales.map(r=>r.SalesRep).filter(Boolean))].sort();
+      const reps = [...new Set(D.sales.map(r=>r.SalesRep).filter(Boolean))]
+        .filter(r => !EXCLUDED_REPS.has(r))
+        .sort();
       const sel = document.getElementById('global-rep-select');
       const cur = sel.value;
       sel.innerHTML = '<option value="">All Reps</option>' + reps.map(r=>`<option${r===cur?' selected':''}>${r}</option>`).join('');
@@ -1139,14 +1150,17 @@ function renderOverview() {
   document.getElementById('gauge-bhag-actual').textContent   = 'Actual: '+fmtK(ytdActual);
   document.getElementById('gauge-bhag-target').textContent   = 'BHAG: '+fmtK(bhagYTD);
 
-  // Cumulative YTD Line Chart
-  // Build actual cumulative per month for current year
-  // PP→calendar month: (PP + 9) % 12
-  const actualByMonth = Array(12).fill(null);
+  // Cumulative YTD Line Chart — fiscal year order: Nov, Dec, Jan, Feb, ..., Oct
+  // Fiscal period PP: 01=Nov, 02=Dec, 03=Jan, 04=Feb, ..., 12=Oct
+  // x-axis labels in fiscal order (PP 01→12)
+  const FY_LABELS = ['Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'];
+
+  // Build actual sales indexed by fiscal period (PP 01-12 → index 0-11)
+  const actualByFP = Array(12).fill(null);
   periodsThisYear.forEach(p => {
-    const pp = parseInt(p.slice(-2));
-    const mo = (pp + 9) % 12;  // convert fiscal period to 0-indexed calendar month
-    if (mo >= 0 && mo <= 11) {
+    const pp = parseInt(p.slice(-2)); // fiscal period 1-12
+    const idx = pp - 1;              // 0-indexed
+    if (idx >= 0 && idx <= 11) {
       const sum = ytdRows.filter(r => {
         const fp = (r.FinancialPeriod||'').trim();
         if (/^\d{6}$/.test(fp)) return fp === p;
@@ -1154,22 +1168,28 @@ function renderOverview() {
         if (!d || isNaN(d)) return false;
         return (String(d.getFullYear()) + String(d.getMonth()+1).padStart(2,'0')) === p;
       }).reduce((s, r) => s + (+r.ExtAmount||0), 0);
-      actualByMonth[mo] = (actualByMonth[mo]||0) + sum;
+      actualByFP[idx] = (actualByFP[idx]||0) + sum;
     }
   });
-  // Make cumulative
+
+  // Make cumulative in fiscal order
   const actualCum = [];
   let run = 0;
-  for(let i=0; i<12; i++) {
-    if(actualByMonth[i] !== null) { run += actualByMonth[i]; actualCum.push(run); }
+  for (let i = 0; i < 12; i++) {
+    if (actualByFP[i] !== null) { run += actualByFP[i]; actualCum.push(run); }
     else actualCum.push(null);
   }
+
+  // Budget/BHAG are already stored in fiscal order (PP01→PP12) in REP_TARGETS
+  // targets.budgetCum[0] = cumulative through PP01 (Nov), [1] = through PP02 (Dec), etc.
+  const budgetFYCum = targets.budgetCum;   // already fiscal-period-ordered
+  const bhagFYCum   = targets.bhagCum;     // already fiscal-period-ordered
 
   if(chartYTD) chartYTD.destroy();
   chartYTD = new Chart(document.getElementById('chart-ytd').getContext('2d'), {
     type: 'line',
     data: {
-      labels: MONTHS,
+      labels: FY_LABELS,
       datasets: [
         {
           label: 'Actual', data: actualCum,
@@ -1178,13 +1198,13 @@ function renderOverview() {
           tension: 0.3, fill: false,
         },
         {
-          label: 'Budget', data: BUDGET_CUM,
+          data: budgetFYCum,
           borderColor: '#5b8fcc', backgroundColor: 'transparent',
           borderWidth: 2, borderDash: [6,4], pointRadius: 3, pointBackgroundColor: '#5b8fcc',
           tension: 0.3,
         },
         {
-          label: 'BHAG', data: BHAG_CUM,
+          data: bhagFYCum,
           borderColor: '#5a9e45', backgroundColor: 'transparent',
           borderWidth: 2, borderDash: [3,3], pointRadius: 3, pointBackgroundColor: '#5a9e45',
           tension: 0.3,
@@ -1391,7 +1411,7 @@ function renderCustomerData() {
   document.getElementById('cust-kpi-disp').textContent = totalDisp;
 
   // Populate rep filter
-  const reps = [...new Set(custData.map(r=>r.rep).filter(r=>r&&r!=='—'))].sort();
+  const reps = [...new Set(custData.map(r=>r.rep).filter(r=>r&&r!=='—'))].filter(r => !EXCLUDED_REPS.has(r)).sort();
   document.getElementById('cust-rep-filter').innerHTML = '<option value="">All Reps</option>' + reps.map(r=>`<option>${r}</option>`).join('');
 
   renderCustomerTable();
@@ -1591,11 +1611,14 @@ function renderOpportunities() {
   document.getElementById('opp-kpi-sub').textContent = `${oppRows.length} open deals`;
   document.getElementById('opp-kpi-weighted').textContent = fmtKpi(pipeline * 0.5);
 
-  // ── Activity KPIs
-  const acts7d = D.activities.filter(r => r.StartDate && new Date(r.StartDate) >= ago7
+  // ── Activity KPIs — window covers past 7 days AND next 7 days
+  //     (StartDate on activities is a scheduled date, can be past or future)
+  const next7ForAct = new Date(today); next7ForAct.setDate(today.getDate() + 7);
+  const acts7d = D.activities.filter(r =>
+    r.StartDate && new Date(r.StartDate) >= ago7 && new Date(r.StartDate) <= next7ForAct
     && ownerMatchesRep(ownerName(r.Owner), activeRep));
   document.getElementById('act-kpi-7d').textContent = acts7d.length;
-  document.getElementById('act-kpi-7d-sub').textContent = 'last 7 days';
+  document.getElementById('act-kpi-7d-sub').textContent = '±7 days';
 
   // ── Task KPIs
   const tasks7d = D.tasks.filter(r =>
@@ -1616,6 +1639,8 @@ function renderOpportunities() {
   }).join('');
 
   // ── Activities last 7 days feed
+  // Sort by StartDate ascending so upcoming appear at top after past
+  acts7d.sort((a,b) => new Date(a.StartDate) - new Date(b.StartDate));
   document.getElementById('act-7d-badge').textContent = acts7d.length + ' activities';
   document.getElementById('act-7d-feed').innerHTML = acts7d.length
     ? acts7d.map(r => `
@@ -1675,10 +1700,14 @@ function renderAct120Table() {
   const today      = new Date();
   const ago120     = new Date(today); ago120.setDate(today.getDate() - 120);
 
-  // Build set of customers who HAVE had activity in last 120 days
+  // Build set of customers who HAVE had activity logged (past 120 days OR any future)
+  // Both past and scheduled future activities count as "active"
   const activeSet = new Set();
   D.activities.forEach(r => {
-    if (!r.StartDate || new Date(r.StartDate) < ago120) return;
+    if (!r.StartDate) return;
+    const actDate = new Date(r.StartDate);
+    // Include if within last 120 days OR scheduled for the future
+    if (actDate < ago120 && actDate < today) return;
     const name = (r.AccountName||'').trim(); if (!name) return;
     activeSet.add(name.toLowerCase());
   });
