@@ -537,7 +537,7 @@
       <!-- Customers with activity in last 120 days + Pipeline by stage/rep -->
       <div class="row cols-2">
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Customers with Activity — Last 120 Days</span><span class="card-badge" id="act-120d-badge"></span></div>
+          <div class="card-hdr"><span class="card-title">Customers with No Activity — Last 120 Days</span><span class="card-badge" id="act-120d-badge"></span></div>
           <div class="ctrl-bar">
             <input class="ctrl-input" id="act-120d-search" placeholder="Search customer…" oninput="renderAct120Table()">
             <div class="row-count" id="act-120d-count"></div>
@@ -546,9 +546,9 @@
             <table>
               <thead><tr>
                 <th>Customer</th>
-                <th>Last Activity</th>
-                <th>Owner</th>
-                <th>Summary</th>
+                <th>Activity Status</th>
+                <th>Sales Rep</th>
+                <th style="text-align:right">YTD Sales</th>
               </tr></thead>
               <tbody id="act-120d-tbody"></tbody>
             </table>
@@ -841,7 +841,7 @@ async function tryFetch(label, endpoint, params) {
 }
 
 // ─── DATA STORE ───────────────────────────────────────────────────────────────
-let D = { sales:[], ar:[], displays:[], opportunities:[], activities:[], tasks:[], contacts:{}, trailing12:[], trailing12rows:[], salesByClass:[], priorSales:[] };
+let D = { sales:[], ar:[], displays:[], opportunities:[], activities:[], tasks:[], contacts:{}, empCodeToName:{}, repNameToEmpCode:{}, trailing12:[], trailing12rows:[], salesByClass:[], priorSales:[] };
 
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
 async function loadData() {
@@ -952,6 +952,22 @@ async function loadData() {
       }
     });
     addLog(`Contact lookup: ${Object.keys(D.contacts).length} entries`);
+
+    // 4e. Employee code → rep name lookup for Opportunities (BI-Opportunities uses codes like Z119)
+    //     Build from EP-Tasks which has both EmployeeID (code) and Owner (full name)
+    D.empCodeToName = {};
+    D.tasks.forEach(r => {
+      const code = (r.EmployeeID||'').trim();
+      const name = (r.Owner||'').trim();
+      if (code && name) D.empCodeToName[code] = name;
+    });
+    // Also map from D.sales SalesRep → try to find matching employee
+    // And build a repName → employeeCode reverse map for filtering opps
+    D.repNameToEmpCode = {};
+    Object.entries(D.empCodeToName).forEach(([code, name]) => {
+      D.repNameToEmpCode[name] = code;
+    });
+    addLog(`Employee code lookup: ${Object.keys(D.empCodeToName).length} entries`);
 
     // 5. Aggregate — split data
     D.curSales   = D.sales.filter(r => r._year === curFyLabel);
@@ -1072,10 +1088,14 @@ function renderOverview() {
   }).filter(Boolean))].sort();
 
   const monthsIn = periodsThisYear.length || 1;
-  // Last period: last 2 digits = month number (1-based)
-  const lastPeriod = periodsThisYear[periodsThisYear.length - 1] || '';
-  const lastMonthNum = lastPeriod ? parseInt(lastPeriod.slice(-2)) : 1;
-  const lastMonthIdx = Math.min(lastMonthNum - 1, 11);
+  // Convert last fiscal period number to calendar month index
+  // PP=01→Nov(10), PP=02→Dec(11), PP=03→Jan(0)... PP=07→May(4)
+  // Formula: (PP + 9) % 12
+  const lastPeriod    = periodsThisYear[periodsThisYear.length - 1] || '';
+  const lastPP        = lastPeriod ? parseInt(lastPeriod.slice(-2)) : 1;
+  const lastMonthIdx  = (lastPP + 9) % 12;  // 0-indexed calendar month
+  // Calendar year for the label: PP 01-02 belong to FY start year (prior cal year)
+  const lastCalYear   = lastPP <= 2 ? parseInt(fiscalYear) - 1 : parseInt(fiscalYear);
 
   const ytdActual = ytdRows.reduce((s,r) => s+(+r.ExtAmount||0), 0);
 
@@ -1086,7 +1106,7 @@ function renderOverview() {
 
   // KPIs
   document.getElementById('kpi-ytd-actual').textContent = fmtKpi(ytdActual);
-  document.getElementById('kpi-ytd-sub').textContent = `through ${MONTHS[lastMonthIdx]} ${fiscalYear} (${monthsIn} periods)`;
+  document.getElementById('kpi-ytd-sub').textContent = `through ${MONTHS[lastMonthIdx]} ${lastCalYear} (${monthsIn} periods)`;
   document.getElementById('kpi-annual-budget').textContent = fmtKpi(targets.annualBudget);
   document.getElementById('kpi-annual-budget-sub').textContent = `Budget target (FY ${fiscalYear})${activeRep ? ' · '+activeRep : ''}`;
   document.getElementById('kpi-annual-bhag').textContent = fmtKpi(targets.annualBhag);
@@ -1103,7 +1123,7 @@ function renderOverview() {
   document.getElementById('kpi-bhag-pill').innerHTML = pill(vsBhag >= 0, vsBhag >= 0 ? fmtPct(vsBhag,bhagYTD)+' ahead' : fmtPct(-vsBhag,bhagYTD)+' behind');
 
   // Gauges
-  const asOf = `As of ${MONTHS[lastMonthIdx]} ${fiscalYear}`;
+  const asOf = `As of ${MONTHS[lastMonthIdx]} ${lastCalYear}`;
   document.getElementById('gauge-as-of').textContent = asOf;
 
   const bPct = Math.min((ytdActual/budgetYTD)*100, 110);
@@ -1121,10 +1141,11 @@ function renderOverview() {
 
   // Cumulative YTD Line Chart
   // Build actual cumulative per month for current year
+  // PP→calendar month: (PP + 9) % 12
   const actualByMonth = Array(12).fill(null);
   periodsThisYear.forEach(p => {
-    // p is "YYYYMM" e.g. "202507" → month index = parseInt("07") - 1 = 6
-    const mo = parseInt(p.slice(-2)) - 1;
+    const pp = parseInt(p.slice(-2));
+    const mo = (pp + 9) % 12;  // convert fiscal period to 0-indexed calendar month
     if (mo >= 0 && mo <= 11) {
       const sum = ytdRows.filter(r => {
         const fp = (r.FinancialPeriod||'').trim();
@@ -1556,8 +1577,15 @@ function renderOpportunities() {
   const ago120 = new Date(today); ago120.setDate(ago120.getDate() - 120);
   const next7  = new Date(today); next7.setDate(next7.getDate() + 7);
 
-  // ── Opportunities
-  const oppRows = D.opportunities;
+  // ── Opportunities — filter by rep using employee code lookup
+  const oppRows = activeRep
+    ? D.opportunities.filter(r => {
+        const empCode = (r.Employee||'').trim();
+        // Match by employee code → name, or by name directly
+        const empName = D.empCodeToName[empCode] || empCode;
+        return ownerMatchesRep(empName, activeRep);
+      })
+    : D.opportunities;
   const pipeline = oppRows.reduce((s,r)=>s+(+r.Amount||0),0);
   document.getElementById('opp-kpi-pipeline').textContent = fmtKpi(pipeline);
   document.getElementById('opp-kpi-sub').textContent = `${oppRows.length} open deals`;
@@ -1640,39 +1668,49 @@ function renderOpportunities() {
   renderOppTable();
 }
 
-// ─── CUSTOMERS WITH ACTIVITY LAST 120 DAYS ───────────────────────────────────
+// ─── CUSTOMERS WITH NO ACTIVITY IN LAST 120 DAYS (inactive customers) ──────────
 function renderAct120Table() {
-  const activeRep = getActiveRepFilter();
-  const today     = new Date();
-  const ago120    = new Date(today); ago120.setDate(today.getDate() - 120);
+  const activeRep  = getActiveRepFilter();
+  const fetchYear  = String(CUR_YEAR);
+  const today      = new Date();
+  const ago120     = new Date(today); ago120.setDate(today.getDate() - 120);
 
-  const custMap = {};
+  // Build set of customers who HAVE had activity in last 120 days
+  const activeSet = new Set();
   D.activities.forEach(r => {
     if (!r.StartDate || new Date(r.StartDate) < ago120) return;
-    const oName = ownerName(r.Owner);
-    if (!ownerMatchesRep(oName, activeRep)) return;
     const name = (r.AccountName||'').trim(); if (!name) return;
-    if (!custMap[name] || new Date(r.StartDate) > new Date(custMap[name].StartDate)) {
-      custMap[name] = { ...r, _ownerName: oName };
-    }
+    activeSet.add(name.toLowerCase());
   });
 
-  const custList = Object.values(custMap).sort((a,b) => new Date(b.StartDate) - new Date(a.StartDate));
-  document.getElementById('act-120d-badge').textContent = custList.length + ' customers';
+  // All customers from current FY sales, filtered by rep
+  const salesCusts = {};
+  D.sales.filter(r => r._year === fetchYear && (!activeRep || r.SalesRep === activeRep))
+    .forEach(r => {
+      const name = (r.CustomerName||'').trim(); if (!name) return;
+      if (!salesCusts[name]) salesCusts[name] = { name, rep: r.SalesRep||'—', ytd: 0 };
+      salesCusts[name].ytd += +r.ExtAmount||0;
+    });
+
+  // Inactive = customers with YTD sales but NO activity in last 120 days
+  const inactive = Object.values(salesCusts)
+    .filter(c => !activeSet.has(c.name.toLowerCase()))
+    .sort((a,b) => b.ytd - a.ytd); // sort by YTD sales desc (highest-value neglected first)
+
+  document.getElementById('act-120d-badge').textContent = inactive.length + ' inactive';
 
   const search = (document.getElementById('act-120d-search')?.value||'').toLowerCase();
-  const filtered = search ? custList.filter(r => r.AccountName.toLowerCase().includes(search)) : custList;
-  document.getElementById('act-120d-count').textContent = `${filtered.length} / ${custList.length} customers`;
+  const filtered = search ? inactive.filter(r => r.name.toLowerCase().includes(search)) : inactive;
+  document.getElementById('act-120d-count').textContent = `${filtered.length} / ${inactive.length} customers`;
 
   document.getElementById('act-120d-tbody').innerHTML = filtered.length
     ? filtered.map(r => `<tr>
-        <td style="font-weight:600;color:var(--asf-navy)">${r.AccountName}</td>
-        <td style="color:var(--dim);white-space:nowrap">${fmtDate(r.StartDate)}</td>
-        <td style="color:var(--dim)">${r._ownerName}</td>
-        <td style="color:var(--muted);font-size:11px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
-            title="${(r.Summary||r.Description||'').replace(/"/g,'&quot;')}">${r.Summary||r.Description||'—'}</td>
+        <td style="font-weight:600;color:var(--asf-navy)">${r.name}</td>
+        <td style="color:var(--red);font-weight:600">No activity in 120+ days</td>
+        <td style="color:var(--dim)">${r.rep}</td>
+        <td style="text-align:right;color:var(--asf-blue);font-weight:600">${fmt$(r.ytd)}</td>
       </tr>`).join('')
-    : '<tr><td colspan="4" class="empty">No matching customers.</td></tr>';
+    : '<div style="padding:20px;text-align:center;color:var(--asf-green);font-weight:600">✓ All customers have recent activity</div>';
 }
 
 function renderOppTable() {
@@ -1681,6 +1719,12 @@ function renderOppTable() {
   const activeRep = getActiveRepFilter();
 
   let rows = D.opportunities.filter(r => {
+    // Apply global rep filter via employee code lookup
+    if (activeRep) {
+      const empCode = (r.Employee||'').trim();
+      const empName = D.empCodeToName[empCode] || empCode;
+      if (!ownerMatchesRep(empName, activeRep)) return false;
+    }
     if (search && !((r.Customer||'').toLowerCase().includes(search)||(r.Opportunity||'').toLowerCase().includes(search))) return false;
     if (stage && r.Stage !== stage) return false;
     return true;
@@ -1693,10 +1737,13 @@ function renderOppTable() {
     return v.includes('won')?'b-green':v.includes('prospect')||v.includes('bid')||v.includes('qualif')?'b-blue':v.includes('proposal')||v.includes('negot')?'b-yellow':v.includes('lost')?'b-red':'b-dim';
   };
 
-  document.getElementById('opp-tbody').innerHTML = rows.length ? rows.map(r => `<tr>
+  document.getElementById('opp-tbody').innerHTML = rows.length ? rows.map(r => {
+    const empCode = (r.Employee||'').trim();
+    const ownerDisplay = D.empCodeToName[empCode] || empCode || '—';
+    return `<tr>
       <td style="color:var(--asf-blue);font-weight:600;white-space:nowrap">${r.Opportunity||'—'}</td>
       <td style="font-weight:500">${r.Customer||'—'}</td>
-      <td style="color:var(--dim)">${r.Employee||'—'}</td>
+      <td style="color:var(--dim)">${ownerDisplay}</td>
       <td><span class="badge ${stageCls(r.Stage)}">${r.Stage||'—'}</span></td>
       <td><span class="badge b-dim">${r.Status||'—'}</span></td>
       <td>—</td>
@@ -1704,7 +1751,8 @@ function renderOppTable() {
       <td style="text-align:right;color:var(--asf-navy);font-weight:700">${fmt$(r.Amount)}</td>
       <td style="text-align:right;color:var(--asf-green);font-weight:600">—</td>
       <td></td>
-    </tr>`).join('')
+    </tr>`;
+  }).join('')
     : '<tr><td colspan="10" class="empty">No matching opportunities.</td></tr>';
 }
 
