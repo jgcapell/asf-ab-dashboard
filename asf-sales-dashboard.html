@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASF Sales Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@800&display=swap');
+  :root {
+    --bg:       #020c1a;
+    --surface:  #071524;
+    --border:   #0d2744;
+    --border2:  #0a1e32;
+    --muted:    #2d4a6b;
+    --dim:      #334155;
+    --text:     #cbd5e1;
+    --bright:   #f1f5f9;
+    --accent:   #38bdf8;
+    --green:    #22c55e;
+    --yellow:   #eab308;
+    --orange:   #f97316;
+    --red:      #ef4444;
+    --purple:   #a78bfa;
+    --radius:   6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Mono', 'Courier New', monospace; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── Loading overlay ── */
+  #loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 14px; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .loading-text { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Login ── */
+  #login-screen { display: none; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-card { width: 380px; padding: 40px 36px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; text-align: center; }
+  .login-logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--bright); margin-bottom: 4px; }
+  .login-sub-title { font-size: 10px; color: var(--dim); letter-spacing: 0.12em; margin-bottom: 32px; }
+  .login-btn { width: 100%; padding: 12px; background: #0d3060; border: 1px solid #1e4976; color: var(--accent); border-radius: var(--radius); font-size: 12px; font-family: inherit; font-weight: 600; letter-spacing: 0.08em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: background 0.2s; }
+  .login-btn:hover { background: #122d5c; }
+  .login-note { font-size: 10px; color: var(--muted); margin-top: 16px; line-height: 1.6; }
+  .error-box { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 10px 14px; border-radius: var(--radius); font-size: 11px; margin-bottom: 20px; display: none; text-align: left; }
+
+  /* ── Dashboard ── */
+  #dashboard { display: none; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, var(--bg), #071524, var(--bg)); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .header-left .title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--bright); letter-spacing: -0.02em; }
+  .header-left .subtitle { font-size: 10px; color: var(--dim); margin-top: 2px; letter-spacing: 0.1em; }
+  .header-right { display: flex; gap: 8px; align-items: center; }
+  .btn { background: transparent; border: 1px solid var(--border); color: var(--dim); padding: 6px 12px; border-radius: var(--radius); font-size: 10px; font-family: inherit; cursor: pointer; letter-spacing: 0.08em; transition: all 0.15s; white-space: nowrap; }
+  .btn:hover { border-color: var(--muted); color: var(--text); }
+  .btn-primary { background: #071e38; border-color: #1e4976; color: var(--accent); display: flex; align-items: center; gap: 6px; }
+  .btn-primary:hover { background: #0d2744; }
+  .btn-primary:disabled { color: var(--dim); cursor: wait; }
+  .spin { display: inline-block; animation: spin 1s linear infinite; }
+
+  /* Progress bar */
+  #progress-bar-wrap { background: #030d1c; border-bottom: 1px solid var(--border); padding: 10px 24px; display: none; }
+  .progress-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--dim); margin-bottom: 5px; }
+  .progress-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #1e4976, var(--accent)); border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+
+  /* Debug log */
+  #debug-log { background: #030d1c; border-bottom: 1px solid var(--border); padding: 10px 24px; max-height: 180px; overflow-y: auto; display: none; }
+  .log-header { font-size: 9px; color: var(--green); letter-spacing: 0.12em; margin-bottom: 4px; }
+  .log-line { font-size: 10px; padding: 1px 0; color: var(--dim); }
+  .log-line.ok    { color: var(--green); }
+  .log-line.error { color: var(--red); }
+  .log-line.warn  { color: var(--orange); }
+
+  /* Error banner */
+  #error-banner { background: rgba(239,68,68,0.1); border-bottom: 1px solid rgba(239,68,68,0.3); color: #fca5a5; padding: 8px 24px; font-size: 11px; display: none; align-items: center; gap: 14px; }
+
+  /* Nav tabs */
+  #nav-tabs { display: none; gap: 2px; padding: 0 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .nav-tab { background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--dim); padding: 10px 16px; font-size: 10px; font-family: inherit; font-weight: 600; letter-spacing: 0.1em; cursor: pointer; transition: all 0.15s; }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Panels */
+  .panel-grid { display: grid; gap: 16px; padding: 20px 24px; }
+  .panel-grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .panel-grid-2 { grid-template-columns: 1fr 1fr; }
+  .panel-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .panel-grid-1 { grid-template-columns: 1fr; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .panel-header { padding: 10px 14px; border-bottom: 1px solid var(--border2); display: flex; align-items: center; gap: 8px; }
+  .panel-title { font-size: 9px; font-weight: 600; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; }
+  .panel-body { padding: 14px; }
+  .panel-body-scroll { padding: 0; max-height: 420px; overflow-y: auto; }
+
+  /* KPI cards */
+  .kpi-val { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--bright); letter-spacing: -0.03em; margin: 6px 0 4px; }
+  .kpi-sub { font-size: 9px; color: var(--muted); letter-spacing: 0.08em; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  thead th { text-align: left; padding: 7px 10px; color: var(--muted); font-weight: 600; font-size: 9px; letter-spacing: 0.1em; background: var(--bg); border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
+  thead th:hover { color: var(--accent); }
+  thead th.no-sort { cursor: default; }
+  thead th.no-sort:hover { color: var(--muted); }
+  tbody tr { border-bottom: 1px solid #071524; }
+  tbody tr:hover td { background: #0a1f36; }
+  tbody td { padding: 7px 10px; vertical-align: middle; }
+
+  /* Badges */
+  .badge { padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; display: inline-block; }
+  .badge-blue   { background: rgba(56,189,248,0.1); color: #38bdf8; border: 1px solid rgba(56,189,248,0.25); }
+  .badge-green  { background: rgba(34,197,94,0.1);  color: #22c55e; border: 1px solid rgba(34,197,94,0.25); }
+  .badge-yellow { background: rgba(234,179,8,0.1);  color: #eab308; border: 1px solid rgba(234,179,8,0.25); }
+  .badge-orange { background: rgba(249,115,22,0.1); color: #f97316; border: 1px solid rgba(249,115,22,0.25); }
+  .badge-red    { background: rgba(239,68,68,0.1);  color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+  .badge-purple { background: rgba(167,139,250,0.1);color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
+  .badge-dim    { background: rgba(100,116,139,0.1);color: #64748b; border: 1px solid rgba(100,116,139,0.25); }
+
+  /* Bar chart rows */
+  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .bar-label { width: 120px; font-size: 10px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 16px; background: #0a1e32; border-radius: 3px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 3px; transition: width 0.6s ease; display: flex; align-items: center; padding-left: 6px; }
+  .bar-fill-label { font-size: 9px; color: rgba(255,255,255,0.75); font-weight: 600; white-space: nowrap; }
+  .bar-val-out { font-size: 10px; color: var(--muted); min-width: 60px; text-align: right; flex-shrink: 0; }
+
+  /* Probability bar */
+  .prob-wrap { display: flex; align-items: center; gap: 6px; }
+  .prob-track { width: 60px; height: 4px; background: #1e293b; border-radius: 2px; overflow: hidden; }
+  .prob-fill  { height: 100%; border-radius: 2px; background: var(--accent); }
+
+  /* Activity feed */
+  .activity-item { padding: 10px 14px; border-left: 2px solid var(--border); margin-bottom: 6px; }
+  .activity-item:hover { border-left-color: var(--accent); background: #0a1f36; }
+  .activity-account { font-size: 11px; font-weight: 500; color: var(--bright); }
+  .activity-summary { font-size: 10px; color: var(--dim); margin-top: 3px; }
+  .activity-meta { font-size: 9px; color: var(--muted); margin-top: 4px; display: flex; gap: 10px; }
+
+  /* Chart container */
+  .chart-wrap { position: relative; height: 220px; }
+
+  /* Controls */
+  .controls-bar { display: flex; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border2); flex-wrap: wrap; align-items: center; }
+  .ctrl-input  { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: var(--radius); font-size: 11px; font-family: inherit; outline: none; width: 200px; }
+  .ctrl-input::placeholder { color: var(--muted); }
+  .ctrl-select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: var(--radius); font-size: 11px; font-family: inherit; outline: none; cursor: pointer; }
+  .ctrl-select option { background: var(--surface); }
+  .item-count { margin-left: auto; font-size: 10px; color: var(--muted); }
+
+  /* Tab content */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Empty */
+  .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 11px; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0a1628; }
+  ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Initializing...</div>
+</div>
+
+<!-- Login screen -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">All South Flooring</div>
+    <div class="login-sub-title">SALES INTELLIGENCE DASHBOARD</div>
+    <div id="login-error" class="error-box"></div>
+    <button class="login-btn" onclick="startLogin()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+        <polyline points="10 17 15 12 10 7"/>
+        <line x1="15" y1="12" x2="3" y2="12"/>
+      </svg>
+      SIGN IN WITH ACUMATICA
+    </button>
+    <div class="login-note">Your credentials are handled directly by Acumatica.<br>This dashboard never stores your password.</div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="title">ASF SALES DASHBOARD</div>
+      <div class="subtitle" id="header-subtitle">LIVE · ACUMATICA OData</div>
+    </div>
+    <div class="header-right">
+      <button class="btn" onclick="toggleLog()">DEBUG LOG</button>
+      <button class="btn btn-primary" id="refresh-btn" onclick="loadData()">
+        <span id="refresh-icon">⟳</span> REFRESH
+      </button>
+      <button class="btn" onclick="logout()">SIGN OUT</button>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div id="progress-bar-wrap">
+    <div class="progress-labels">
+      <span id="progress-label">Loading...</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+
+  <!-- Debug log -->
+  <div id="debug-log">
+    <div class="log-header">QUERY LOG</div>
+    <div id="log-lines"></div>
+  </div>
+
+  <!-- Error banner -->
+  <div id="error-banner">
+    <span id="error-text"></span>
+    <span style="color:#f87171;cursor:pointer;text-decoration:underline" onclick="toggleLog()">debug log</span>
+  </div>
+
+  <!-- Nav tabs -->
+  <div id="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('overview')">OVERVIEW</button>
+    <button class="nav-tab" onclick="showTab('sales')">SALES HISTORY</button>
+    <button class="nav-tab" onclick="showTab('displays')">DISPLAYS PLACED</button>
+    <button class="nav-tab" onclick="showTab('opportunities')">OPPORTUNITIES</button>
+    <button class="nav-tab" onclick="showTab('activities')">ACTIVITIES</button>
+    <button class="nav-tab" onclick="showTab('ar')">AR DAYS TO PAY</button>
+    <button class="nav-tab" onclick="showTab('analytics')">ANALYTICS</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ OVERVIEW -->
+  <div id="tab-overview" class="tab-content active">
+    <!-- KPI row -->
+    <div class="panel-grid panel-grid-4">
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Recent Invoiced Sales</span></div>
+        <div class="panel-body">
+          <div class="kpi-val" id="kpi-total-sales">—</div>
+          <div class="kpi-sub" id="kpi-total-sales-sub">loading...</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Open Pipeline</span></div>
+        <div class="panel-body">
+          <div class="kpi-val" id="kpi-pipeline" style="color:var(--purple)">—</div>
+          <div class="kpi-sub" id="kpi-pipeline-sub">loading...</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Activities (Recent)</span></div>
+        <div class="panel-body">
+          <div class="kpi-val" id="kpi-activities" style="color:var(--green)">—</div>
+          <div class="kpi-sub">logged interactions</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Avg AR Days Past Due</span></div>
+        <div class="panel-body">
+          <div class="kpi-val" id="kpi-ar-days" style="color:var(--yellow)">—</div>
+          <div class="kpi-sub" id="kpi-ar-sub">loading...</div>
+        </div>
+      </div>
+    </div>
+    <!-- Charts row -->
+    <div class="panel-grid panel-grid-2" style="padding-top:0">
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Trailing 12 Months — Quarterly Sales</span></div>
+        <div class="panel-body">
+          <div class="chart-wrap"><canvas id="chart-trailing12"></canvas></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Sales by Item Class</span></div>
+        <div class="panel-body" id="itemclass-bars">
+          <div class="empty-state">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ SALES HISTORY -->
+  <div id="tab-sales" class="tab-content">
+    <div style="padding:20px 24px 0">
+      <div class="panel">
+        <div class="controls-bar">
+          <input class="ctrl-input" id="sales-search" placeholder="Search customer or ref..." oninput="renderSalesTable()">
+          <select class="ctrl-select" id="sales-rep-filter" onchange="renderSalesTable()">
+            <option value="">All Reps</option>
+          </select>
+          <select class="ctrl-select" id="sales-class-filter" onchange="renderSalesTable()">
+            <option value="">All Classes</option>
+          </select>
+          <div class="item-count" id="sales-count">0 rows</div>
+        </div>
+        <div class="panel-body-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th class="no-sort">REF #</th>
+                <th class="no-sort">CUSTOMER</th>
+                <th class="no-sort">DATE</th>
+                <th class="no-sort">SALES REP</th>
+                <th class="no-sort">ITEM CLASS</th>
+                <th class="no-sort">DESCRIPTION</th>
+                <th class="no-sort" style="text-align:right">QTY</th>
+                <th class="no-sort" style="text-align:right">UNIT PRICE</th>
+                <th class="no-sort" style="text-align:right">EXT AMOUNT</th>
+              </tr>
+            </thead>
+            <tbody id="sales-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ DISPLAYS PLACED -->
+  <div id="tab-displays" class="tab-content">
+    <div style="padding:20px 24px 0">
+      <div class="panel">
+        <div class="controls-bar">
+          <input class="ctrl-input" id="disp-search" placeholder="Search customer..." oninput="renderDisplaysTable()">
+          <select class="ctrl-select" id="disp-rep-filter" onchange="renderDisplaysTable()">
+            <option value="">All Reps</option>
+          </select>
+          <div class="item-count" id="disp-count">0 rows</div>
+        </div>
+        <div class="panel-body-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th class="no-sort">CUSTOMER</th>
+                <th class="no-sort">DISPLAYS PLACED</th>
+                <th class="no-sort">DATE</th>
+                <th class="no-sort">SALESPERSON</th>
+                <th class="no-sort" style="text-align:right">INVOICE AMT</th>
+                <th class="no-sort">CLASS</th>
+              </tr>
+            </thead>
+            <tbody id="displays-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ OPPORTUNITIES -->
+  <div id="tab-opportunities" class="tab-content">
+    <div style="padding:20px 24px 0">
+      <div class="panel">
+        <div class="controls-bar">
+          <input class="ctrl-input" id="opp-search" placeholder="Search account or ID..." oninput="renderOppTable()">
+          <select class="ctrl-select" id="opp-stage-filter" onchange="renderOppTable()">
+            <option value="">All Stages</option>
+          </select>
+          <select class="ctrl-select" id="opp-status-filter" onchange="renderOppTable()">
+            <option value="">All Statuses</option>
+          </select>
+          <div class="item-count" id="opp-count">0 rows</div>
+        </div>
+        <div class="panel-body-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th class="no-sort">OPP ID</th>
+                <th class="no-sort">ACCOUNT</th>
+                <th class="no-sort">STAGE</th>
+                <th class="no-sort">STATUS</th>
+                <th class="no-sort">PROBABILITY</th>
+                <th class="no-sort">EST. CLOSE</th>
+                <th class="no-sort" style="text-align:right">TOTAL</th>
+                <th class="no-sort">DESCRIPTION</th>
+              </tr>
+            </thead>
+            <tbody id="opp-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ ACTIVITIES -->
+  <div id="tab-activities" class="tab-content">
+    <div style="padding:20px 24px 0">
+      <div class="panel">
+        <div class="controls-bar">
+          <input class="ctrl-input" id="act-search" placeholder="Search account or summary..." oninput="renderActivities()">
+          <div class="item-count" id="act-count">0 rows</div>
+        </div>
+        <div class="panel-body-scroll" style="max-height:600px">
+          <div id="activities-feed" style="padding:12px 14px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ AR DAYS -->
+  <div id="tab-ar" class="tab-content">
+    <div style="padding:20px 24px 0">
+      <div class="panel">
+        <div class="controls-bar">
+          <input class="ctrl-input" id="ar-search" placeholder="Search customer..." oninput="renderARTable()">
+          <select class="ctrl-select" id="ar-sort" onchange="renderARTable()">
+            <option value="days-desc">Days Past Due ↓</option>
+            <option value="days-asc">Days Past Due ↑</option>
+            <option value="name">Customer Name</option>
+            <option value="limit-desc">Credit Limit ↓</option>
+          </select>
+          <div class="item-count" id="ar-count">0 rows</div>
+        </div>
+        <div class="panel-body-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th class="no-sort">CUSTOMER ID</th>
+                <th class="no-sort">CUSTOMER NAME</th>
+                <th class="no-sort">TERMS</th>
+                <th class="no-sort" style="text-align:right">DAYS PAST DUE</th>
+                <th class="no-sort" style="text-align:right">CREDIT LIMIT</th>
+                <th class="no-sort">VERIFICATION</th>
+              </tr>
+            </thead>
+            <tbody id="ar-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════ ANALYTICS -->
+  <div id="tab-analytics" class="tab-content">
+    <div class="panel-grid panel-grid-2">
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Trailing 12 Months — by Financial Period</span></div>
+        <div class="panel-body">
+          <div class="chart-wrap" style="height:260px"><canvas id="chart-analytics-t12"></canvas></div>
+        </div>
+        <div class="panel-body-scroll" style="max-height:260px">
+          <table>
+            <thead>
+              <tr>
+                <th class="no-sort">PERIOD</th>
+                <th class="no-sort" style="text-align:right">SALES</th>
+                <th class="no-sort" style="text-align:right">COST</th>
+                <th class="no-sort" style="text-align:right">PROFIT</th>
+                <th class="no-sort" style="text-align:right">MARGIN %</th>
+              </tr>
+            </thead>
+            <tbody id="t12-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Sales by Item Class — Detail</span></div>
+        <div class="panel-body">
+          <div id="itemclass-bars-analytics"></div>
+        </div>
+        <div class="panel-body-scroll" style="max-height:260px">
+          <table>
+            <thead>
+              <tr>
+                <th class="no-sort">ITEM CLASS</th>
+                <th class="no-sort" style="text-align:right">SALES</th>
+                <th class="no-sort" style="text-align:right">COST</th>
+                <th class="no-sort" style="text-align:right">QTY</th>
+                <th class="no-sort" style="text-align:right">MARGIN %</th>
+              </tr>
+            </thead>
+            <tbody id="itemclass-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#dashboard -->
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const CONFIG = {
+  acumaticaUrl: 'https://allsouthflooring.acumatica.com',
+  clientId:     '6337533B-4E40-14F2-F483-DD653A38138B@ASF',
+  clientSecret: 'djA-sMyV_8128aNE8g5IKg',
+  scopes:       'api offline_access openid profile email',
+  redirectUri:  window.location.origin + window.location.pathname,
+  workerUrl:    'https://asf-inventory-dashboard.greg-capell.workers.dev',
+};
+
+const TWELVE_MONTHS_AGO = (() => {
+  const d = new Date(); d.setFullYear(d.getFullYear() - 1);
+  return d.toISOString().slice(0, 10);
+})();
+
+// ─── AUTH STATE ──────────────────────────────────────────────────────────────
+let auth = { accessToken: null, refreshToken: null };
+
+function startLogin() {
+  const state = Math.random().toString(36).substring(2);
+  sessionStorage.setItem('oauth_state', state);
+  const p = new URLSearchParams({
+    client_id:     CONFIG.clientId,
+    response_type: 'code',
+    redirect_uri:  CONFIG.redirectUri,
+    scope:         CONFIG.scopes,
+    state,
+  });
+  window.location.href = `${CONFIG.acumaticaUrl}/identity/connect/authorize?${p}`;
+}
+
+async function handleCallback(code, state) {
+  const saved = sessionStorage.getItem('oauth_state');
+  if (state !== saved) { showLoginError('OAuth state mismatch. Please try again.'); return; }
+  setLoadingText('Signing you in...');
+  try {
+    const resp = await fetch(`${CONFIG.workerUrl}/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type:    'authorization_code',
+        code,
+        redirect_uri:  CONFIG.redirectUri,
+        client_id:     CONFIG.clientId,
+        client_secret: CONFIG.clientSecret,
+      }),
+    });
+    if (!resp.ok) { const t = await resp.text(); throw new Error(`Token exchange failed (${resp.status}): ${t.slice(0,200)}`); }
+    const tokens = await resp.json();
+    auth.accessToken  = tokens.access_token;
+    auth.refreshToken = tokens.refresh_token;
+    window.history.replaceState({}, '', window.location.pathname);
+    showDashboard();
+    loadData();
+  } catch (e) {
+    showLoginError(e.message);
+  }
+}
+
+async function refreshToken() {
+  const resp = await fetch(`${CONFIG.workerUrl}/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type:    'refresh_token',
+      refresh_token: auth.refreshToken,
+      client_id:     CONFIG.clientId,
+      client_secret: CONFIG.clientSecret,
+    }),
+  });
+  if (!resp.ok) { logout(); throw new Error('Session expired. Please log in again.'); }
+  const t = await resp.json();
+  auth.accessToken  = t.access_token;
+  auth.refreshToken = t.refresh_token || auth.refreshToken;
+}
+
+function logout() {
+  auth = { accessToken: null, refreshToken: null };
+  document.getElementById('dashboard').style.display    = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('nav-tabs').style.display     = 'none';
+  hideLoadingOverlay();
+}
+
+// ─── OData fetch with auto-pagination ────────────────────────────────────────
+async function odataGet(endpoint, params = {}) {
+  const url = new URL(`${CONFIG.workerUrl}/odata/${encodeURIComponent(endpoint)}`);
+  url.searchParams.set('$format', 'json');
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+
+  const all = [];
+  let next = url.toString();
+  while (next) {
+    if (next.includes('allsouthflooring.acumatica.com')) {
+      const nextUrl    = new URL(next);
+      const workerNext = new URL(`${CONFIG.workerUrl}/odata/${encodeURIComponent(nextUrl.pathname.replace('/OData/ASF/', ''))}`);
+      nextUrl.searchParams.forEach((v, k) => workerNext.searchParams.set(k, v));
+      next = workerNext.toString();
+    }
+    let res = await fetch(next, { headers: { Authorization: `Bearer ${auth.accessToken}`, Accept: 'application/json' } });
+    if (res.status === 401 && auth.refreshToken) {
+      await refreshToken();
+      res = await fetch(next, { headers: { Authorization: `Bearer ${auth.accessToken}`, Accept: 'application/json' } });
+    }
+    if (!res.ok) { const t = await res.text(); throw new Error(`OData ${res.status}: ${t.slice(0,150)}`); }
+    const j = await res.json();
+    all.push(...(j.value || (Array.isArray(j) ? j : [])));
+    next = j['@odata.nextLink'] || null;
+  }
+  return all;
+}
+
+// ─── Data stores ─────────────────────────────────────────────────────────────
+let DATA = {
+  salesHistory:   [],
+  displaysPlaced: [],
+  opportunities:  [],
+  activities:     [],
+  arDays:         [],
+  trailing12:     [],
+  salesByClass:   [],
+};
+
+// ─── Load all data ─────────────────────────────────────────────────────────────
+async function loadData() {
+  setLoadingState(true);
+  clearError(); clearLog();
+  const TOTAL_STEPS = 7;
+  let done = 0;
+
+  function step(label) {
+    done++;
+    setProgress(done, TOTAL_STEPS, label);
+  }
+
+  try {
+    // 1. Sales history (DB-InvoicedItems)
+    addLog('Fetching sales history...');
+    DATA.salesHistory = await odataGet('DB-InvoicedItems', {
+      '$select':  'ReferenceNbr,CustomerName,InvoiceDate,SalesRep,ExtAmount,ExtCost,ExtProfit,ItemClass,Description,Quantity,UnitPrice',
+      '$orderby': 'InvoiceDate desc',
+      '$top':     '500',
+    });
+    step(`SALES HISTORY — ${DATA.salesHistory.length} rows`);
+    addLog(`✓ Sales history: ${DATA.salesHistory.length} rows`, 'ok');
+
+    // 2. Displays placed (GC-TargetCustomers)
+    addLog('Fetching displays placed...');
+    DATA.displaysPlaced = await odataGet('GC-TargetCustomers', {
+      '$select':  'CustomerName,DisplaysPlaced,Date,DefaultSalesperson,InvoiceAmt,BusinessAccountClass',
+      '$filter':  "DisplaysPlaced ne null and DisplaysPlaced ne ''",
+      '$orderby': 'Date desc',
+    });
+    step(`DISPLAYS PLACED — ${DATA.displaysPlaced.length} rows`);
+    addLog(`✓ Displays placed: ${DATA.displaysPlaced.length} rows`, 'ok');
+
+    // 3. Opportunities (CR-Opportunities2018R1)
+    addLog('Fetching opportunities...');
+    DATA.opportunities = await odataGet('CR-Opportunities2018R1', {
+      '$select':  'OpportunityID,AccountName,Stage,Status,Total,EstimatedCloseDate,Probability,Description',
+      '$filter':  "Status ne 'Won' and Status ne 'Lost'",
+      '$orderby': 'Total desc',
+    });
+    step(`OPPORTUNITIES — ${DATA.opportunities.length} rows`);
+    addLog(`✓ Opportunities: ${DATA.opportunities.length} rows`, 'ok');
+
+    // 4. Activities (GC-ActivityTracking)
+    addLog('Fetching activities...');
+    DATA.activities = await odataGet('GC-ActivityTracking', {
+      '$select':  'AccountName,Summary,Description,StartDate,RelatedEntityType,Owner',
+      '$orderby': 'StartDate desc',
+      '$top':     '200',
+    });
+    step(`ACTIVITIES — ${DATA.activities.length} rows`);
+    addLog(`✓ Activities: ${DATA.activities.length} rows`, 'ok');
+
+    // 5. AR Days to Pay (GC-CustomerCreditLimit)
+    addLog('Fetching AR data...');
+    DATA.arDays = await odataGet('GC-CustomerCreditLimit', {
+      '$select':  'CustomerID,CustomerName,Terms,CreditDaysPastDue,CreditLimit,CreditVerification',
+      '$orderby': 'CreditDaysPastDue desc',
+    });
+    step(`AR DAYS — ${DATA.arDays.length} rows`);
+    addLog(`✓ AR days: ${DATA.arDays.length} rows`, 'ok');
+
+    // 6. Trailing 12 months (BI-ARInvoices)
+    addLog('Fetching trailing 12-month data...');
+    const rawT12 = await odataGet('BI-ARInvoices', {
+      '$select':  'FinancialPeriod,ExtAmount,ExtCost,ExtProfit',
+      '$filter':  `InvoiceDate ge datetime'${TWELVE_MONTHS_AGO}T00:00:00'`,
+    });
+    DATA.trailing12 = aggregateByPeriod(rawT12);
+    step(`TRAILING 12M — ${DATA.trailing12.length} periods`);
+    addLog(`✓ Trailing 12M: ${rawT12.length} rows → ${DATA.trailing12.length} periods`, 'ok');
+
+    // 7. Sales by item class (DB-InvoicedItems aggregated client-side)
+    addLog('Aggregating sales by item class...');
+    const rawClass = await odataGet('DB-InvoicedItems', {
+      '$select':  'ItemClass,ExtAmount,ExtCost,Quantity',
+      '$filter':  `InvoiceDate ge datetime'${TWELVE_MONTHS_AGO}T00:00:00'`,
+    });
+    DATA.salesByClass = aggregateByClass(rawClass);
+    step(`ITEM CLASSES — ${DATA.salesByClass.length} classes`);
+    addLog(`✓ Sales by item class: ${DATA.salesByClass.length} classes`, 'ok');
+
+    // Update timestamp
+    const ts = new Date().toLocaleTimeString();
+    document.getElementById('header-subtitle').textContent = `LIVE · ACUMATICA OData · ${ts}`;
+
+    // Render everything
+    renderOverview();
+    buildSalesFilters();
+    renderSalesTable();
+    buildDisplaysFilters();
+    renderDisplaysTable();
+    buildOppFilters();
+    renderOppTable();
+    renderActivities();
+    renderARTable();
+    renderAnalytics();
+
+    addLog('All data loaded.', 'ok');
+
+  } catch (e) {
+    showError(e.message);
+    addLog('ERROR: ' + e.message, 'error');
+  } finally {
+    setLoadingState(false);
+  }
+}
+
+// ─── Aggregation helpers ──────────────────────────────────────────────────────
+function aggregateByPeriod(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const p = (r.FinancialPeriod || '').trim();
+    if (!p) return;
+    if (!map[p]) map[p] = { period: p, sales: 0, cost: 0, profit: 0 };
+    map[p].sales  += Number(r.ExtAmount || 0);
+    map[p].cost   += Number(r.ExtCost   || 0);
+    map[p].profit += Number(r.ExtProfit || 0);
+  });
+  return Object.values(map).sort((a, b) => a.period.localeCompare(b.period));
+}
+
+function aggregateByClass(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const cls = (r.ItemClass || 'UNCLASSIFIED').trim();
+    if (!map[cls]) map[cls] = { cls, sales: 0, cost: 0, qty: 0 };
+    map[cls].sales += Number(r.ExtAmount || 0);
+    map[cls].cost  += Number(r.ExtCost   || 0);
+    map[cls].qty   += Number(r.Quantity  || 0);
+  });
+  return Object.values(map).sort((a, b) => b.sales - a.sales);
+}
+
+// ─── Formatters ───────────────────────────────────────────────────────────────
+function fmtDollar(n) {
+  const v = parseFloat(n);
+  if (isNaN(v)) return '$0';
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function fmtPct(num, den) {
+  if (!den || den === 0) return '—';
+  return ((num / den) * 100).toFixed(1) + '%';
+}
+
+function stageBadgeClass(stage) {
+  const s = (stage || '').toLowerCase();
+  if (s.includes('won'))           return 'badge-green';
+  if (s.includes('prospect'))      return 'badge-blue';
+  if (s.includes('qualif'))        return 'badge-blue';
+  if (s.includes('proposal'))      return 'badge-yellow';
+  if (s.includes('negot'))         return 'badge-orange';
+  if (s.includes('lost'))          return 'badge-red';
+  return 'badge-dim';
+}
+function statusBadgeClass(status) {
+  const s = (status || '').toLowerCase();
+  if (s === 'open')  return 'badge-green';
+  if (s === 'won')   return 'badge-green';
+  if (s === 'lost')  return 'badge-red';
+  return 'badge-dim';
+}
+function arDayColor(days) {
+  if (days > 60) return 'var(--red)';
+  if (days > 30) return 'var(--yellow)';
+  return 'var(--green)';
+}
+
+// ─── Chart instances ──────────────────────────────────────────────────────────
+let chartT12 = null, chartAnalT12 = null;
+
+function buildT12Chart(canvasId, data) {
+  const existing = Chart.getChart(canvasId);
+  if (existing) existing.destroy();
+
+  // Group into quarters
+  const qMap = {};
+  data.forEach(d => {
+    const yr = d.period.substring(0, 4);
+    const mo = parseInt(d.period.substring(4, 6) || d.period.substring(5, 7), 10);
+    const q  = `${yr} Q${Math.ceil(mo / 3)}`;
+    if (!qMap[q]) qMap[q] = { sales: 0, profit: 0 };
+    qMap[q].sales  += d.sales;
+    qMap[q].profit += d.profit;
+  });
+  const labels = Object.keys(qMap);
+  const sales  = labels.map(k => qMap[k].sales);
+  const profit = labels.map(k => qMap[k].profit);
+
+  return new Chart(document.getElementById(canvasId).getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Sales',  data: sales,  backgroundColor: 'rgba(56,189,248,0.5)', borderColor: '#38bdf8', borderWidth: 1 },
+        { label: 'Profit', data: profit, backgroundColor: 'rgba(34,197,94,0.4)',  borderColor: '#22c55e', borderWidth: 1 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#334155', font: { size: 10, family: 'DM Mono' } } } },
+      scales: {
+        x: { ticks: { color: '#334155', font: { size: 9, family: 'DM Mono' } }, grid: { color: '#0d2744' } },
+        y: { ticks: { color: '#334155', font: { size: 9, family: 'DM Mono' }, callback: v => '$' + (v >= 1e6 ? (v/1e6).toFixed(1)+'M' : (v/1e3).toFixed(0)+'K') }, grid: { color: '#0d2744' } },
+      },
+    },
+  });
+}
+
+function buildBarRows(containerId, data, max) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!data.length) { el.innerHTML = '<div class="empty-state">No data</div>'; return; }
+  const colors = ['#38bdf8','#a78bfa','#22c55e','#f97316','#eab308','#f87171','#34d399','#818cf8'];
+  el.innerHTML = data.slice(0, 12).map((d, i) => {
+    const pct = max > 0 ? (d.sales / max) * 100 : 0;
+    const color = colors[i % colors.length];
+    return `<div class="bar-row">
+      <div class="bar-label" title="${d.cls}">${d.cls || '—'}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%;background:${color}">
+          ${pct > 25 ? `<span class="bar-fill-label">${fmtDollar(d.sales)}</span>` : ''}
+        </div>
+      </div>
+      ${pct <= 25 ? `<div class="bar-val-out">${fmtDollar(d.sales)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ─── Overview ────────────────────────────────────────────────────────────────
+function renderOverview() {
+  // KPIs
+  const totalSales = DATA.salesHistory.reduce((s, r) => s + Number(r.ExtAmount || 0), 0);
+  document.getElementById('kpi-total-sales').textContent     = fmtDollar(totalSales);
+  document.getElementById('kpi-total-sales-sub').textContent = `${DATA.salesHistory.length} transactions`;
+
+  const pipeline = DATA.opportunities.reduce((s, r) => s + Number(r.Total || 0), 0);
+  document.getElementById('kpi-pipeline').textContent     = fmtDollar(pipeline);
+  document.getElementById('kpi-pipeline-sub').textContent = `${DATA.opportunities.length} open deals`;
+
+  document.getElementById('kpi-activities').textContent = DATA.activities.length;
+
+  const daysArr = DATA.arDays.map(r => parseInt(r.CreditDaysPastDue) || 0).filter(d => d > 0);
+  const avgDays = daysArr.length ? Math.round(daysArr.reduce((a, b) => a + b, 0) / daysArr.length) : 0;
+  document.getElementById('kpi-ar-days').textContent = avgDays + 'd';
+  document.getElementById('kpi-ar-days').style.color = arDayColor(avgDays);
+  document.getElementById('kpi-ar-sub').textContent  = `${DATA.arDays.length} customers`;
+
+  // Trailing 12 chart
+  if (DATA.trailing12.length) buildT12Chart('chart-trailing12', DATA.trailing12);
+
+  // Item class bars
+  const maxSales = DATA.salesByClass[0]?.sales || 1;
+  buildBarRows('itemclass-bars', DATA.salesByClass, maxSales);
+}
+
+// ─── Sales History ────────────────────────────────────────────────────────────
+function buildSalesFilters() {
+  const reps    = [...new Set(DATA.salesHistory.map(r => r.SalesRep).filter(Boolean))].sort();
+  const classes = [...new Set(DATA.salesHistory.map(r => r.ItemClass).filter(Boolean))].sort();
+  document.getElementById('sales-rep-filter').innerHTML   = '<option value="">All Reps</option>'    + reps.map(r => `<option>${r}</option>`).join('');
+  document.getElementById('sales-class-filter').innerHTML = '<option value="">All Classes</option>' + classes.map(c => `<option>${c}</option>`).join('');
+}
+function renderSalesTable() {
+  const search = document.getElementById('sales-search').value.toLowerCase();
+  const rep    = document.getElementById('sales-rep-filter').value;
+  const cls    = document.getElementById('sales-class-filter').value;
+
+  let rows = DATA.salesHistory.filter(r => {
+    if (search && !((r.CustomerName||'').toLowerCase().includes(search) || (r.ReferenceNbr||'').toLowerCase().includes(search))) return false;
+    if (rep && r.SalesRep !== rep) return false;
+    if (cls && r.ItemClass !== cls) return false;
+    return true;
+  });
+
+  document.getElementById('sales-count').textContent = `${rows.length} / ${DATA.salesHistory.length} rows`;
+  document.getElementById('sales-tbody').innerHTML = rows.length ? rows.map(r => `<tr>
+    <td style="color:var(--accent);font-weight:500">${r.ReferenceNbr||'—'}</td>
+    <td>${r.CustomerName||'—'}</td>
+    <td style="color:var(--dim)">${fmtDate(r.InvoiceDate)}</td>
+    <td style="color:var(--dim)">${r.SalesRep||'—'}</td>
+    <td><span class="badge badge-dim">${r.ItemClass||'—'}</span></td>
+    <td style="color:var(--dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.Description||''}">${r.Description||'—'}</td>
+    <td style="text-align:right">${Number(r.Quantity||0).toFixed(0)}</td>
+    <td style="text-align:right;color:var(--dim)">${fmtDollar(r.UnitPrice)}</td>
+    <td style="text-align:right;color:var(--green);font-weight:500">${fmtDollar(r.ExtAmount)}</td>
+  </tr>`).join('') : '<tr><td colspan="9" class="empty-state">No matching rows.</td></tr>';
+}
+
+// ─── Displays Placed ──────────────────────────────────────────────────────────
+function buildDisplaysFilters() {
+  const reps = [...new Set(DATA.displaysPlaced.map(r => r.DefaultSalesperson).filter(Boolean))].sort();
+  document.getElementById('disp-rep-filter').innerHTML = '<option value="">All Reps</option>' + reps.map(r => `<option>${r}</option>`).join('');
+}
+function renderDisplaysTable() {
+  const search = document.getElementById('disp-search').value.toLowerCase();
+  const rep    = document.getElementById('disp-rep-filter').value;
+
+  let rows = DATA.displaysPlaced.filter(r => {
+    if (search && !(r.CustomerName||'').toLowerCase().includes(search)) return false;
+    if (rep && r.DefaultSalesperson !== rep) return false;
+    return true;
+  });
+
+  document.getElementById('disp-count').textContent = `${rows.length} / ${DATA.displaysPlaced.length} rows`;
+  document.getElementById('displays-tbody').innerHTML = rows.length ? rows.map(r => `<tr>
+    <td style="font-weight:500">${r.CustomerName||'—'}</td>
+    <td style="color:var(--accent);font-weight:700">${r.DisplaysPlaced||'—'}</td>
+    <td style="color:var(--dim)">${fmtDate(r.Date)}</td>
+    <td>${r.DefaultSalesperson||'—'}</td>
+    <td style="text-align:right;color:var(--green);font-weight:500">${fmtDollar(r.InvoiceAmt)}</td>
+    <td><span class="badge badge-dim">${r.BusinessAccountClass||'—'}</span></td>
+  </tr>`).join('') : '<tr><td colspan="6" class="empty-state">No matching rows.</td></tr>';
+}
+
+// ─── Opportunities ────────────────────────────────────────────────────────────
+function buildOppFilters() {
+  const stages   = [...new Set(DATA.opportunities.map(r => r.Stage).filter(Boolean))].sort();
+  const statuses = [...new Set(DATA.opportunities.map(r => r.Status).filter(Boolean))].sort();
+  document.getElementById('opp-stage-filter').innerHTML  = '<option value="">All Stages</option>'   + stages.map(s => `<option>${s}</option>`).join('');
+  document.getElementById('opp-status-filter').innerHTML = '<option value="">All Statuses</option>' + statuses.map(s => `<option>${s}</option>`).join('');
+}
+function renderOppTable() {
+  const search = document.getElementById('opp-search').value.toLowerCase();
+  const stage  = document.getElementById('opp-stage-filter').value;
+  const status = document.getElementById('opp-status-filter').value;
+
+  let rows = DATA.opportunities.filter(r => {
+    if (search && !((r.AccountName||'').toLowerCase().includes(search) || (r.OpportunityID||'').toLowerCase().includes(search))) return false;
+    if (stage  && r.Stage  !== stage)  return false;
+    if (status && r.Status !== status) return false;
+    return true;
+  });
+
+  document.getElementById('opp-count').textContent = `${rows.length} / ${DATA.opportunities.length} rows`;
+  document.getElementById('opp-tbody').innerHTML = rows.length ? rows.map(r => {
+    const prob = parseInt(r.Probability) || 0;
+    return `<tr>
+      <td style="color:var(--accent);font-weight:500;white-space:nowrap">${r.OpportunityID||'—'}</td>
+      <td>${r.AccountName||'—'}</td>
+      <td><span class="badge ${stageBadgeClass(r.Stage)}">${r.Stage||'—'}</span></td>
+      <td><span class="badge ${statusBadgeClass(r.Status)}">${r.Status||'—'}</span></td>
+      <td>
+        <div class="prob-wrap">
+          <div class="prob-track"><div class="prob-fill" style="width:${prob}%"></div></div>
+          <span style="font-size:9px;color:var(--muted)">${prob}%</span>
+        </div>
+      </td>
+      <td style="color:var(--dim);white-space:nowrap">${fmtDate(r.EstimatedCloseDate)}</td>
+      <td style="text-align:right;color:var(--yellow);font-weight:500">${fmtDollar(r.Total)}</td>
+      <td style="color:var(--dim);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.Description||''}">${r.Description||'—'}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8" class="empty-state">No matching rows.</td></tr>';
+}
+
+// ─── Activities ───────────────────────────────────────────────────────────────
+function renderActivities() {
+  const search = document.getElementById('act-search').value.toLowerCase();
+  let rows = DATA.activities.filter(r =>
+    !search || (r.AccountName||'').toLowerCase().includes(search) || (r.Summary||'').toLowerCase().includes(search)
+  );
+  document.getElementById('act-count').textContent = `${rows.length} / ${DATA.activities.length}`;
+  document.getElementById('activities-feed').innerHTML = rows.length ? rows.map(r => `
+    <div class="activity-item">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span class="activity-account">${r.AccountName||'—'}</span>
+        ${r.RelatedEntityType ? `<span class="badge badge-dim">${r.RelatedEntityType}</span>` : ''}
+        <span style="margin-left:auto;font-size:9px;color:var(--muted)">${fmtDate(r.StartDate)}</span>
+      </div>
+      <div class="activity-summary">${r.Summary || r.Description || 'No summary'}</div>
+    </div>`).join('') : '<div class="empty-state">No matching activities.</div>';
+}
+
+// ─── AR Days to Pay ───────────────────────────────────────────────────────────
+function renderARTable() {
+  const search  = document.getElementById('ar-search').value.toLowerCase();
+  const sortVal = document.getElementById('ar-sort').value;
+
+  let rows = DATA.arDays.filter(r =>
+    !search || (r.CustomerName||'').toLowerCase().includes(search) || (r.CustomerID||'').toLowerCase().includes(search)
+  );
+
+  rows.sort((a, b) => {
+    if (sortVal === 'days-desc') return (parseInt(b.CreditDaysPastDue)||0) - (parseInt(a.CreditDaysPastDue)||0);
+    if (sortVal === 'days-asc')  return (parseInt(a.CreditDaysPastDue)||0) - (parseInt(b.CreditDaysPastDue)||0);
+    if (sortVal === 'name')      return (a.CustomerName||'').localeCompare(b.CustomerName||'');
+    if (sortVal === 'limit-desc')return (parseFloat(b.CreditLimit)||0) - (parseFloat(a.CreditLimit)||0);
+    return 0;
+  });
+
+  document.getElementById('ar-count').textContent = `${rows.length} / ${DATA.arDays.length} rows`;
+  document.getElementById('ar-tbody').innerHTML = rows.length ? rows.map(r => {
+    const days = parseInt(r.CreditDaysPastDue) || 0;
+    return `<tr>
+      <td style="color:var(--accent);font-weight:500">${r.CustomerID||'—'}</td>
+      <td>${r.CustomerName||'—'}</td>
+      <td style="color:var(--dim)">${r.Terms||'—'}</td>
+      <td style="text-align:right;font-weight:700;color:${arDayColor(days)}">${days}d</td>
+      <td style="text-align:right;color:var(--dim)">${fmtDollar(r.CreditLimit)}</td>
+      <td><span class="badge ${(r.CreditVerification||'').toLowerCase() === 'automatic' ? 'badge-green' : 'badge-yellow'}">${r.CreditVerification||'—'}</span></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" class="empty-state">No matching rows.</td></tr>';
+}
+
+// ─── Analytics ────────────────────────────────────────────────────────────────
+function renderAnalytics() {
+  // Trailing 12 chart
+  if (DATA.trailing12.length) buildT12Chart('chart-analytics-t12', DATA.trailing12);
+
+  // Trailing 12 table
+  document.getElementById('t12-tbody').innerHTML = DATA.trailing12.map(d => `<tr>
+    <td style="color:var(--dim)">${d.period}</td>
+    <td style="text-align:right;color:var(--accent);font-weight:500">${fmtDollar(d.sales)}</td>
+    <td style="text-align:right;color:var(--muted)">${fmtDollar(d.cost)}</td>
+    <td style="text-align:right;color:var(--green);font-weight:500">${fmtDollar(d.profit)}</td>
+    <td style="text-align:right;color:var(--dim)">${fmtPct(d.profit, d.sales)}</td>
+  </tr>`).join('');
+
+  // Item class bars + table
+  const maxSales = DATA.salesByClass[0]?.sales || 1;
+  buildBarRows('itemclass-bars-analytics', DATA.salesByClass, maxSales);
+  document.getElementById('itemclass-tbody').innerHTML = DATA.salesByClass.map(d => `<tr>
+    <td>${d.cls}</td>
+    <td style="text-align:right;color:var(--purple);font-weight:500">${fmtDollar(d.sales)}</td>
+    <td style="text-align:right;color:var(--muted)">${fmtDollar(d.cost)}</td>
+    <td style="text-align:right">${Number(d.qty).toFixed(0)}</td>
+    <td style="text-align:right;color:var(--dim)">${fmtPct(d.sales - d.cost, d.sales)}</td>
+  </tr>`).join('');
+}
+
+// ─── Tab navigation ───────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ─── UI helpers ───────────────────────────────────────────────────────────────
+function setLoadingState(on) {
+  const btn  = document.getElementById('refresh-btn');
+  const icon = document.getElementById('refresh-icon');
+  btn.disabled  = on;
+  icon.className = on ? 'spin' : '';
+  icon.textContent = '⟳';
+  document.getElementById('progress-bar-wrap').style.display = on ? 'block' : 'none';
+}
+function setProgress(done, total, label) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progress-fill').style.width  = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+  document.getElementById('progress-pct').textContent   = pct + '%';
+}
+function showError(msg) {
+  const el = document.getElementById('error-banner');
+  document.getElementById('error-text').textContent = '⚠ ' + msg;
+  el.style.display = 'flex';
+}
+function clearError() { document.getElementById('error-banner').style.display = 'none'; }
+function showLoginError(msg) {
+  hideLoadingOverlay();
+  document.getElementById('loading-overlay').style.display = 'none';
+  document.getElementById('login-screen').style.display    = 'flex';
+  const el = document.getElementById('login-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+function addLog(msg, type = '') {
+  const div = document.createElement('div');
+  div.className = 'log-line' + (type ? ' ' + type : '');
+  div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  document.getElementById('log-lines').appendChild(div);
+  document.getElementById('debug-log').scrollTop = 9999;
+}
+function clearLog() { document.getElementById('log-lines').innerHTML = ''; }
+let logVisible = false;
+function toggleLog() {
+  logVisible = !logVisible;
+  document.getElementById('debug-log').style.display = logVisible ? 'block' : 'none';
+  document.querySelector('.btn[onclick="toggleLog()"]').textContent = logVisible ? 'HIDE LOG' : 'DEBUG LOG';
+}
+function showDashboard() {
+  hideLoadingOverlay();
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display    = 'block';
+  document.getElementById('nav-tabs').style.display     = 'flex';
+}
+function setLoadingText(t) { document.getElementById('loading-text').textContent = t; }
+function hideLoadingOverlay() { document.getElementById('loading-overlay').style.display = 'none'; }
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+(async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const code   = params.get('code');
+  const state  = params.get('state');
+  const error  = params.get('error');
+
+  if (error) {
+    showLoginError('Login error: ' + (params.get('error_description') || error));
+    return;
+  }
+  if (code && state) {
+    await handleCallback(code, state);
+    return;
+  }
+  hideLoadingOverlay();
+  document.getElementById('login-screen').style.display = 'flex';
+})();
+</script>
+</body>
+</html>
