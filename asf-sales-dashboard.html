@@ -803,16 +803,34 @@ async function loadData() {
   const step = lbl => { done++; setProgress(done,STEPS,lbl); };
 
   try {
-    // 1. Sales history — fetch current + prior fiscal year for YoY comparison
-    //    Determine current year from today, fetch both years
+    // 1. Sales history — two date-range fetches (current + prior YTD)
+    //    FiscalYear OData filter not supported; use InvoiceDate range instead
     const fetchYear  = String(CUR_YEAR);
     const priorYear  = String(CUR_YEAR - 1);
-    D.sales = await tryFetch('Sales History', 'InvoicedItems', {
-      '$select': 'ReferenceNbr,CustomerName,InvoiceDate,PaymentDate,SalesRep,ExtAmount,ExtCost,ExtProfit,ItemClass,Quantity,FinancialPeriod,FiscalYear,DisplayingDealers',
-      '$filter': `FiscalYear eq '${fetchYear}' or FiscalYear eq '${priorYear}'`,
-      '$orderby':'InvoiceDate desc',
-    });
-    step(`SALES — ${D.sales.length} rows`);
+    const todayStr   = new Date().toISOString().slice(0,10);          // e.g. "2026-05-12"
+    const curStart   = fetchYear  + '-01-01';
+    const priStart   = priorYear  + '-01-01';
+    const priEnd     = priorYear  + '-' + todayStr.slice(5);          // same MM-DD last year
+
+    const SALES_COLS = 'ReferenceNbr,CustomerName,InvoiceDate,PaymentDate,SalesRep,ExtAmount,ExtCost,ExtProfit,ItemClass,Quantity,FinancialPeriod,FiscalYear,DisplayingDealers';
+
+    const [curRows, priRows] = await Promise.all([
+      tryFetch('Sales (Current YTD)', 'InvoicedItems', {
+        '$select':  SALES_COLS,
+        '$filter':  `InvoiceDate ge datetime'${curStart}T00:00:00' and InvoiceDate le datetime'${todayStr}T23:59:59'`,
+        '$orderby': 'InvoiceDate desc',
+      }),
+      tryFetch('Sales (Prior YTD)', 'InvoicedItems', {
+        '$select':  SALES_COLS,
+        '$filter':  `InvoiceDate ge datetime'${priStart}T00:00:00' and InvoiceDate le datetime'${priEnd}T23:59:59'`,
+        '$orderby': 'InvoiceDate desc',
+      }),
+    ]);
+
+    curRows.forEach(r => r._year = fetchYear);
+    priRows.forEach(r => r._year = priorYear);
+    D.sales = [...curRows, ...priRows];
+    step(`SALES — ${curRows.length} current + ${priRows.length} prior YTD rows`);
 
     // 2. AR / Credit data (credit settings)
     D.ar = await tryFetch('AR Days', 'GC-CustomerCreditLimit', {
@@ -834,10 +852,9 @@ async function loadData() {
     });
     step(`OPPORTUNITIES — ${D.opportunities.length} rows`);
 
-    // 5. Aggregate
-    // Split into current / prior fiscal year
-    D.curSales  = D.sales.filter(r => (r.FiscalYear||'').trim() === fetchYear);
-    D.priorSales = D.sales.filter(r => (r.FiscalYear||'').trim() === priorYear);
+    // 5. Aggregate — split using _year tag set during fetch
+    D.curSales   = D.sales.filter(r => r._year === fetchYear);
+    D.priorSales = D.sales.filter(r => r._year === priorYear);
     D.trailing12 = aggregateByPeriod(D.sales); // still use both for trailing chart
     D.salesByClass = aggregateByClass(D.curSales);
     step('AGGREGATION COMPLETE');
@@ -914,24 +931,16 @@ function renderOverview() {
   const fetchYear = String(CUR_YEAR);
   const priorYear = String(CUR_YEAR - 1);
   const allRepSales = D.sales.filter(r => !activeRep || r.SalesRep === activeRep);
-  const repSales = allRepSales.filter(r => (r.FiscalYear||'').trim() === fetchYear || !r.FiscalYear);
+  const repSales = allRepSales.filter(r => r._year === fetchYear);
 
-  // Detect fiscal year — use FiscalYear field directly (now in $select)
-  // FiscalYear is a 4-digit string e.g. "2025", "2026"
-  // FinancialPeriod format is "YYYYMM" e.g. "202507"
+  // repSales already scoped to current year via _year tag
   if (repSales.length > 0) {
-    addLog(`Sample: FiscalYear=${repSales[0].FiscalYear} FP=${repSales[0].FinancialPeriod} Date=${repSales[0].InvoiceDate} Amt=${repSales[0].ExtAmount}`);
+    addLog(`Sample: FP=${repSales[0].FinancialPeriod} Date=${repSales[0].InvoiceDate} Amt=${repSales[0].ExtAmount}`);
   } else {
-    addLog('WARNING: repSales is empty', 'error');
+    addLog('WARNING: repSales is empty — check InvoiceDate filter', 'error');
   }
-
-  // Find most recent fiscal year in data
-  const fiscalYears = repSales.map(r => (r.FiscalYear||'').trim()).filter(y => /^\d{4}$/.test(y));
-  const fiscalYear = fiscalYears.length ? [...fiscalYears].sort().reverse()[0] : String(CUR_YEAR);
-  addLog(`Fiscal year: ${fiscalYear}`);
-
-  // YTD rows = current fiscal year
-  const ytdRows = repSales.filter(r => (r.FiscalYear||'').trim() === fiscalYear);
+  const fiscalYear = fetchYear;
+  const ytdRows = repSales;
 
   // Determine month index from FinancialPeriod ("YYYYMM") or InvoiceDate
   // FinancialPeriod sample value: "202507" → month = 07
@@ -1057,13 +1066,14 @@ function renderOverview() {
     },
   });
 
-  // Trailing 12 bar chart
-  // Re-aggregate trailing 12 for the active rep filter
-  const t12Data    = aggregateByPeriod(repSales);
-  const cls12Data  = aggregateByClass(repSales);
-  const t12Labels = t12Data.map(d => d.label || d.period);
-  const t12Sales  = t12Data.map(d => d.sales);
-  const t12Profit = t12Data.map(d => d.profit);
+  // Trailing 12 bar chart — use allRepSales (both years) for full 12-month view
+  // Aggregate all periods, sort chronologically, then take last 12
+  const t12DataFull = aggregateByPeriod(allRepSales);
+  const t12Data     = t12DataFull.slice(-12); // last 12 periods in chronological order
+  const cls12Data   = aggregateByClass(repSales);
+  const t12Labels   = t12Data.map(d => d.label || d.period);
+  const t12Sales    = t12Data.map(d => d.sales);
+  const t12Profit   = t12Data.map(d => d.profit);
   document.getElementById('t12-badge').textContent = `${t12Labels[0]||''} → ${t12Labels[t12Labels.length-1]||''}` + (activeRep ? ` · ${activeRep}` : '');
   if(chartT12) chartT12.destroy();
   chartT12 = new Chart(document.getElementById('chart-t12').getContext('2d'), {
@@ -1093,7 +1103,7 @@ function renderOverview() {
   document.getElementById('t12-tbody').innerHTML = t12Data.map(d => {
     totS+=d.sales; totC+=d.cost; totP+=d.profit;
     return `<tr>
-      <td style="color:var(--asf-navy);font-weight:600">${d.period}</td>
+      <td style="color:var(--asf-navy);font-weight:600">${d.label||d.period}</td>
       <td style="text-align:right;color:var(--asf-blue);font-weight:600">${fmt$(d.sales)}</td>
       <td style="text-align:right;color:var(--muted)">${fmt$(d.cost)}</td>
       <td style="text-align:right;color:var(--asf-green);font-weight:600">${fmt$(d.profit)}</td>
@@ -1136,8 +1146,8 @@ function renderCustomerData() {
   const fetchYear   = String(CUR_YEAR);
   const priorYear   = String(CUR_YEAR - 1);
   const repSales    = D.sales.filter(r => !activeRep || r.SalesRep === activeRep);
-  const curRepSales = repSales.filter(r => (r.FiscalYear||'').trim() === fetchYear);
-  const priRepSales = repSales.filter(r => (r.FiscalYear||'').trim() === priorYear);
+  const curRepSales = repSales.filter(r => r._year === fetchYear);
+  const priRepSales = repSales.filter(r => r._year === priorYear);
 
   // Aggregate YTD sales (current year) per customer
   const salesMap = {};
@@ -1292,7 +1302,7 @@ function renderCustItemClassBars() {
   const fetchYear  = String(CUR_YEAR);
   let src = D.sales.filter(r =>
     (!activeRep || r.SalesRep === activeRep) &&
-    (r.FiscalYear||'').trim() === fetchYear
+    r._year === fetchYear
   );
   if (activeCustTab) src = src.filter(r => (r.CustomerName||'').trim() === activeCustTab);
   const clsData = aggregateByClass(src);
