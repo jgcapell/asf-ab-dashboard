@@ -62,6 +62,19 @@
   .hbtn.primary { background: var(--asf-blue); border-color: var(--asf-blue); color: #fff; display: flex; align-items: center; gap: 6px; }
   .hbtn.primary:hover { background: #4a7db8; }
   .hbtn.primary:disabled { opacity: 0.5; cursor: wait; }
+
+  /* Rep selector in header */
+  #rep-selector-wrap { display: none; align-items: center; gap: 8px; }
+  #rep-selector-wrap label { font-size: 10px; color: rgba(255,255,255,0.55); font-weight: 600; letter-spacing: 0.07em; white-space: nowrap; }
+  #global-rep-select { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #fff; padding: 5px 28px 5px 10px; border-radius: 6px; font-size: 11px; font-family: inherit; font-weight: 600; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.5)'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+  #global-rep-select option { background: #1e5080; color: #fff; }
+  #global-rep-select:focus { border-color: rgba(255,255,255,0.5); }
+  /* User badge */
+  .user-badge { display: flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18); border-radius: 6px; padding: 5px 11px; }
+  .user-badge-name { font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 600; }
+  .user-badge-role { font-size: 9px; color: rgba(255,255,255,0.45); letter-spacing: 0.06em; text-transform: uppercase; }
+  /* Rep-locked banner */
+  #rep-lock-banner { background: rgba(91,143,204,0.12); border-bottom: 1px solid rgba(91,143,204,0.25); padding: 7px 28px; font-size: 11px; color: var(--asf-navy); font-weight: 600; display: none; align-items: center; gap: 8px; }
   .spin { display: inline-block; animation: spin 1s linear infinite; }
 
   /* Progress */
@@ -213,6 +226,18 @@
       </div>
     </div>
     <div class="header-right">
+      <div id="rep-selector-wrap">
+        <label for="global-rep-select">VIEW REP:</label>
+        <select id="global-rep-select" onchange="onRepFilterChange()">
+          <option value="">All Reps</option>
+        </select>
+      </div>
+      <div class="user-badge" id="user-badge" style="display:none">
+        <div>
+          <div class="user-badge-name" id="user-badge-name">—</div>
+          <div class="user-badge-role" id="user-badge-role">—</div>
+        </div>
+      </div>
       <button class="hbtn" onclick="toggleLog()">DEBUG LOG</button>
       <button class="hbtn primary" id="refresh-btn" onclick="loadData()">
         <span id="refresh-icon">⟳</span> REFRESH
@@ -231,6 +256,10 @@
     <div id="log-lines"></div>
   </div>
 
+  <div id="rep-lock-banner">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span id="rep-lock-text">Viewing your data only</span>
+  </div>
   <div id="err-banner"><span id="err-txt"></span><span style="cursor:pointer;text-decoration:underline;color:var(--red)" onclick="toggleLog()">debug log</span></div>
 
   <!-- Nav tabs -->
@@ -521,8 +550,21 @@ const BHAG_CUM   = BHAG_MONTHLY.reduce((acc,v,i)   => { acc.push((acc[i-1]||0)+v
 const TRAILING_AGO = (() => { const d=new Date(); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); })();
 const CUR_YEAR = new Date().getFullYear();
 
-// ─── AUTH ─────────────────────────────────────────────────────────────────────
+// ─── AUTH & USER IDENTITY ────────────────────────────────────────────────────
 let auth = { accessToken: null, refreshToken: null };
+
+// Current user context — resolved after login
+let USER = {
+  username:    null,   // from userinfo sub/preferred_username
+  displayName: null,   // full name
+  email:       null,
+  roles:       [],     // Acumatica roles
+  isManager:   false,  // Administrator or ASF Sales Manager
+  salespersonId: null, // e.g. '000-22'
+  salespersonName: null, // display name matching SalesRep field
+};
+
+const MANAGER_ROLES = ['Administrator', 'ASF Sales Manager'];
 
 function startLogin() {
   const state = Math.random().toString(36).substring(2);
@@ -535,6 +577,7 @@ async function handleCallback(code, state) {
   if (state !== sessionStorage.getItem('oauth_state')) { showLoginErr('OAuth state mismatch. Please try again.'); return; }
   setLoadTxt('Signing you in…');
   try {
+    // 1. Exchange code for tokens
     const resp = await fetch(`${CONFIG.workerUrl}/token`, {
       method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: CONFIG.redirectUri, client_id: CONFIG.clientId, client_secret: CONFIG.clientSecret }),
@@ -542,9 +585,120 @@ async function handleCallback(code, state) {
     if (!resp.ok) throw new Error(`Token exchange failed (${resp.status})`);
     const t = await resp.json();
     auth.accessToken = t.access_token; auth.refreshToken = t.refresh_token;
+
+    // 2. Resolve user identity (roles + salesperson link)
+    setLoadTxt('Resolving user profile…');
+    await resolveUserIdentity();
+
     window.history.replaceState({}, '', window.location.pathname);
-    showDashboard(); loadData();
+    showDashboard();
+    loadData();
   } catch(e) { showLoginErr(e.message); }
+}
+
+// ── Resolve who is logged in and what they can see ───────────────────────────
+async function resolveUserIdentity() {
+  try {
+    // Step 1: userinfo endpoint (standard OIDC)
+    const uiResp = await fetch(`${CONFIG.acumaticaUrl}/identity/connect/userinfo`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` }
+    });
+    const ui = uiResp.ok ? await uiResp.json() : {};
+    addLog('userinfo: ' + JSON.stringify(ui), 'ok');
+
+    USER.username    = ui.preferred_username || ui.sub || ui.email || '';
+    USER.displayName = ui.name || ui.given_name || USER.username;
+    USER.email       = ui.email || '';
+
+    // Step 2: Fetch the Acumatica Users record to get roles + employee link
+    // Try by username match via OData Users endpoint
+    const usersRows = await tryFetch('User Profile', 'Users', {
+      '$filter': `Username eq '${USER.username}'`,
+      '$select': 'Username,FullName,Email,Roles,LinkedEntity,EmployeeID,SalesPersonID',
+      '$top': '1',
+    });
+
+    const userRec = usersRows[0] || {};
+    addLog('User record: ' + JSON.stringify(userRec), 'ok');
+
+    // Parse roles — Acumatica returns them comma-separated or as array
+    const rolesRaw = userRec.Roles || ui.role || '';
+    USER.roles = Array.isArray(rolesRaw)
+      ? rolesRaw
+      : String(rolesRaw).split(',').map(r => r.trim()).filter(Boolean);
+
+    USER.isManager = USER.roles.some(r => MANAGER_ROLES.includes(r));
+
+    // Step 3: Resolve salesperson name
+    // If the user record has SalesPersonID use that, else try Employee link
+    if (userRec.SalesPersonID) {
+      USER.salespersonId = userRec.SalesPersonID;
+      // Look up the display name
+      const spRows = await tryFetch('Salesperson', 'Salesperson', {
+        '$filter': `SalespersonID eq '${USER.salespersonId}'`,
+        '$select': 'SalespersonID,Name',
+        '$top': '1',
+      });
+      USER.salespersonName = spRows[0]?.Name || userRec.FullName || USER.displayName;
+    } else if (userRec.EmployeeID || userRec.LinkedEntity) {
+      const empId = userRec.EmployeeID || userRec.LinkedEntity;
+      // Look up employee → salesperson
+      const empRows = await tryFetch('Employee', 'EPEmployee', {
+        '$filter': `EmployeeID eq '${empId}'`,
+        '$select': 'EmployeeID,SalespersonID,Name',
+        '$top': '1',
+      });
+      const emp = empRows[0] || {};
+      USER.salespersonId   = emp.SalespersonID || null;
+      USER.salespersonName = emp.Name || userRec.FullName || USER.displayName;
+      if (USER.salespersonId) {
+        const spRows = await tryFetch('Salesperson name', 'Salesperson', {
+          '$filter': `SalespersonID eq '${USER.salespersonId}'`,
+          '$select': 'SalespersonID,Name', '$top': '1',
+        });
+        if (spRows[0]?.Name) USER.salespersonName = spRows[0].Name;
+      }
+    } else {
+      // Fallback: use display name and try to match against SalesRep field later
+      USER.salespersonName = userRec.FullName || USER.displayName;
+    }
+
+    addLog(`User resolved: ${USER.displayName} | Manager: ${USER.isManager} | Rep: ${USER.salespersonName}`, 'ok');
+
+  } catch(e) {
+    // Non-fatal: if identity resolution fails, default to manager view
+    addLog('WARN: identity resolution failed — defaulting to manager view. ' + e.message, 'error');
+    USER.isManager = true;
+    USER.salespersonName = null;
+  }
+
+  // Update header badge
+  document.getElementById('user-badge').style.display = 'flex';
+  document.getElementById('user-badge-name').textContent = USER.displayName || USER.username || '—';
+  document.getElementById('user-badge-role').textContent = USER.isManager ? 'Manager · All Reps' : (USER.salespersonName || 'Sales Rep');
+
+  // Show rep lock banner for non-managers
+  if (!USER.isManager) {
+    const banner = document.getElementById('rep-lock-banner');
+    banner.style.display = 'flex';
+    document.getElementById('rep-lock-text').textContent =
+      `Viewing data for: ${USER.salespersonName || USER.displayName} only`;
+  }
+}
+
+// ── Get the currently active rep filter ─────────────────────────────────────
+// Returns null (all reps) for managers, or the rep name for locked users
+function getActiveRepFilter() {
+  if (!USER.isManager) return USER.salespersonName; // locked
+  const sel = document.getElementById('global-rep-select');
+  return sel.value || null; // null = all reps
+}
+
+// Called when manager changes the global rep selector
+function onRepFilterChange() {
+  renderOverview();
+  renderCustomerData();
+  renderOpportunities();
 }
 
 async function doRefreshToken() {
@@ -558,6 +712,10 @@ async function doRefreshToken() {
 
 function logout() {
   auth = { accessToken: null, refreshToken: null };
+  USER = { username:null, displayName:null, email:null, roles:[], isManager:false, salespersonId:null, salespersonName:null };
+  document.getElementById('rep-lock-banner').style.display='none';
+  document.getElementById('rep-selector-wrap').style.display='none';
+  document.getElementById('user-badge').style.display='none';
   document.getElementById('dashboard').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('nav-tabs').style.display = 'none';
@@ -634,6 +792,14 @@ async function loadData() {
 
     document.getElementById('hdr-sub').textContent = `SALES DASHBOARD · ${new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}`;
 
+    // Populate global rep selector (managers only)
+    if (USER.isManager) {
+      const reps = [...new Set(D.sales.map(r=>r.SalesRep).filter(Boolean))].sort();
+      const sel = document.getElementById('global-rep-select');
+      const cur = sel.value; // preserve selection on refresh
+      sel.innerHTML = '<option value="">All Reps</option>' + reps.map(r=>`<option${r===cur?' selected':''}>${r}</option>`).join('');
+    }
+
     renderOverview();
     renderCustomerData();
     renderOpportunities();
@@ -676,8 +842,12 @@ const fmtPct = (n,d) => { if(!d||d===0) return '—'; return ((n/d)*100).toFixed
 let chartYTD=null, chartT12=null;
 
 function renderOverview() {
+  // Apply rep filter
+  const activeRep = getActiveRepFilter();
+  const repSales = activeRep ? D.sales.filter(r => r.SalesRep === activeRep) : D.sales;
+
   // Determine YTD actual from InvoicedItems (current fiscal year)
-  const ytdRows = D.sales.filter(r => {
+  const ytdRows = repSales.filter(r => {
     const p = r.FinancialPeriod||''; return p.endsWith(`-${CUR_YEAR}`) || p.endsWith(`-${CUR_YEAR.toString().slice(-2)}`);
   });
 
@@ -727,7 +897,7 @@ function renderOverview() {
   periodsThisYear.forEach(p => {
     const mo = parseInt(p.split('-')[0]) - 1;
     if(mo >= 0 && mo <= 11) {
-      const sum = ytdRows.filter(r => r.FinancialPeriod === p).reduce((s,r) => s+(+r.ExtAmount||0), 0);
+      const sum = repSales.filter(r => r.FinancialPeriod === p && (r.FinancialPeriod||'').endsWith(`-${CUR_YEAR}`)).reduce((s,r) => s+(+r.ExtAmount||0), 0);
       actualByMonth[mo] = (actualByMonth[mo]||0) + sum;
     }
   });
@@ -780,10 +950,13 @@ function renderOverview() {
   });
 
   // Trailing 12 bar chart
-  const t12Labels = D.trailing12.map(d => d.period);
-  const t12Sales  = D.trailing12.map(d => d.sales);
-  const t12Profit = D.trailing12.map(d => d.profit);
-  document.getElementById('t12-badge').textContent = `${t12Labels[0]||''} → ${t12Labels[t12Labels.length-1]||''}`;
+  // Re-aggregate trailing 12 for the active rep filter
+  const t12Data    = aggregateByPeriod(repSales);
+  const cls12Data  = aggregateByClass(repSales);
+  const t12Labels = t12Data.map(d => d.period);
+  const t12Sales  = t12Data.map(d => d.sales);
+  const t12Profit = t12Data.map(d => d.profit);
+  document.getElementById('t12-badge').textContent = `${t12Labels[0]||''} → ${t12Labels[t12Labels.length-1]||''}` + (activeRep ? ` · ${activeRep}` : '');
   if(chartT12) chartT12.destroy();
   chartT12 = new Chart(document.getElementById('chart-t12').getContext('2d'), {
     type: 'bar',
@@ -809,7 +982,7 @@ function renderOverview() {
 
   // Trailing 12 detail table
   let totS=0,totC=0,totP=0;
-  document.getElementById('t12-tbody').innerHTML = D.trailing12.map(d => {
+  document.getElementById('t12-tbody').innerHTML = t12Data.map(d => {
     totS+=d.sales; totC+=d.cost; totP+=d.profit;
     return `<tr>
       <td style="color:var(--asf-navy);font-weight:600">${d.period}</td>
@@ -825,7 +998,7 @@ function renderOverview() {
   document.getElementById('t12-tot-margin').textContent = fmtPct(totP,totS);
 
   // Item class bars
-  const cls = D.salesByClass; const maxSales = cls[0]?.sales||1;
+  const cls = cls12Data; const maxSales = cls[0]?.sales||1;
   const COLORS = ['#1e5080','#5a9e45','#5b8fcc','#c4890a','#6b52b8','#c4621a','#3a7a28','#3a6faa'];
   document.getElementById('itemclass-bars').innerHTML = cls.slice(0,10).map((d,i) => {
     const pct = (d.sales/maxSales)*100;
@@ -851,9 +1024,13 @@ function pill(good, label) {
 let custData = []; // merged per-customer
 
 function renderCustomerData() {
+  const activeRep = getActiveRepFilter();
+  const repSales  = activeRep ? D.sales.filter(r => r.SalesRep === activeRep) : D.sales;
+  const repDisp   = activeRep ? D.displays.filter(r => r.DefaultSalesperson === activeRep) : D.displays;
+
   // Aggregate YTD sales per customer from sales rows
   const salesMap = {};
-  D.sales.forEach(r => {
+  repSales.forEach(r => {
     const name = (r.CustomerName||'').trim(); if(!name) return;
     if(!salesMap[name]) salesMap[name] = { name, ytd: 0, invoices: 0, rep: r.SalesRep||'—' };
     salesMap[name].ytd += +r.ExtAmount||0;
@@ -867,7 +1044,7 @@ function renderCustomerData() {
 
   // Merge displays data (count per customer)
   const dispMap = {};
-  D.displays.forEach(r => {
+  repDisp.forEach(r => {
     const name = (r.CustomerName||'').trim(); if(!name) return;
     if(!dispMap[name]) dispMap[name] = { count: 0, reps: new Set() };
     dispMap[name].count += parseInt(r.DisplaysPlaced)||1;
@@ -888,6 +1065,18 @@ function renderCustomerData() {
   });
 
   // KPIs
+  // Update rep filter dropdown for managers
+  if (USER.isManager) {
+    const reps = [...new Set(D.sales.map(r=>r.SalesRep).filter(Boolean))].sort();
+    const repSel = document.getElementById('cust-rep-filter');
+    const curVal = repSel.value;
+    // pre-select active global filter
+    repSel.innerHTML = '<option value="">All Reps</option>' + reps.map(r=>`<option${r===curVal?' selected':''}>${r}</option>`).join('');
+    if (activeRep && !curVal) repSel.value = activeRep;
+  } else {
+    // Non-managers: hide rep column filter
+    document.getElementById('cust-rep-filter').style.display = 'none';
+  }
   document.getElementById('cust-kpi-count').textContent = custData.length;
   const avgDays = custData.length ? Math.round(custData.reduce((s,r)=>s+r.days,0)/custData.length) : 0;
   const kpiDays = document.getElementById('cust-kpi-days');
@@ -940,7 +1129,14 @@ function renderCustomerTable() {
 
 // ─── OPPORTUNITIES ────────────────────────────────────────────────────────────
 function renderOpportunities() {
-  const rows = D.opportunities;
+  const activeRep = getActiveRepFilter();
+  // For opportunities, match on Owner field. Try exact match, else fallback to salesperson name.
+  const rows = activeRep
+    ? D.opportunities.filter(r => {
+        const owner = (r.Owner||'').trim();
+        return owner === activeRep || owner.toLowerCase() === (activeRep||'').toLowerCase();
+      })
+    : D.opportunities;
   const pipeline = rows.reduce((s,r)=>s+(+r.Total||0),0);
   const weighted = rows.reduce((s,r)=>s+((+r.Total||0)*(+(r.Probability||0)/100)),0);
   const avgProb  = rows.length ? rows.reduce((s,r)=>s+(+(r.Probability||0)),0)/rows.length : 0;
@@ -971,11 +1167,17 @@ function renderOpportunities() {
     return `<div class="bar-row"><div class="bar-lbl">${o}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${SCOLORS[i%SCOLORS.length]}">${pct>22?`<span class="bar-fill-lbl">${fmtK(v)}</span>`:''}</div></div>${pct<=22?`<div class="bar-val-out">${fmtK(v)}</div>`:''}</div>`;
   }).join('');
 
-  // Build filters
-  const stages = [...new Set(rows.map(r=>r.Stage).filter(Boolean))].sort();
-  const owners = [...new Set(rows.map(r=>r.Owner).filter(Boolean))].sort();
+  // Build filters — always from full dataset so managers can switch
+  const allOwners = [...new Set(D.opportunities.map(r=>r.Owner).filter(Boolean))].sort();
+  const stages = [...new Set(D.opportunities.map(r=>r.Stage).filter(Boolean))].sort();
   document.getElementById('opp-stage-filter').innerHTML = '<option value="">All Stages</option>'+stages.map(s=>`<option>${s}</option>`).join('');
-  document.getElementById('opp-rep-filter').innerHTML   = '<option value="">All Owners</option>'+owners.map(o=>`<option>${o}</option>`).join('');
+  if (USER.isManager) {
+    const repSel = document.getElementById('opp-rep-filter');
+    repSel.innerHTML = '<option value="">All Owners</option>'+allOwners.map(o=>`<option>${o}</option>`).join('');
+    repSel.style.display = '';
+  } else {
+    document.getElementById('opp-rep-filter').style.display = 'none';
+  }
 
   renderOppTable();
 }
@@ -985,10 +1187,17 @@ function renderOppTable() {
   const stage  = document.getElementById('opp-stage-filter').value;
   const owner  = document.getElementById('opp-rep-filter').value;
 
+  const activeRep2 = getActiveRepFilter();
   let rows = D.opportunities.filter(r => {
+    // Apply global rep lock for non-managers
+    if (activeRep2) {
+      const o = (r.Owner||'').trim();
+      if (o !== activeRep2 && o.toLowerCase() !== activeRep2.toLowerCase()) return false;
+    }
     if(search && !((r.AccountName||'').toLowerCase().includes(search)||(r.OpportunityID||'').toLowerCase().includes(search))) return false;
     if(stage && r.Stage !== stage) return false;
-    if(owner && r.Owner !== owner) return false;
+    // Manager's per-tab rep filter
+    if(USER.isManager && owner && r.Owner !== owner) return false;
     return true;
   });
 
@@ -1045,7 +1254,16 @@ function addLog(msg,type='') { const d=document.createElement('div'); d.classNam
 function clearLog() { document.getElementById('log-lines').innerHTML=''; }
 let logVisible=false;
 function toggleLog() { logVisible=!logVisible; document.getElementById('debug-log').style.display=logVisible?'block':'none'; document.querySelector('.hbtn[onclick="toggleLog()"]').textContent=logVisible?'HIDE LOG':'DEBUG LOG'; }
-function showDashboard() { hideOverlay(); document.getElementById('login-screen').style.display='none'; document.getElementById('dashboard').style.display='block'; document.getElementById('nav-tabs').style.display='flex'; }
+function showDashboard() {
+  hideOverlay();
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  document.getElementById('nav-tabs').style.display='flex';
+  // Show rep selector only for managers
+  if (USER.isManager) {
+    document.getElementById('rep-selector-wrap').style.display='flex';
+  }
+}
 function setLoadTxt(t) { document.getElementById('load-txt').textContent=t; }
 function hideOverlay() { document.getElementById('loading-overlay').style.display='none'; }
 
