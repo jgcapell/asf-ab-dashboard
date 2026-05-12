@@ -916,12 +916,12 @@ async function loadData() {
     });
     step(`DISPLAYS — ${D.displays.length} rows`);
 
-    // 4. Opportunities — use BI-Opportunities which has Employee name resolved
-    //    Plus DisplayName from CR-Opportunities for owner name matching SalesRep
-    D.opportunities = await tryFetch('Opportunities', 'BI-Opportunities', {
-      '$select':'Opportunity,Customer,Employee,Stage,Status,Amount,Estimated,DateCreated',
-      '$filter': "Status eq 'Open'",
-      '$orderby':'Amount desc',
+    // 4. Opportunities — CR-Opportunities2018R1 has DisplayName (owner full name)
+    //    which matches SalesRep names directly for rep filtering
+    D.opportunities = await tryFetch('Opportunities', 'CR-Opportunities2018R1', {
+      '$select':'OpportunityID,AccountName,DisplayName,Stage,Status,Total,EstimatedCloseDate,Probability,Description',
+      '$filter': "Status ne 'Won' and Status ne 'Lost'",
+      '$orderby':'Total desc',
     });
     step(`OPPORTUNITIES — ${D.opportunities.length} rows`);
 
@@ -1578,19 +1578,15 @@ function renderOpportunities() {
   const ago120 = new Date(today); ago120.setDate(ago120.getDate() - 120);
   const next7  = new Date(today); next7.setDate(next7.getDate() + 7);
 
-  // ── Opportunities — filter by rep using employee code lookup
+  // ── Opportunities — filter by DisplayName which is the owner's full name
   const oppRows = activeRep
-    ? D.opportunities.filter(r => {
-        const empCode = (r.Employee||'').trim();
-        // Match by employee code → name, or by name directly
-        const empName = D.empCodeToName[empCode] || empCode;
-        return ownerMatchesRep(empName, activeRep);
-      })
+    ? D.opportunities.filter(r => ownerMatchesRep(r.DisplayName||'', activeRep))
     : D.opportunities;
-  const pipeline = oppRows.reduce((s,r)=>s+(+r.Amount||0),0);
+  const pipeline = oppRows.reduce((s,r)=>s+(+r.Total||0),0);
+  const weighted = oppRows.reduce((s,r)=>s+((+r.Total||0)*(+(r.Probability||0)/100)),0);
   document.getElementById('opp-kpi-pipeline').textContent = fmtKpi(pipeline);
   document.getElementById('opp-kpi-sub').textContent = `${oppRows.length} open deals`;
-  document.getElementById('opp-kpi-weighted').textContent = fmtKpi(pipeline * 0.5);
+  document.getElementById('opp-kpi-weighted').textContent = fmtKpi(weighted);
 
   // ── Activity KPIs — window covers past 7 days AND next 7 days
   //     (StartDate on activities is a scheduled date, can be past or future)
@@ -1612,7 +1608,7 @@ function renderOpportunities() {
   // ── Stage bars
   const SCOLORS = ['#1e5080','#5b8fcc','#5a9e45','#c4890a','#6b52b8','#c4621a'];
   const stageMap = {};
-  oppRows.forEach(r => { const s=r.Stage||'Unknown'; stageMap[s]=(stageMap[s]||0)+(+r.Amount||0); });
+  oppRows.forEach(r => { const s=r.Stage||'Unknown'; stageMap[s]=(stageMap[s]||0)+(+r.Total||0); });
   const stageData = Object.entries(stageMap).sort((a,b)=>b[1]-a[1]);
   const stageMax  = stageData[0]?.[1]||1;
   document.getElementById('opp-stage-bars').innerHTML = stageData.map(([s,v],i) => {
@@ -1730,13 +1726,8 @@ function renderOppTable() {
   const activeRep = getActiveRepFilter();
 
   let rows = D.opportunities.filter(r => {
-    // Apply global rep filter via employee code lookup
-    if (activeRep) {
-      const empCode = (r.Employee||'').trim();
-      const empName = D.empCodeToName[empCode] || empCode;
-      if (!ownerMatchesRep(empName, activeRep)) return false;
-    }
-    if (search && !((r.Customer||'').toLowerCase().includes(search)||(r.Opportunity||'').toLowerCase().includes(search))) return false;
+    if (activeRep && !ownerMatchesRep(r.DisplayName||'', activeRep)) return false;
+    if (search && !((r.AccountName||'').toLowerCase().includes(search)||(r.OpportunityID||'').toLowerCase().includes(search))) return false;
     if (stage && r.Stage !== stage) return false;
     return true;
   });
@@ -1745,23 +1736,28 @@ function renderOppTable() {
 
   const stageCls = s => {
     const v=(s||'').toLowerCase();
-    return v.includes('won')?'b-green':v.includes('prospect')||v.includes('bid')||v.includes('qualif')?'b-blue':v.includes('proposal')||v.includes('negot')?'b-yellow':v.includes('lost')?'b-red':'b-dim';
+    return v.includes('won')?'b-green':v.includes('prospect')||v.includes('bid')||v.includes('sample')||v.includes('qualif')?'b-blue':v.includes('proposal')||v.includes('negot')?'b-yellow':v.includes('lost')?'b-red':'b-dim';
   };
 
   document.getElementById('opp-tbody').innerHTML = rows.length ? rows.map(r => {
-    const empCode = (r.Employee||'').trim();
-    const ownerDisplay = D.empCodeToName[empCode] || empCode || '—';
+    const prob = +r.Probability||0;
+    const wt   = (+r.Total||0) * prob / 100;
     return `<tr>
-      <td style="color:var(--asf-blue);font-weight:600;white-space:nowrap">${r.Opportunity||'—'}</td>
-      <td style="font-weight:500">${r.Customer||'—'}</td>
-      <td style="color:var(--dim)">${ownerDisplay}</td>
+      <td style="color:var(--asf-blue);font-weight:600;white-space:nowrap">${r.OpportunityID||'—'}</td>
+      <td style="font-weight:500">${r.AccountName||'—'}</td>
+      <td style="color:var(--dim)">${r.DisplayName||'—'}</td>
       <td><span class="badge ${stageCls(r.Stage)}">${r.Stage||'—'}</span></td>
       <td><span class="badge b-dim">${r.Status||'—'}</span></td>
-      <td>—</td>
-      <td style="color:var(--dim);white-space:nowrap">${fmtDate(r.Estimated)}</td>
-      <td style="text-align:right;color:var(--asf-navy);font-weight:700">${fmt$(r.Amount)}</td>
-      <td style="text-align:right;color:var(--asf-green);font-weight:600">—</td>
-      <td></td>
+      <td>
+        <div class="prob-wrap">
+          <div class="prob-track"><div class="prob-fill" style="width:${prob}%"></div></div>
+          <span style="font-size:10px;color:var(--muted);font-weight:600">${prob}%</span>
+        </div>
+      </td>
+      <td style="color:var(--dim);white-space:nowrap">${fmtDate(r.EstimatedCloseDate)}</td>
+      <td style="text-align:right;color:var(--asf-navy);font-weight:700">${fmt$(r.Total)}</td>
+      <td style="text-align:right;color:var(--asf-green);font-weight:600">${fmt$(wt)}</td>
+      <td style="color:var(--muted);font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.Description||'').replace(/"/g,'&quot;')}">${r.Description||'—'}</td>
     </tr>`;
   }).join('')
     : '<tr><td colspan="10" class="empty">No matching opportunities.</td></tr>';
