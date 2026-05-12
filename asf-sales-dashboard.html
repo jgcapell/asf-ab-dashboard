@@ -62,25 +62,8 @@
   .hbtn.primary { background: var(--asf-blue); border-color: var(--asf-blue); color: #fff; display: flex; align-items: center; gap: 6px; }
   .hbtn.primary:hover { background: #4a7db8; }
   .hbtn.primary:disabled { opacity: 0.5; cursor: wait; }
-
-  /* Global customer filter */
-  #cust-filter-wrap { display: none; align-items: center; gap: 8px; }
-  #cust-filter-wrap label { font-size: 10px; color: rgba(255,255,255,0.55); font-weight: 600; letter-spacing: 0.07em; white-space: nowrap; }
-  .cust-filter-combo { position: relative; }
-  #global-cust-input { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #fff; padding: 5px 28px 5px 10px; border-radius: 6px; font-size: 11px; font-family: inherit; font-weight: 500; outline: none; width: 180px; }
-  #global-cust-input::placeholder { color: rgba(255,255,255,0.4); }
-  #global-cust-input:focus { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.18); }
-  .cust-clear-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; display: none; }
-  .cust-clear-btn:hover { color: #fff; }
-  #cust-dropdown { position: absolute; top: calc(100% + 4px); left: 0; width: 260px; background: #fff; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(30,80,128,0.18); z-index: 1000; max-height: 240px; overflow-y: auto; display: none; }
-  .cust-drop-item { padding: 8px 12px; font-size: 12px; color: var(--text); cursor: pointer; border-bottom: 1px solid var(--border2); font-weight: 500; }
-  .cust-drop-item:last-child { border-bottom: none; }
-  .cust-drop-item:hover { background: #eef4fb; color: var(--asf-navy); }
-  .cust-drop-item strong { color: var(--asf-blue); }
-  /* Active customer filter banner */
-  #cust-filter-banner { background: rgba(91,143,204,0.10); border-bottom: 1px solid rgba(91,143,204,0.22); padding: 6px 28px; font-size: 11px; color: var(--asf-navy); font-weight: 600; display: none; align-items: center; gap: 10px; }
-  #cust-filter-banner button { background: none; border: 1px solid rgba(30,80,128,0.25); color: var(--asf-navy); border-radius: 4px; padding: 2px 8px; font-size: 10px; font-family: inherit; font-weight: 700; cursor: pointer; }
-  #cust-filter-banner button:hover { background: rgba(30,80,128,0.08); }
+  .btn-sm { padding: 6px 14px; border-radius: 6px; font-size: 11px; font-family: inherit; font-weight: 600; cursor: pointer; border: none; background: var(--asf-navy); color: #fff; transition: background 0.15s; }
+  .btn-sm:hover { background: #174068; }
 
   /* Rep selector in header */
   #rep-selector-wrap { display: none; align-items: center; gap: 8px; }
@@ -245,15 +228,6 @@
       </div>
     </div>
     <div class="header-right">
-      <div id="cust-filter-wrap">
-        <label>CUSTOMER:</label>
-        <div class="cust-filter-combo">
-          <input id="global-cust-input" type="text" placeholder="All customers…"
-                 oninput="onCustFilterInput()" onfocus="showCustDropdown()" autocomplete="off">
-          <button class="cust-clear-btn" id="cust-clear-btn" onclick="clearCustFilter()" title="Clear">✕</button>
-          <div id="cust-dropdown"></div>
-        </div>
-      </div>
       <div id="rep-selector-wrap">
         <label for="global-rep-select">VIEW REP:</label>
         <select id="global-rep-select" onchange="onRepFilterChange()">
@@ -284,11 +258,6 @@
     <div id="log-lines"></div>
   </div>
 
-  <div id="cust-filter-banner">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <span>Filtered by customer: <strong id="cust-banner-name"></strong></span>
-    <button onclick="clearCustFilter()">✕ Clear</button>
-  </div>
   <div id="rep-lock-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     <span id="rep-lock-text">Viewing your data only</span>
@@ -451,6 +420,32 @@
         </div>
       </div>
 
+      <!-- Item Class chart row -->
+      <div class="row cols-2">
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Sales by Item Class</span>
+            <span class="card-badge" id="cust-class-badge">Current Year</span>
+          </div>
+          <div class="card-body" id="cust-itemclass-bars">
+            <div class="empty">Loading…</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Filter by Customer</span></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:11px;color:var(--muted)">Filter the item class chart and table to a specific customer.</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <input class="ctrl-input" id="cust-tab-search" placeholder="Type customer name…"
+                     oninput="onCustTabSearch()" autocomplete="off" style="width:100%;max-width:280px">
+              <button class="btn-sm" onclick="clearCustTabFilter()">Clear</button>
+            </div>
+            <div id="cust-tab-dropdown" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;max-height:180px;overflow-y:auto;display:none"></div>
+            <div id="cust-tab-active" style="display:none;background:rgba(91,143,204,0.1);border:1px solid rgba(91,143,204,0.25);border-radius:6px;padding:8px 12px;font-size:11px;font-weight:600;color:var(--asf-navy)"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Customer master table -->
       <div class="card">
         <div class="card-hdr"><span class="card-title">Customer Detail</span></div>
@@ -468,14 +463,16 @@
         <div class="card-scroll">
           <table>
             <thead><tr>
+              <th style="width:24px"></th>
               <th>Customer</th>
               <th>Sales Rep</th>
               <th style="text-align:right">YTD Sales</th>
-              <th style="text-align:right">Invoices</th>
+              <th style="text-align:right">Prior YTD</th>
+              <th style="text-align:right">YoY Variance</th>
               <th style="text-align:right">Avg Days to Pay</th>
               <th style="text-align:right">Credit Limit</th>
               <th>Terms</th>
-              <th style="text-align:right">Displays Placed</th>
+              <th style="text-align:right">Displays</th>
             </tr></thead>
             <tbody id="cust-tbody"></tbody>
           </table>
@@ -747,75 +744,7 @@ function onRepFilterChange() {
   renderOpportunities();
 }
 
-// ─── GLOBAL CUSTOMER FILTER ───────────────────────────────────────────────────
-let activeCustomer = null; // null = all customers
 
-function getActiveCustFilter() { return activeCustomer; }
-
-function populateCustFilter() {
-  // Build sorted unique customer list from sales data (respecting rep filter)
-  const activeRep = getActiveRepFilter();
-  const src = activeRep ? D.sales.filter(r => r.SalesRep === activeRep) : D.sales;
-  return [...new Set(src.map(r => (r.CustomerName||'').trim()).filter(Boolean))].sort();
-}
-
-function onCustFilterInput() {
-  const val = document.getElementById('global-cust-input').value.trim();
-  document.getElementById('cust-clear-btn').style.display = val ? 'block' : 'none';
-  showCustDropdown();
-}
-
-function showCustDropdown() {
-  const input = document.getElementById('global-cust-input');
-  const query = input.value.toLowerCase().trim();
-  const customers = populateCustFilter();
-  const matches = query
-    ? customers.filter(c => c.toLowerCase().includes(query)).slice(0, 12)
-    : customers.slice(0, 12);
-
-  const dd = document.getElementById('cust-dropdown');
-  if (!matches.length) { dd.style.display = 'none'; return; }
-
-  dd.innerHTML = matches.map(c => {
-    const hi = query
-      ? c.replace(new RegExp('(' + query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + ')', 'gi'), '<strong>$1</strong>')
-      : c;
-    return `<div class="cust-drop-item" data-name="${c.replace(/"/g,'&quot;')}" onmousedown="selectCustomer(this.dataset.name)">${hi}</div>`;
-  }).join('');
-  dd.style.display = 'block';
-}
-
-function selectCustomer(name) {
-  activeCustomer = name;
-  document.getElementById('global-cust-input').value = name;
-  document.getElementById('cust-clear-btn').style.display = 'block';
-  document.getElementById('cust-dropdown').style.display = 'none';
-  // Show banner
-  document.getElementById('cust-filter-banner').style.display = 'flex';
-  document.getElementById('cust-banner-name').textContent = name;
-  // Re-render all tabs
-  renderOverview();
-  renderCustomerData();
-  renderOpportunities();
-}
-
-function clearCustFilter() {
-  activeCustomer = null;
-  document.getElementById('global-cust-input').value = '';
-  document.getElementById('cust-clear-btn').style.display = 'none';
-  document.getElementById('cust-dropdown').style.display = 'none';
-  document.getElementById('cust-filter-banner').style.display = 'none';
-  renderOverview();
-  renderCustomerData();
-  renderOpportunities();
-}
-
-// Hide dropdown when clicking outside
-document.addEventListener('click', e => {
-  if (!e.target.closest('.cust-filter-combo')) {
-    document.getElementById('cust-dropdown').style.display = 'none';
-  }
-});
 
 async function doRefreshToken() {
   const resp = await fetch(`${CONFIG.workerUrl}/token`, {
@@ -829,11 +758,9 @@ async function doRefreshToken() {
 function logout() {
   auth = { accessToken: null, refreshToken: null };
   USER = { username:null, displayName:null, email:null, roles:[], isManager:false, salespersonId:null, salespersonName:null };
-  activeCustomer = null;
   document.getElementById('rep-lock-banner').style.display='none';
-  document.getElementById('cust-filter-banner').style.display='none';
   document.getElementById('rep-selector-wrap').style.display='none';
-  document.getElementById('cust-filter-wrap').style.display='none';
+
   document.getElementById('user-badge').style.display='none';
   document.getElementById('dashboard').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
@@ -867,7 +794,7 @@ async function tryFetch(label, endpoint, params) {
 }
 
 // ─── DATA STORE ───────────────────────────────────────────────────────────────
-let D = { sales:[], ar:[], displays:[], opportunities:[], trailing12:[], salesByClass:[] };
+let D = { sales:[], ar:[], displays:[], opportunities:[], trailing12:[], salesByClass:[], priorSales:[] };
 
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
 async function loadData() {
@@ -876,10 +803,13 @@ async function loadData() {
   const step = lbl => { done++; setProgress(done,STEPS,lbl); };
 
   try {
-    // 1. Sales history (YTD + trailing 12) via InvoicedItems
+    // 1. Sales history — fetch current + prior fiscal year for YoY comparison
+    //    Determine current year from today, fetch both years
+    const fetchYear  = String(CUR_YEAR);
+    const priorYear  = String(CUR_YEAR - 1);
     D.sales = await tryFetch('Sales History', 'InvoicedItems', {
-      '$select': 'ReferenceNbr,CustomerName,InvoiceDate,SalesRep,ExtAmount,ExtCost,ExtProfit,ItemClass,Quantity,FinancialPeriod',
-      '$filter': `InvoiceDate ge datetime'${TRAILING_AGO}T00:00:00'`,
+      '$select': 'ReferenceNbr,CustomerName,InvoiceDate,PaymentDate,SalesRep,ExtAmount,ExtCost,ExtProfit,ItemClass,Quantity,FinancialPeriod,FiscalYear,DisplayingDealers',
+      '$filter': `FiscalYear eq '${fetchYear}' or FiscalYear eq '${priorYear}'`,
       '$orderby':'InvoiceDate desc',
     });
     step(`SALES — ${D.sales.length} rows`);
@@ -905,8 +835,11 @@ async function loadData() {
     step(`OPPORTUNITIES — ${D.opportunities.length} rows`);
 
     // 5. Aggregate
-    D.trailing12 = aggregateByPeriod(D.sales);
-    D.salesByClass = aggregateByClass(D.sales);
+    // Split into current / prior fiscal year
+    D.curSales  = D.sales.filter(r => (r.FiscalYear||'').trim() === fetchYear);
+    D.priorSales = D.sales.filter(r => (r.FiscalYear||'').trim() === priorYear);
+    D.trailing12 = aggregateByPeriod(D.sales); // still use both for trailing chart
+    D.salesByClass = aggregateByClass(D.curSales);
     step('AGGREGATION COMPLETE');
 
     document.getElementById('hdr-sub').textContent = `SALES DASHBOARD · ${new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}`;
@@ -918,12 +851,7 @@ async function loadData() {
       const cur = sel.value;
       sel.innerHTML = '<option value="">All Reps</option>' + reps.map(r=>`<option${r===cur?' selected':''}>${r}</option>`).join('');
     }
-    // Customer filter is always available — input is type-ahead, no pre-population needed
-    // But if a customer was previously selected and data refreshed, re-validate it exists
-    if (activeCustomer) {
-      const allCusts = [...new Set(D.sales.map(r=>(r.CustomerName||'').trim()).filter(Boolean))];
-      if (!allCusts.includes(activeCustomer)) clearCustFilter();
-    }
+
 
     renderOverview();
     renderCustomerData();
@@ -938,19 +866,27 @@ async function loadData() {
 function aggregateByPeriod(rows) {
   const m = {};
   rows.forEach(r => {
-    // Use FinancialPeriod if available and valid, otherwise derive from InvoiceDate
+    // FinancialPeriod is "YYYYMM" e.g. "202507"
+    // Display label: convert to "MMM YYYY" e.g. "Jul 2025"
     let p = (r.FinancialPeriod||'').trim();
-    if (!p || !/^\d{2}-\d{4}$/.test(p)) {
+    if (!p || !/^\d{6}$/.test(p)) {
+      // fallback: derive from InvoiceDate
       const d = r.InvoiceDate ? new Date(r.InvoiceDate) : null;
       if (!d || isNaN(d)) return;
-      p = String(d.getMonth()+1).padStart(2,'0') + '-' + d.getFullYear();
+      p = String(d.getFullYear()) + String(d.getMonth()+1).padStart(2,'0');
     }
-    if(!m[p]) m[p] = {period:p, sales:0, cost:0, profit:0};
+    if (!m[p]) m[p] = { period: p, sales: 0, cost: 0, profit: 0 };
     m[p].sales  += +r.ExtAmount||0;
     m[p].cost   += +r.ExtCost||0;
     m[p].profit += +r.ExtProfit||0;
   });
-  return Object.values(m).sort((a,b) => a.period.localeCompare(b.period));
+  // Sort chronologically and convert period key to readable label
+  return Object.values(m)
+    .sort((a,b) => a.period.localeCompare(b.period))
+    .map(d => {
+      const yr = d.period.slice(0,4), mo = parseInt(d.period.slice(4))-1;
+      return { ...d, label: MONTHS[mo] + ' ' + yr };
+    });
 }
 
 function aggregateByClass(rows) {
@@ -973,62 +909,46 @@ const fmtPct = (n,d) => { if(!d||d===0) return '—'; return ((n/d)*100).toFixed
 let chartYTD=null, chartT12=null;
 
 function renderOverview() {
-  // Apply rep + customer filters
+  // Apply rep filter
   const activeRep = getActiveRepFilter();
-  const activeCust = getActiveCustFilter();
-  const repSales = D.sales
-    .filter(r => !activeRep  || r.SalesRep    === activeRep)
-    .filter(r => !activeCust || (r.CustomerName||'').trim() === activeCust);
+  const fetchYear = String(CUR_YEAR);
+  const priorYear = String(CUR_YEAR - 1);
+  const allRepSales = D.sales.filter(r => !activeRep || r.SalesRep === activeRep);
+  const repSales = allRepSales.filter(r => (r.FiscalYear||'').trim() === fetchYear || !r.FiscalYear);
 
-  // Log a sample row so we can verify field names coming from InvoicedItems
+  // Detect fiscal year — use FiscalYear field directly (now in $select)
+  // FiscalYear is a 4-digit string e.g. "2025", "2026"
+  // FinancialPeriod format is "YYYYMM" e.g. "202507"
   if (repSales.length > 0) {
-    addLog('Sample InvoicedItems row fields: ' + Object.keys(repSales[0]).join(', '));
-    addLog('Sample values: FP=' + repSales[0].FinancialPeriod + ' Date=' + repSales[0].InvoiceDate + ' Amt=' + repSales[0].ExtAmount);
+    addLog(`Sample: FiscalYear=${repSales[0].FiscalYear} FP=${repSales[0].FinancialPeriod} Date=${repSales[0].InvoiceDate} Amt=${repSales[0].ExtAmount}`);
   } else {
-    addLog('WARNING: repSales is empty — InvoicedItems returned no rows', 'error');
+    addLog('WARNING: repSales is empty', 'error');
   }
 
-  // Detect fiscal year from FinancialPeriod ("MM-YYYY") OR fall back to InvoiceDate year
-  // Try FinancialPeriod first
-  const allPeriods = repSales.map(r => (r.FinancialPeriod||'').trim()).filter(p => /^\d{2}-\d{4}$/.test(p));
-  const mostRecentPeriod = [...allPeriods].sort().reverse()[0] || '';
+  // Find most recent fiscal year in data
+  const fiscalYears = repSales.map(r => (r.FiscalYear||'').trim()).filter(y => /^\d{4}$/.test(y));
+  const fiscalYear = fiscalYears.length ? [...fiscalYears].sort().reverse()[0] : String(CUR_YEAR);
+  addLog(`Fiscal year: ${fiscalYear}`);
 
-  let fiscalYear, lastMonthIdx, periodsThisYear, ytdRows;
+  // YTD rows = current fiscal year
+  const ytdRows = repSales.filter(r => (r.FiscalYear||'').trim() === fiscalYear);
 
-  if (mostRecentPeriod) {
-    // FinancialPeriod is populated — use it
-    fiscalYear = mostRecentPeriod.split('-')[1];
-    addLog(`Using FinancialPeriod — fiscal year: ${fiscalYear}`);
-    ytdRows = repSales.filter(r => (r.FinancialPeriod||'').endsWith(`-${fiscalYear}`));
-    periodsThisYear = [...new Set(ytdRows.map(r => r.FinancialPeriod||'').filter(Boolean))].sort();
-    const lastPeriodNum = periodsThisYear.length
-      ? parseInt(periodsThisYear[periodsThisYear.length-1].split('-')[0]) - 1
-      : 0;
-    lastMonthIdx = Math.min(lastPeriodNum, 11);
-  } else {
-    // FinancialPeriod missing — fall back to InvoiceDate year
-    // Find the most recent InvoiceDate year present in the data
-    const years = repSales
-      .map(r => r.InvoiceDate ? new Date(r.InvoiceDate).getFullYear() : null)
-      .filter(y => y && !isNaN(y));
-    fiscalYear = years.length ? String(Math.max(...years)) : String(CUR_YEAR);
-    addLog(`FinancialPeriod missing — falling back to InvoiceDate year: ${fiscalYear}`);
-    ytdRows = repSales.filter(r => {
-      const d = r.InvoiceDate ? new Date(r.InvoiceDate) : null;
-      return d && !isNaN(d) && String(d.getFullYear()) === fiscalYear;
-    });
-    // Build synthetic periods from InvoiceDate month
-    periodsThisYear = [...new Set(ytdRows.map(r => {
-      const d = new Date(r.InvoiceDate);
-      return String(d.getMonth() + 1).padStart(2,'0') + '-' + fiscalYear;
-    }).filter(Boolean))].sort();
-    const lastPeriodNum = periodsThisYear.length
-      ? parseInt(periodsThisYear[periodsThisYear.length-1].split('-')[0]) - 1
-      : 0;
-    lastMonthIdx = Math.min(lastPeriodNum, 11);
-  }
+  // Determine month index from FinancialPeriod ("YYYYMM") or InvoiceDate
+  // FinancialPeriod sample value: "202507" → month = 07
+  const periodsThisYear = [...new Set(ytdRows.map(r => {
+    const fp = (r.FinancialPeriod||'').trim();
+    if (/^\d{6}$/.test(fp)) return fp; // YYYYMM format
+    // fallback: derive from InvoiceDate
+    const d = r.InvoiceDate ? new Date(r.InvoiceDate) : null;
+    if (!d || isNaN(d)) return null;
+    return String(d.getFullYear()) + String(d.getMonth()+1).padStart(2,'0');
+  }).filter(Boolean))].sort();
 
   const monthsIn = periodsThisYear.length || 1;
+  // Last period: last 2 digits = month number (1-based)
+  const lastPeriod = periodsThisYear[periodsThisYear.length - 1] || '';
+  const lastMonthNum = lastPeriod ? parseInt(lastPeriod.slice(-2)) : 1;
+  const lastMonthIdx = Math.min(lastMonthNum - 1, 11);
 
   const ytdActual = ytdRows.reduce((s,r) => s+(+r.ExtAmount||0), 0);
 
@@ -1076,16 +996,16 @@ function renderOverview() {
   // Build actual cumulative per month for current year
   const actualByMonth = Array(12).fill(null);
   periodsThisYear.forEach(p => {
-    const mo = parseInt(p.split('-')[0]) - 1;
-    if(mo >= 0 && mo <= 11) {
-      // Match by FinancialPeriod if present, otherwise by InvoiceDate month
+    // p is "YYYYMM" e.g. "202507" → month index = parseInt("07") - 1 = 6
+    const mo = parseInt(p.slice(-2)) - 1;
+    if (mo >= 0 && mo <= 11) {
       const sum = ytdRows.filter(r => {
-        if (mostRecentPeriod) return r.FinancialPeriod === p;
+        const fp = (r.FinancialPeriod||'').trim();
+        if (/^\d{6}$/.test(fp)) return fp === p;
         const d = r.InvoiceDate ? new Date(r.InvoiceDate) : null;
         if (!d || isNaN(d)) return false;
-        const synth = String(d.getMonth()+1).padStart(2,'0') + '-' + fiscalYear;
-        return synth === p;
-      }).reduce((s,r) => s+(+r.ExtAmount||0), 0);
+        return (String(d.getFullYear()) + String(d.getMonth()+1).padStart(2,'0')) === p;
+      }).reduce((s, r) => s + (+r.ExtAmount||0), 0);
       actualByMonth[mo] = (actualByMonth[mo]||0) + sum;
     }
   });
@@ -1141,7 +1061,7 @@ function renderOverview() {
   // Re-aggregate trailing 12 for the active rep filter
   const t12Data    = aggregateByPeriod(repSales);
   const cls12Data  = aggregateByClass(repSales);
-  const t12Labels = t12Data.map(d => d.period);
+  const t12Labels = t12Data.map(d => d.label || d.period);
   const t12Sales  = t12Data.map(d => d.sales);
   const t12Profit = t12Data.map(d => d.profit);
   document.getElementById('t12-badge').textContent = `${t12Labels[0]||''} → ${t12Labels[t12Labels.length-1]||''}` + (activeRep ? ` · ${activeRep}` : '');
@@ -1212,18 +1132,16 @@ function pill(good, label) {
 let custData = []; // merged per-customer
 
 function renderCustomerData() {
-  const activeRep  = getActiveRepFilter();
-  const activeCust = getActiveCustFilter();
-  const repSales  = D.sales
-    .filter(r => !activeRep  || r.SalesRep === activeRep)
-    .filter(r => !activeCust || (r.CustomerName||'').trim() === activeCust);
-  const repDisp   = D.displays
-    .filter(r => !activeRep  || r.DefaultSalesperson === activeRep)
-    .filter(r => !activeCust || (r.CustomerName||'').trim() === activeCust);
+  const activeRep   = getActiveRepFilter();
+  const fetchYear   = String(CUR_YEAR);
+  const priorYear   = String(CUR_YEAR - 1);
+  const repSales    = D.sales.filter(r => !activeRep || r.SalesRep === activeRep);
+  const curRepSales = repSales.filter(r => (r.FiscalYear||'').trim() === fetchYear);
+  const priRepSales = repSales.filter(r => (r.FiscalYear||'').trim() === priorYear);
 
-  // Aggregate YTD sales per customer from sales rows
+  // Aggregate YTD sales (current year) per customer
   const salesMap = {};
-  repSales.forEach(r => {
+  curRepSales.forEach(r => {
     const name = (r.CustomerName||'').trim(); if(!name) return;
     if(!salesMap[name]) salesMap[name] = { name, ytd: 0, invoices: 0, rep: r.SalesRep||'—' };
     salesMap[name].ytd += +r.ExtAmount||0;
@@ -1231,56 +1149,71 @@ function renderCustomerData() {
     if(r.SalesRep && r.SalesRep !== '—') salesMap[name].rep = r.SalesRep;
   });
 
+  // Aggregate prior year sales per customer
+  const priorMap = {};
+  priRepSales.forEach(r => {
+    const name = (r.CustomerName||'').trim(); if(!name) return;
+    if(!priorMap[name]) priorMap[name] = { ytd: 0 };
+    priorMap[name].ytd += +r.ExtAmount||0;
+  });
+
   // Merge AR credit settings
   const arMap = {};
   D.ar.forEach(r => { arMap[(r.CustomerName||'').trim()] = r; });
 
-  // Calculate avg days to pay from InvoicedItems (D.sales)
-  // Each row has InvoiceDate; we aggregate unique invoices per customer
-  // and compute average days from invoice date to today as a proxy for
-  // days outstanding / days to pay. Unique by ReferenceNbr to avoid
-  // double-counting multi-line invoices.
+  // Avg days to pay = avg(PaymentDate - InvoiceDate) across paid invoices
+  // Deduplicated by ReferenceNbr so multi-line invoices count once per invoice.
   const daysToPayMap = {};
-  const today = new Date();
-  const seenInvoices = new Set();
+  const seenForDays = new Set();
   D.sales.forEach(r => {
     const name = (r.CustomerName||'').trim();
     const ref  = (r.ReferenceNbr||'').trim();
-    if (!name || !ref) return;
+    if (!name || !ref || !r.PaymentDate) return; // only paid invoices
     const key = name + '|' + ref;
-    if (seenInvoices.has(key)) return; // deduplicate multi-line invoices
-    seenInvoices.add(key);
-    const inv = r.InvoiceDate ? new Date(r.InvoiceDate) : null;
-    if (!inv || isNaN(inv)) return;
-    const days = Math.round((today - inv) / (1000 * 60 * 60 * 24));
+    if (seenForDays.has(key)) return; // one entry per invoice
+    seenForDays.add(key);
+    const inv = new Date(r.InvoiceDate);
+    const paid = new Date(r.PaymentDate);
+    if (isNaN(inv) || isNaN(paid)) return;
+    const days = Math.round((paid - inv) / (1000 * 60 * 60 * 24));
     if (days < 0 || days > 365) return; // skip outliers
     if (!daysToPayMap[name]) daysToPayMap[name] = { total: 0, count: 0 };
     daysToPayMap[name].total += days;
     daysToPayMap[name].count++;
   });
 
-  // Merge displays data (count per customer)
+  // Build displays from DisplayingDealers field on InvoicedItems
+  // The field is a comma-separated list of display names — unique per customer (same value on every line)
+  // Count unique display names and store the list for expansion
   const dispMap = {};
-  repDisp.forEach(r => {
-    const name = (r.CustomerName||'').trim(); if(!name) return;
-    if(!dispMap[name]) dispMap[name] = { count: 0, reps: new Set() };
-    dispMap[name].count += parseInt(r.DisplaysPlaced)||1;
-    if(r.DefaultSalesperson) dispMap[name].reps.add(r.DefaultSalesperson);
+  repSales.forEach(r => {
+    const name = (r.CustomerName||'').trim();
+    const raw  = (r.DisplayingDealers||'').trim();
+    if (!name || !raw) return;
+    if (!dispMap[name]) dispMap[name] = { displays: new Set() };
+    raw.split(',').map(d => d.trim()).filter(Boolean).forEach(d => dispMap[name].displays.add(d));
   });
 
   // Build merged list
   custData = Object.values(salesMap).map(s => {
-    const ar  = arMap[s.name] || {};
-    const dp  = dispMap[s.name] || { count: 0 };
-    const dtp = daysToPayMap[s.name];
+    const ar   = arMap[s.name] || {};
+    const dp   = dispMap[s.name] || { displays: new Set() };
+    const dtp  = daysToPayMap[s.name];
+    const prior = priorMap[s.name] || { ytd: 0 };
     const avgDaysToPay = dtp && dtp.count > 0 ? Math.round(dtp.total / dtp.count) : null;
+    const displayList  = [...dp.displays].sort();
+    const yoyVar = prior.ytd > 0 ? s.ytd - prior.ytd : null;
+    const yoyPct = prior.ytd > 0 ? ((s.ytd - prior.ytd) / prior.ytd) * 100 : null;
     return {
       name: s.name, rep: s.rep, ytd: s.ytd, invoices: s.invoices,
-      avgDaysToPay,                           // calculated from invoice history
-      daysPastDue: parseInt(ar.CreditDaysPastDue)||0, // AR setting (kept for color coding)
+      priorYtd: prior.ytd,
+      yoyVar, yoyPct,
+      avgDaysToPay,
+      daysPastDue: parseInt(ar.CreditDaysPastDue)||0,
       limit: parseFloat(ar.CreditLimit)||0,
       terms: ar.Terms||'—',
-      displays: dp.count,
+      displayCount: displayList.length,
+      displayList,
     };
   });
 
@@ -1300,10 +1233,11 @@ function renderCustomerData() {
   document.getElementById('cust-kpi-count').textContent = custData.length;
   const daysArr = custData.filter(r=>r.avgDaysToPay!==null).map(r=>r.avgDaysToPay);
   const avgDays = daysArr.length ? Math.round(daysArr.reduce((a,b)=>a+b,0)/daysArr.length) : 0;
+  addLog('Avg days to pay (terms-based): ' + avgDays + ' days across ' + daysArr.length + ' customers');
   const kpiDays = document.getElementById('cust-kpi-days');
   kpiDays.textContent = avgDays ? avgDays+'d' : '—';
   kpiDays.style.color = avgDays > 45 ? 'var(--red)' : avgDays > 30 ? 'var(--yellow)' : 'var(--asf-green)';
-  const totalDisp = custData.reduce((s,r)=>s+r.displays,0);
+  const totalDisp = custData.reduce((s,r)=>s+r.displayCount,0);
   document.getElementById('cust-kpi-disp').textContent = totalDisp;
 
   // Populate rep filter
@@ -1313,12 +1247,95 @@ function renderCustomerData() {
   renderCustomerTable();
 }
 
+// ─── CUSTOMER TAB FILTER ─────────────────────────────────────────────────────
+let activeCustTab = null;
+
+function onCustTabSearch() {
+  const q = document.getElementById('cust-tab-search').value.toLowerCase().trim();
+  const activeRep = getActiveRepFilter();
+  const allCusts = [...new Set(D.sales
+    .filter(r => !activeRep || r.SalesRep === activeRep)
+    .map(r => (r.CustomerName||'').trim()).filter(Boolean))].sort();
+  const matches = q ? allCusts.filter(c => c.toLowerCase().includes(q)).slice(0,10) : [];
+  const dd = document.getElementById('cust-tab-dropdown');
+  if (!matches.length) { dd.style.display='none'; return; }
+  dd.innerHTML = matches.map(c =>
+    `<div style="padding:7px 12px;font-size:12px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border2);font-weight:500"
+          onmousedown="selectCustTab('${c.replace(/'/g,"\'")}')"
+          onmouseover="this.style.background='#eef4fb'" onmouseout="this.style.background=''">${c}</div>`
+  ).join('');
+  dd.style.display='block';
+}
+
+function selectCustTab(name) {
+  activeCustTab = name;
+  document.getElementById('cust-tab-search').value = name;
+  document.getElementById('cust-tab-dropdown').style.display='none';
+  const active = document.getElementById('cust-tab-active');
+  active.textContent = '🔍 Showing: ' + name;
+  active.style.display='block';
+  renderCustItemClassBars();
+  renderCustomerTable();
+}
+
+function clearCustTabFilter() {
+  activeCustTab = null;
+  document.getElementById('cust-tab-search').value = '';
+  document.getElementById('cust-tab-dropdown').style.display='none';
+  document.getElementById('cust-tab-active').style.display='none';
+  renderCustItemClassBars();
+  renderCustomerTable();
+}
+
+function renderCustItemClassBars() {
+  const activeRep  = getActiveRepFilter();
+  const fetchYear  = String(CUR_YEAR);
+  let src = D.sales.filter(r =>
+    (!activeRep || r.SalesRep === activeRep) &&
+    (r.FiscalYear||'').trim() === fetchYear
+  );
+  if (activeCustTab) src = src.filter(r => (r.CustomerName||'').trim() === activeCustTab);
+  const clsData = aggregateByClass(src);
+  const maxSales = clsData[0]?.sales || 1;
+  const COLORS = ['#1e5080','#5a9e45','#5b8fcc','#c4890a','#6b52b8','#c4621a','#3a7a28','#3a6faa'];
+  const el = document.getElementById('cust-itemclass-bars');
+  document.getElementById('cust-class-badge').textContent =
+    (activeCustTab ? activeCustTab + ' · ' : '') + 'FY ' + fetchYear;
+  if (!clsData.length) { el.innerHTML='<div class="empty">No data</div>'; return; }
+  el.innerHTML = clsData.slice(0,10).map((d,i) => {
+    const pct = (d.sales/maxSales)*100;
+    return `<div class="bar-row">
+      <div class="bar-lbl" title="${d.cls}">${d.cls}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}">
+          ${pct>22?`<span class="bar-fill-lbl">${fmtK(d.sales)}</span>`:''}
+        </div>
+      </div>
+      ${pct<=22?`<div class="bar-val-out">${fmtK(d.sales)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function toggleCustExpand(rowId) {
+  const el = document.getElementById(rowId + '-expand');
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'table-row';
+  // Flip arrow on the trigger row
+  const triggerRow = el.previousElementSibling;
+  if (triggerRow) {
+    const arrow = triggerRow.querySelector('td:first-child');
+    if (arrow) arrow.textContent = isOpen ? '▶' : '▼';
+  }
+}
+
 function renderCustomerTable() {
   const search = document.getElementById('cust-search').value.toLowerCase();
   const rep    = document.getElementById('cust-rep-filter').value;
   const sort   = document.getElementById('cust-sort').value;
 
   let rows = custData.filter(r => {
+    if(activeCustTab && r.name !== activeCustTab) return false;
     if(search && !r.name.toLowerCase().includes(search)) return false;
     if(rep && r.rep !== rep) return false;
     return true;
@@ -1333,34 +1350,46 @@ function renderCustomerTable() {
   });
 
   document.getElementById('cust-count').textContent = `${rows.length} / ${custData.length} customers`;
-  document.getElementById('cust-tbody').innerHTML = rows.length ? rows.map(r => {
-    const d2p = r.avgDaysToPay !== null ? r.avgDaysToPay : r.daysPastDue;
-    const dayCol = d2p > 45 ? 'var(--red)' : d2p > 30 ? 'var(--yellow)' : 'var(--asf-green)';
-    return `<tr>
+  document.getElementById('cust-tbody').innerHTML = rows.length ? rows.map((r,i) => {
+    const d2p    = r.avgDaysToPay !== null ? r.avgDaysToPay : r.daysPastDue;
+    const dayCol = d2p > 45 ? 'var(--red)' : d2p > 30 ? 'var(--yellow)' : 'var(--asf-blue)';
+    const yoyCol = r.yoyVar === null ? 'var(--muted)' : r.yoyVar >= 0 ? 'var(--asf-green)' : 'var(--red)';
+    const yoyTxt = r.yoyVar === null ? '—'
+      : `${r.yoyVar >= 0 ? '▲' : '▼'} ${fmt$(Math.abs(r.yoyVar))} (${Math.abs(r.yoyPct).toFixed(1)}%)`;
+    const hasDisp = r.displayCount > 0;
+    const rowId   = 'cust-row-' + i;
+    const expandRow = hasDisp ? `
+      <tr id="${rowId}-expand" style="display:none;background:#f0f5fb">
+        <td></td>
+        <td colspan="9" style="padding:10px 16px">
+          <div style="font-size:10px;font-weight:700;color:var(--asf-navy);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Displays Placed (${r.displayCount})</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${r.displayList.map(d => `<span class="badge b-blue">${d}</span>`).join('')}
+          </div>
+        </td>
+      </tr>` : '';
+    return `<tr style="cursor:${hasDisp?'pointer':'default'}" onclick="${hasDisp?`toggleCustExpand('${rowId}')`:''}" title="${hasDisp?'Click to see displays':''}">
+      <td style="text-align:center;color:var(--asf-blue);font-size:12px;font-weight:700">${hasDisp ? '▶' : ''}</td>
       <td style="font-weight:600;color:var(--asf-navy)">${r.name}</td>
       <td style="color:var(--dim)">${r.rep}</td>
       <td style="text-align:right;color:var(--asf-blue);font-weight:600">${fmt$(r.ytd)}</td>
-      <td style="text-align:right;color:var(--dim)">${r.invoices}</td>
+      <td style="text-align:right;color:var(--muted)">${r.priorYtd > 0 ? fmt$(r.priorYtd) : '—'}</td>
+      <td style="text-align:right;font-weight:700;color:${yoyCol}">${yoyTxt}</td>
       <td style="text-align:right;font-weight:700;color:${dayCol}">${r.avgDaysToPay !== null ? r.avgDaysToPay+'d' : '—'}</td>
       <td style="text-align:right;color:var(--dim)">${fmt$(r.limit)}</td>
       <td><span class="badge b-dim">${r.terms}</span></td>
-      <td style="text-align:right;color:${r.displays>0?'var(--asf-green)':'var(--muted)'};font-weight:${r.displays>0?'700':'400'}">${r.displays||'—'}</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="8" class="empty">No matching customers.</td></tr>';
+      <td style="text-align:right;color:${hasDisp?'var(--asf-green)':'var(--muted)'};font-weight:${hasDisp?'700':'400'}">${r.displayCount||'—'}</td>
+    </tr>${expandRow}`;
+  }).join('') : '<tr><td colspan="10" class="empty">No matching customers.</td></tr>';
 }
 
 // ─── OPPORTUNITIES ────────────────────────────────────────────────────────────
 function renderOpportunities() {
-  const activeRep  = getActiveRepFilter();
-  const activeCust = getActiveCustFilter();
-  // For opportunities, match on Owner field for rep filter, AccountName for customer filter
+  const activeRep = getActiveRepFilter();
   const rows = D.opportunities.filter(r => {
     if (activeRep) {
       const owner = (r.Owner||'').trim();
       if (owner !== activeRep && owner.toLowerCase() !== activeRep.toLowerCase()) return false;
-    }
-    if (activeCust) {
-      if ((r.AccountName||'').trim() !== activeCust) return false;
     }
     return true;
   });
@@ -1414,14 +1443,12 @@ function renderOppTable() {
   const stage  = document.getElementById('opp-stage-filter').value;
   const owner  = document.getElementById('opp-rep-filter').value;
 
-  const activeRep2  = getActiveRepFilter();
-  const activeCust2 = getActiveCustFilter();
+  const activeRep2 = getActiveRepFilter();
   let rows = D.opportunities.filter(r => {
     if (activeRep2) {
       const o = (r.Owner||'').trim();
       if (o !== activeRep2 && o.toLowerCase() !== activeRep2.toLowerCase()) return false;
     }
-    if (activeCust2 && (r.AccountName||'').trim() !== activeCust2) return false;
     if(search && !((r.AccountName||'').toLowerCase().includes(search)||(r.OpportunityID||'').toLowerCase().includes(search))) return false;
     if(stage && r.Stage !== stage) return false;
     if(USER.isManager && owner && r.Owner !== owner) return false;
@@ -1490,8 +1517,6 @@ function showDashboard() {
   if (USER.isManager) {
     document.getElementById('rep-selector-wrap').style.display='flex';
   }
-  // Customer filter available to everyone
-  document.getElementById('cust-filter-wrap').style.display='flex';
 }
 function setLoadTxt(t) { document.getElementById('load-txt').textContent=t; }
 function hideOverlay() { document.getElementById('loading-overlay').style.display='none'; }
