@@ -847,7 +847,7 @@ async function tryFetch(label, endpoint, params) {
 }
 
 // ─── DATA STORE ───────────────────────────────────────────────────────────────
-let D = { sales:[], ar:[], displays:[], opportunities:[], activities:[], tasks:[], contacts:{}, empCodeToName:{}, repNameToEmpCode:{}, trailing12:[], trailing12rows:[], salesByClass:[], priorSales:[] };
+let D = { sales:[], ar:[], displays:[], opportunities:[], activities:[], tasks:[], empCodeToName:{}, trailing12:[], trailing12rows:[], salesByClass:[], priorSales:[] };
 
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
 async function loadData() {
@@ -930,7 +930,7 @@ async function loadData() {
     const actWinStart = (() => { const d=new Date(); d.setDate(d.getDate()-120); return d.toISOString().slice(0,10); })();
     const actWinEnd   = (() => { const d=new Date(); d.setDate(d.getDate()+30);  return d.toISOString().slice(0,10); })();
     D.activities = await tryFetch('Activities', 'GC-ActivityTracking', {
-      '$select':'ID,AccountName,Summary,Owner,StartDate,RelatedEntityType,Description',
+      '$select':'ID,AccountName,Summary,Owner,OwnerName,StartDate,RelatedEntityType,Description',
       '$filter': `StartDate ge datetime'${actWinStart}T00:00:00' and StartDate le datetime'${actWinEnd}T23:59:59'`,
       '$orderby':'StartDate desc',
       '$top':'500',
@@ -945,24 +945,7 @@ async function loadData() {
       '$orderby':'DueDate asc',
     });
 
-    // 4d. Contacts lookup: Owner int → name for activities
-    //     Load from CR-Contacts for employees only (those with a Login)
-    const contactRows = await tryFetch('Contacts (owners)', 'CR-Contacts2018R1', {
-      '$select':'ContactID,FirstName,LastName,Login,OwnerName',
-      '$filter': "Login ne ''",
-      '$top':'200',
-    });
-    D.contacts = {};
-    contactRows.forEach(r => {
-      const id = parseInt(r.ContactID);
-      if (!isNaN(id)) {
-        const name = [r.FirstName, r.LastName].filter(Boolean).join(' ').trim() || r.OwnerName || r.Login || '';
-        D.contacts[id] = name;
-      }
-    });
-    addLog(`Contact lookup: ${Object.keys(D.contacts).length} entries`);
-
-    // 4e. Employee code → rep name lookup for Opportunities (BI-Opportunities uses codes like Z119)
+    // 4d. Employee code → rep name lookup for Opportunities (BI-Opportunities uses codes like Z119)
     //     Build from EP-Tasks which has both EmployeeID (code) and Owner (full name)
     D.empCodeToName = {};
     D.tasks.forEach(r => {
@@ -970,13 +953,8 @@ async function loadData() {
       const name = (r.Owner||'').trim();
       if (code && name) D.empCodeToName[code] = name;
     });
-    // Also map from D.sales SalesRep → try to find matching employee
-    // And build a repName → employeeCode reverse map for filtering opps
-    D.repNameToEmpCode = {};
-    Object.entries(D.empCodeToName).forEach(([code, name]) => {
-      D.repNameToEmpCode[name] = code;
-    });
     addLog(`Employee code lookup: ${Object.keys(D.empCodeToName).length} entries`);
+    // OwnerName is now returned directly from GC-ActivityTracking — no contacts fetch needed
 
     // 5. Aggregate — split data
     D.curSales   = D.sales.filter(r => r._year === curFyLabel);
@@ -1112,8 +1090,10 @@ function renderOverview() {
 
   // Use per-rep targets if a rep is selected, otherwise company-wide
   const targets  = getTargets(activeRep);
-  const budgetYTD = targets.budgetCum[lastMonthIdx];
-  const bhagYTD   = targets.bhagCum[lastMonthIdx];
+  // budgetCum is indexed by fiscal period (0=PP01=Nov, 1=PP02=Dec, ... 6=PP07=May)
+  const lastFPIdx  = lastPP - 1;  // fiscal period 0-indexed
+  const budgetYTD = targets.budgetCum[lastFPIdx];
+  const bhagYTD   = targets.bhagCum[lastFPIdx];
 
   // KPIs
   document.getElementById('kpi-ytd-actual').textContent = fmtKpi(ytdActual);
@@ -1575,10 +1555,11 @@ function renderCustomerTable() {
 }
 
 // ─── OPPORTUNITIES ────────────────────────────────────────────────────────────
-// ─── HELPER: resolve Owner int → name for activities ─────────────────────────
-function ownerName(id) {
-  if (!id) return '—';
-  return D.contacts[parseInt(id)] || 'ID:' + id;
+// ─── HELPER: get owner name from activity row (OwnerName field, fallback to ID) ─
+function ownerName(idOrRow) {
+  // Called with the row object when we have OwnerName, or with just the ID
+  if (typeof idOrRow === 'object' && idOrRow !== null) return idOrRow.OwnerName || '—';
+  return idOrRow ? String(idOrRow) : '—';
 }
 
 // ─── HELPER: fuzzy match owner name to active rep filter ─────────────────────
@@ -1587,7 +1568,7 @@ function ownerMatchesRep(name, activeRep) {
   if (!name || name === '—') return false;
   const n = name.toLowerCase(), r = activeRep.toLowerCase();
   const parts = r.split(' ');
-  return n.includes(r) || parts.some(p => p.length > 2 && n.includes(p));
+  return n === r || n.includes(r) || parts.some(p => p.length > 2 && n.includes(p));
 }
 
 function renderOpportunities() {
@@ -1616,11 +1597,12 @@ function renderOpportunities() {
   const next7ForAct = new Date(today); next7ForAct.setDate(today.getDate() + 7);
   const acts7d = D.activities.filter(r =>
     r.StartDate && new Date(r.StartDate) >= ago7 && new Date(r.StartDate) <= next7ForAct
-    && ownerMatchesRep(ownerName(r.Owner), activeRep));
+    && ownerMatchesRep(r.OwnerName||ownerName(r.Owner), activeRep));
   document.getElementById('act-kpi-7d').textContent = acts7d.length;
   document.getElementById('act-kpi-7d-sub').textContent = '±7 days';
 
   // ── Task KPIs
+  // EP-Tasks.Owner is already a full name string — direct match works
   const tasks7d = D.tasks.filter(r =>
     r.DueDate && new Date(r.DueDate) >= today && new Date(r.DueDate) <= next7
     && r.Status !== 'Completed' && r.Status !== 'Canceled'
@@ -1651,7 +1633,7 @@ function renderOpportunities() {
             <span style="margin-left:auto;font-size:10px;color:var(--muted)">${fmtDate(r.StartDate)}</span>
           </div>
           <div style="font-size:11px;color:var(--dim)">${r.Summary||r.Description||'No summary'}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px">Owner: ${ownerName(r.Owner)}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Owner: ${r.OwnerName||'—'}</div>
         </div>`).join('')
     : '<div class="empty">No activities in the last 7 days.</div>';
 
