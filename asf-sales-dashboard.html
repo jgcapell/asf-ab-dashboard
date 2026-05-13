@@ -715,12 +715,13 @@ async function handleCallback(code, state) {
     const t = await resp.json();
     auth.accessToken = t.access_token; auth.refreshToken = t.refresh_token;
 
-    // 2. Resolve user identity (roles + salesperson link)
+    window.history.replaceState({}, '', window.location.pathname);
+    showDashboard();
+
+    // 2. Resolve user identity — runs after showDashboard so debug log is visible
     setLoadTxt('Resolving user profile…');
     await resolveUserIdentity();
 
-    window.history.replaceState({}, '', window.location.pathname);
-    showDashboard();
     loadData();
   } catch(e) { showLoginErr(e.message); }
 }
