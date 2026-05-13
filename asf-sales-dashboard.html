@@ -442,9 +442,12 @@
             <div class="empty">Loading…</div>
           </div>
         </div>
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Filter by Customer</span></div>
-          <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+        <div class="card" style="display:flex;flex-direction:column">
+          <div class="card-hdr" style="justify-content:space-between">
+            <span class="card-title">Filter by Customer</span>
+            <span class="card-badge" id="cust-act-badge" style="display:none"></span>
+          </div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:10px;padding-bottom:10px">
             <div style="font-size:11px;color:var(--muted)">Filter the item class chart and table to a specific customer.</div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <input class="ctrl-input" id="cust-tab-search" placeholder="Type customer name…"
@@ -454,6 +457,14 @@
             </div>
             <div id="cust-tab-dropdown" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;max-height:180px;overflow-y:auto;display:none"></div>
             <div id="cust-tab-active" style="display:none;background:rgba(91,143,204,0.1);border:1px solid rgba(91,143,204,0.25);border-radius:6px;padding:8px 12px;font-size:11px;font-weight:600;color:var(--asf-navy)"></div>
+          </div>
+          <!-- Customer activity feed — shown only when a customer is selected -->
+          <div id="cust-act-section" style="display:none;border-top:1px solid var(--border2);flex:1;overflow:hidden;display:flex;flex-direction:column">
+            <div style="padding:8px 14px;background:var(--surface2);border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:10px;font-weight:700;color:var(--asf-navy);letter-spacing:0.08em;text-transform:uppercase">Activities &amp; Tasks — Last 90 Days</span>
+              <span id="cust-act-count" style="font-size:10px;color:var(--muted)"></span>
+            </div>
+            <div id="cust-act-feed" style="overflow-y:auto;max-height:340px;padding:8px 14px;display:flex;flex-direction:column;gap:6px"></div>
           </div>
         </div>
       </div>
@@ -1446,6 +1457,7 @@ function selectCustTab(name) {
   active.textContent = '🔍 ' + name;
   active.style.display = 'block';
   renderCustItemClassBars();
+  renderCustActFeed();
   renderCustomerTable();
 }
 
@@ -1454,8 +1466,84 @@ function clearCustTabFilter() {
   document.getElementById('cust-tab-search').value = '';
   document.getElementById('cust-tab-dropdown').style.display = 'none';
   document.getElementById('cust-tab-active').style.display = 'none';
+  document.getElementById('cust-act-section').style.display = 'none';
+  document.getElementById('cust-act-badge').style.display = 'none';
   renderCustItemClassBars();
   renderCustomerTable();
+}
+
+// ─── CUSTOMER ACTIVITY FEED (last 90 days for selected customer) ───────────────
+function renderCustActFeed() {
+  if (!activeCustTab) return;
+
+  const section = document.getElementById('cust-act-section');
+  const feed    = document.getElementById('cust-act-feed');
+  const badge   = document.getElementById('cust-act-badge');
+  const count   = document.getElementById('cust-act-count');
+  section.style.display = 'flex';
+  badge.style.display   = 'inline';
+  feed.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px 0">Loading…</div>';
+
+  const ago90  = new Date(); ago90.setDate(ago90.getDate() - 90);
+  const next30 = new Date(); next30.setDate(next30.getDate() + 30);
+  const custLower = activeCustTab.toLowerCase();
+
+  // Activities matching this customer
+  const custActs = D.activities.filter(r => {
+    if ((r.AccountName||'').toLowerCase() !== custLower) return false;
+    const d = r.StartDate ? new Date(r.StartDate) : null;
+    return d && d >= ago90 && d <= next30;
+  }).sort((a,b) => new Date(b.StartDate) - new Date(a.StartDate));
+
+  // Tasks matching this customer
+  const custTasks = D.tasks.filter(r => {
+    if ((r.AccountName||'').toLowerCase() !== custLower) return false;
+    const d = r.DueDate ? new Date(r.DueDate) : null;
+    return d && d >= ago90 && d <= next30;
+  }).sort((a,b) => new Date(b.DueDate) - new Date(a.DueDate));
+
+  const total = custActs.length + custTasks.length;
+  badge.textContent = total + ' items';
+  count.textContent = `${custActs.length} activities · ${custTasks.length} tasks`;
+
+  if (!total) {
+    feed.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px 0;text-align:center">No activities or tasks in the last 90 days.</div>';
+    return;
+  }
+
+  const actHtml = custActs.map(r => {
+    const isPast = new Date(r.StartDate) <= new Date();
+    return `<div style="padding:8px 10px;background:var(--surface2);border-radius:6px;border-left:3px solid ${isPast?'var(--asf-blue)':'var(--asf-green)'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+        <span style="font-size:10px;font-weight:700;color:var(--asf-navy);text-transform:uppercase;letter-spacing:0.06em">${r.RelatedEntityType||'Activity'}</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--muted)">${fmtDate(r.StartDate)}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text);font-weight:500">${r.Summary||r.Description||'No summary'}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">Owner: ${r.OwnerName||'—'}</div>
+    </div>`;
+  }).join('');
+
+  const taskHtml = custTasks.map(r => {
+    const due      = new Date(r.DueDate);
+    const today    = new Date();
+    const isOver   = due < today && r.Status !== 'Completed';
+    const daysOut  = Math.ceil((due - today) / (1000*60*60*24));
+    const dueLabel = r.Status === 'Completed' ? `<span style="color:var(--asf-green);font-weight:700">✓ Done</span>`
+                   : isOver   ? `<span style="color:var(--red);font-weight:700">Overdue</span>`
+                   : daysOut === 0 ? `<span style="color:var(--yellow);font-weight:700">Due today</span>`
+                   : `<span style="color:var(--dim)">Due in ${daysOut}d</span>`;
+    return `<div style="padding:8px 10px;background:var(--surface2);border-radius:6px;border-left:3px solid ${isOver?'var(--red)':r.Status==='Completed'?'var(--asf-green)':'var(--yellow)'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+        <span style="font-size:10px;font-weight:700;color:var(--asf-navy);text-transform:uppercase;letter-spacing:0.06em">Task</span>
+        <span class="badge b-dim">${r.Status||'Open'}</span>
+        <span style="margin-left:auto;font-size:10px">${dueLabel}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text);font-weight:500">${r.Summary||'No summary'}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">Owner: ${r.Owner||'—'} · Due: ${fmtDate(r.DueDate)}</div>
+    </div>`;
+  }).join('');
+
+  feed.innerHTML = actHtml + (custTasks.length && custActs.length ? `<div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;padding:4px 0">TASKS</div>` : '') + taskHtml;
 }
 
 function renderCustItemClassBars() {
