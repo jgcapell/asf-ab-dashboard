@@ -718,7 +718,6 @@ async function resolveUserIdentity() {
     USER.email       = ui.email || '';
 
     // Step 2: Fetch the Acumatica Users record to get roles + employee link
-    // Try by username match via OData Users endpoint
     const usersRows = await tryFetch('User Profile', 'Users', {
       '$filter': `Username eq '${USER.username}'`,
       '$select': 'Username,FullName,Email,Roles,LinkedEntity,EmployeeID,SalesPersonID',
@@ -734,13 +733,14 @@ async function resolveUserIdentity() {
       ? rolesRaw
       : String(rolesRaw).split(',').map(r => r.trim()).filter(Boolean);
 
+    addLog(`Roles parsed: [${USER.roles.join(', ')}]`, 'ok');
+
     USER.isManager = USER.roles.some(r => MANAGER_ROLES.includes(r));
+    addLog(`isManager: ${USER.isManager} (checked against: ${MANAGER_ROLES.join(', ')})`, USER.isManager ? 'ok' : 'warn');
 
     // Step 3: Resolve salesperson name
-    // If the user record has SalesPersonID use that, else try Employee link
     if (userRec.SalesPersonID) {
       USER.salespersonId = userRec.SalesPersonID;
-      // Look up the display name
       const spRows = await tryFetch('Salesperson', 'Salesperson', {
         '$filter': `SalespersonID eq '${USER.salespersonId}'`,
         '$select': 'SalespersonID,Name',
@@ -749,7 +749,6 @@ async function resolveUserIdentity() {
       USER.salespersonName = spRows[0]?.Name || userRec.FullName || USER.displayName;
     } else if (userRec.EmployeeID || userRec.LinkedEntity) {
       const empId = userRec.EmployeeID || userRec.LinkedEntity;
-      // Look up employee → salesperson
       const empRows = await tryFetch('Employee', 'EPEmployee', {
         '$filter': `EmployeeID eq '${empId}'`,
         '$select': 'EmployeeID,SalespersonID,Name',
@@ -766,23 +765,36 @@ async function resolveUserIdentity() {
         if (spRows[0]?.Name) USER.salespersonName = spRows[0].Name;
       }
     } else {
-      // Fallback: use display name and try to match against SalesRep field later
       USER.salespersonName = userRec.FullName || USER.displayName;
     }
 
-    addLog(`User resolved: ${USER.displayName} | Manager: ${USER.isManager} | Rep: ${USER.salespersonName}`, 'ok');
+    addLog(`Resolved: ${USER.displayName} | Manager: ${USER.isManager} | Rep: ${USER.salespersonName}`, 'ok');
+
+    // If not a manager and we couldn't resolve a salesperson name,
+    // fall back to the display name from userinfo and try to match against SalesRep
+    if (!USER.isManager && !USER.salespersonName) {
+      USER.salespersonName = USER.displayName;
+      addLog(`No salesperson record found — using display name: ${USER.salespersonName}`, 'warn');
+    }
 
   } catch(e) {
-    // Non-fatal: if identity resolution fails, default to manager view
-    addLog('WARN: identity resolution failed — defaulting to manager view. ' + e.message, 'error');
-    USER.isManager = true;
-    USER.salespersonName = null;
+    // On ANY error — default to LOCKED (non-manager) view for security
+    // Only grant manager access if roles were explicitly confirmed
+    addLog('Identity resolution error: ' + e.message + ' — defaulting to LOCKED view', 'error');
+    USER.isManager       = false;
+    USER.salespersonName = USER.displayName || USER.username || null;
   }
+
+  // If Users endpoint returned no roles at all and isManager is still false,
+  // that is the correct secure default — do NOT promote to manager
+  // Only override to manager if roles were explicitly confirmed above
 
   // Update header badge
   document.getElementById('user-badge').style.display = 'flex';
   document.getElementById('user-badge-name').textContent = USER.displayName || USER.username || '—';
-  document.getElementById('user-badge-role').textContent = USER.isManager ? 'Manager · All Reps' : (USER.salespersonName || 'Sales Rep');
+  document.getElementById('user-badge-role').textContent = USER.isManager
+    ? 'Manager · All Reps'
+    : (USER.salespersonName ? `Rep · ${USER.salespersonName}` : 'Sales Rep');
 
   // Show rep lock banner for non-managers
   if (!USER.isManager) {
