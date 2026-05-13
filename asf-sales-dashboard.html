@@ -671,7 +671,6 @@ let USER = {
   salespersonName: null, // display name matching SalesRep field
 };
 
-const MANAGER_ROLES = ['Administrator', 'ASF Sales Manager'];
 
 function startLogin() {
   const state = Math.random().toString(36).substring(2);
@@ -703,91 +702,58 @@ async function handleCallback(code, state) {
   } catch(e) { showLoginErr(e.message); }
 }
 
+// ── Manager usernames — users who can see all reps ───────────────────────────
+// Add/remove Acumatica usernames here to control manager access
+const MANAGER_USERNAMES = new Set([
+  'greg',       // Greg Capell
+  'pbranon',    // Phil Branon
+  'lgood',      // Lauren Good
+  'todd',       // Todd Good
+]);
+
 // ── Resolve who is logged in and what they can see ───────────────────────────
 async function resolveUserIdentity() {
   try {
-    // Step 1: userinfo endpoint (standard OIDC)
+    // Step 1: Get username from OIDC userinfo
     const uiResp = await fetch(`${CONFIG.acumaticaUrl}/identity/connect/userinfo`, {
       headers: { Authorization: `Bearer ${auth.accessToken}` }
     });
     const ui = uiResp.ok ? await uiResp.json() : {};
     addLog('userinfo: ' + JSON.stringify(ui), 'ok');
 
-    USER.username    = ui.preferred_username || ui.sub || ui.email || '';
+    USER.username    = (ui.preferred_username || ui.sub || ui.email || '').toLowerCase().trim();
     USER.displayName = ui.name || ui.given_name || USER.username;
     USER.email       = ui.email || '';
 
-    // Step 2: Fetch the Acumatica Users record to get roles + employee link
-    const usersRows = await tryFetch('User Profile', 'Users', {
-      '$filter': `Username eq '${USER.username}'`,
-      '$select': 'Username,FullName,Email,Roles,LinkedEntity,EmployeeID,SalesPersonID',
-      '$top': '1',
+    addLog(`Username: "${USER.username}"`, 'ok');
+
+    // Step 2: Check manager access by username
+    USER.isManager = MANAGER_USERNAMES.has(USER.username);
+    addLog(`isManager: ${USER.isManager}`, USER.isManager ? 'ok' : 'warn');
+
+    // Step 3: Resolve full name from EP-Tasks Login → Owner
+    // This gives us the exact SalesRep name as it appears in sales data
+    const taskRows = await tryFetch('Rep name lookup', 'EP-Tasks', {
+      '$select': 'Login,Owner',
+      '$filter': `Login eq '${USER.username}'`,
+      '$top':    '1',
     });
 
-    const userRec = usersRows[0] || {};
-    addLog('User record: ' + JSON.stringify(userRec), 'ok');
-
-    // Parse roles — Acumatica returns them comma-separated or as array
-    const rolesRaw = userRec.Roles || ui.role || '';
-    USER.roles = Array.isArray(rolesRaw)
-      ? rolesRaw
-      : String(rolesRaw).split(',').map(r => r.trim()).filter(Boolean);
-
-    addLog(`Roles parsed: [${USER.roles.join(', ')}]`, 'ok');
-
-    USER.isManager = USER.roles.some(r => MANAGER_ROLES.includes(r));
-    addLog(`isManager: ${USER.isManager} (checked against: ${MANAGER_ROLES.join(', ')})`, USER.isManager ? 'ok' : 'warn');
-
-    // Step 3: Resolve salesperson name
-    if (userRec.SalesPersonID) {
-      USER.salespersonId = userRec.SalesPersonID;
-      const spRows = await tryFetch('Salesperson', 'Salesperson', {
-        '$filter': `SalespersonID eq '${USER.salespersonId}'`,
-        '$select': 'SalespersonID,Name',
-        '$top': '1',
-      });
-      USER.salespersonName = spRows[0]?.Name || userRec.FullName || USER.displayName;
-    } else if (userRec.EmployeeID || userRec.LinkedEntity) {
-      const empId = userRec.EmployeeID || userRec.LinkedEntity;
-      const empRows = await tryFetch('Employee', 'EPEmployee', {
-        '$filter': `EmployeeID eq '${empId}'`,
-        '$select': 'EmployeeID,SalespersonID,Name',
-        '$top': '1',
-      });
-      const emp = empRows[0] || {};
-      USER.salespersonId   = emp.SalespersonID || null;
-      USER.salespersonName = emp.Name || userRec.FullName || USER.displayName;
-      if (USER.salespersonId) {
-        const spRows = await tryFetch('Salesperson name', 'Salesperson', {
-          '$filter': `SalespersonID eq '${USER.salespersonId}'`,
-          '$select': 'SalespersonID,Name', '$top': '1',
-        });
-        if (spRows[0]?.Name) USER.salespersonName = spRows[0].Name;
-      }
+    if (taskRows.length > 0 && taskRows[0].Owner) {
+      USER.salespersonName = taskRows[0].Owner.trim();
+      addLog(`Rep name resolved: "${USER.salespersonName}"`, 'ok');
     } else {
-      USER.salespersonName = userRec.FullName || USER.displayName;
-    }
-
-    addLog(`Resolved: ${USER.displayName} | Manager: ${USER.isManager} | Rep: ${USER.salespersonName}`, 'ok');
-
-    // If not a manager and we couldn't resolve a salesperson name,
-    // fall back to the display name from userinfo and try to match against SalesRep
-    if (!USER.isManager && !USER.salespersonName) {
+      // Fallback: use display name from userinfo
       USER.salespersonName = USER.displayName;
-      addLog(`No salesperson record found — using display name: ${USER.salespersonName}`, 'warn');
+      addLog(`No EP-Tasks match for login "${USER.username}" — using display name: "${USER.salespersonName}"`, 'warn');
     }
 
   } catch(e) {
-    // On ANY error — default to LOCKED (non-manager) view for security
-    // Only grant manager access if roles were explicitly confirmed
+    // Fail closed — unknown users are locked to their own view
     addLog('Identity resolution error: ' + e.message + ' — defaulting to LOCKED view', 'error');
     USER.isManager       = false;
     USER.salespersonName = USER.displayName || USER.username || null;
   }
-
-  // If Users endpoint returned no roles at all and isManager is still false,
-  // that is the correct secure default — do NOT promote to manager
-  // Only override to manager if roles were explicitly confirmed above
 
   // Update header badge
   document.getElementById('user-badge').style.display = 'flex';
@@ -798,8 +764,7 @@ async function resolveUserIdentity() {
 
   // Show rep lock banner for non-managers
   if (!USER.isManager) {
-    const banner = document.getElementById('rep-lock-banner');
-    banner.style.display = 'flex';
+    document.getElementById('rep-lock-banner').style.display = 'flex';
     document.getElementById('rep-lock-text').textContent =
       `Viewing data for: ${USER.salespersonName || USER.displayName} only`;
   }
