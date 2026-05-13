@@ -739,8 +739,8 @@ function isManagerUserType(v) {
 // ── Resolve who is logged in and what they can see ───────────────────────────
 async function resolveUserIdentity() {
   try {
-    // Step 1: Get username from OIDC userinfo
-    const uiResp = await fetch(`${CONFIG.acumaticaUrl}/identity/connect/userinfo`, {
+    // Step 1: Get username via worker (proxies to Acumatica OIDC userinfo — avoids CORS)
+    const uiResp = await fetch(`${CONFIG.workerUrl}/userinfo`, {
       headers: { Authorization: `Bearer ${auth.accessToken}` }
     });
     const ui = uiResp.ok ? await uiResp.json() : {};
