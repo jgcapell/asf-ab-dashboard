@@ -718,11 +718,10 @@ async function handleCallback(code, state) {
     window.history.replaceState({}, '', window.location.pathname);
     showDashboard();
 
-    // 2. Resolve user identity — runs after showDashboard so debug log is visible
-    setLoadTxt('Resolving user profile…');
+    // 2. Resolve identity and load data in parallel
+    // resolveUserIdentity must finish before rendering so rep filter is correct
     await resolveUserIdentity();
-
-    loadData();
+    loadData();  // loadData calls clearLog() — resolveUserIdentity logs appear before it
   } catch(e) { showLoginErr(e.message); }
 }
 
@@ -881,7 +880,8 @@ let D = { sales:[], ar:[], displays:[], opportunities:[], activities:[], tasks:[
 
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
 async function loadData() {
-  setLoading(true); clearErr(); clearLog();
+  setLoading(true); clearErr();
+  // Don't clearLog() here — preserve identity resolution logs from resolveUserIdentity
   const STEPS = 6; let done = 0;
   const step = lbl => { done++; setProgress(done,STEPS,lbl); };
 
