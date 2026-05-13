@@ -667,6 +667,7 @@ const REP_TARGETS = {
 // Helper: get budget/bhag cumulative arrays for a given rep (or company-wide)
 function getTargets(repName) {
   if (repName && REP_TARGETS[repName]) return REP_TARGETS[repName];
+  // Company-wide fallback — always returns valid arrays
   return { annualBudget: 17710000, annualBhag: 19656566, budgetCum: BUDGET_CUM, bhagCum: BHAG_CUM };
 }
 
@@ -780,16 +781,19 @@ async function resolveUserIdentity() {
 
 function updateUserBadge() {
   document.getElementById('user-badge').style.display = 'flex';
-  document.getElementById('user-badge-name').textContent = USER.displayName || USER.username || '\u2014';
+  document.getElementById('user-badge-name').textContent = USER.displayName || USER.username || '—';
   document.getElementById('user-badge-role').textContent = USER.isManager
     ? 'Manager · All Reps'
     : (USER.salespersonName ? 'Rep · ' + USER.salespersonName : 'Sales Rep');
-  if (!USER.isManager) {
+  if (USER.isManager) {
+    document.getElementById('rep-selector-wrap').style.display = 'flex';
+  } else {
     document.getElementById('rep-lock-banner').style.display = 'flex';
     document.getElementById('rep-lock-text').textContent =
-      'Viewing data for: ' + (USER.salespersonName || USER.displayName || '...') + ' only';
+      'Viewing data for: ' + (USER.salespersonName || USER.displayName || '(resolving...)') + ' only';
   }
 }
+
 
 
 // ── Get the currently active rep filter ─────────────────────────────────────
@@ -805,6 +809,8 @@ function onRepFilterChange() {
   renderOverview();
   renderCustomerData();
   renderOpportunities();
+  // Also re-render customer item class bars if on customer tab
+  if (activeCustTab) renderCustItemClassBars();
 }
 
 
@@ -1901,11 +1907,7 @@ function showDashboard() {
   document.getElementById('login-screen').style.display='none';
   document.getElementById('dashboard').style.display='block';
   document.getElementById('nav-tabs').style.display='flex';
-  if (USER.isManager) {
-    document.getElementById('rep-selector-wrap').style.display='flex';
-  }
-  // Show badge immediately with what we know so far
-  updateUserBadge();
+  // rep-selector-wrap and badge are shown by updateUserBadge() called from resolveUserIdentity
 }
 function setLoadTxt(t) { document.getElementById('load-txt').textContent=t; }
 function hideOverlay() { document.getElementById('loading-overlay').style.display='none'; }
