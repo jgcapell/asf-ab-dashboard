@@ -187,6 +187,27 @@
 
   /* Scrollbar */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
+
+  /* ── Print / PDF styles ── */
+  @media print {
+    body { background: #fff !important; font-size: 11px; }
+    .header { background: var(--asf-navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; height: auto; padding: 12px 20px; }
+    .header-right, #nav-tabs, #prog-wrap, #debug-log, #err-banner, #rep-lock-banner,
+    .ctrl-bar, #cust-act-section { display: none !important; }
+    .tab-pane { display: block !important; }
+    .tab-pane + .tab-pane { page-break-before: always; }
+    .card { box-shadow: none !important; border: 1px solid #ccd8e8 !important; break-inside: avoid; }
+    .card-scroll { max-height: none !important; overflow: visible !important; }
+    .page { padding: 12px !important; }
+    canvas { max-width: 100% !important; }
+    .row { gap: 10px !important; }
+    .kpi-val { font-size: 20px !important; }
+    .print-section-label {
+      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800;
+      color: var(--asf-navy); padding: 8px 0 4px; border-bottom: 2px solid var(--asf-navy);
+      margin-bottom: 10px; display: block;
+    }
+  }
   ::-webkit-scrollbar-track { background: var(--surface2); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
@@ -251,6 +272,7 @@
           <div class="user-badge-role" id="user-badge-role">—</div>
         </div>
       </div>
+      <button class="hbtn" onclick="printDashboard()">PRINT / PDF</button>
       <button class="hbtn" onclick="toggleLog()">DEBUG LOG</button>
       <button class="hbtn primary" id="refresh-btn" onclick="loadData()">
         <span id="refresh-icon">⟳</span> REFRESH
@@ -704,18 +726,19 @@ async function handleCallback(code, state) {
 
 // ── Manager usernames — users who can see all reps ───────────────────────────
 // Add/remove Acumatica usernames here to control manager access
-const MANAGER_USERNAMES = new Set([
-  'greg',       // Greg Capell
-  'pbranon',    // Phil Branon
-  'lgood',      // Lauren Good
-  'todd',       // Todd Good
-  'bbrown',     // Bob Brown
-]);
+// Manager access controlled by UserType (LoginTypeID) in GC-CurrentUser GI
+// Blank or '6' = manager/internal staff (full access)
+// '4' = outside sales rep (locked to own data)
+// Update user types directly in Acumatica — no code changes needed
+function isManagerUserType(v) {
+  const t = (v||'').toString().trim();
+  return t === '' || t === '6';
+}
 
+// ── Resolve who is logged in and what they can see ───────────────────────────
 // ── Resolve who is logged in and what they can see ───────────────────────────
 async function resolveUserIdentity() {
   try {
-    // Step 1: Get username from OIDC userinfo
     const uiResp = await fetch(`${CONFIG.acumaticaUrl}/identity/connect/userinfo`, {
       headers: { Authorization: `Bearer ${auth.accessToken}` }
     });
@@ -725,51 +748,49 @@ async function resolveUserIdentity() {
     USER.username    = (ui.preferred_username || ui.sub || ui.email || '').toLowerCase().trim();
     USER.displayName = ui.name || ui.given_name || USER.username;
     USER.email       = ui.email || '';
+    addLog('Username: "' + USER.username + '"', 'ok');
 
-    addLog(`Username: "${USER.username}"`, 'ok');
-
-    // Step 2: Check manager access by username
-    USER.isManager = MANAGER_USERNAMES.has(USER.username);
-    addLog(`isManager: ${USER.isManager}`, USER.isManager ? 'ok' : 'warn');
-
-    // Step 3: Resolve full name from EP-Tasks Login → Owner
-    // This gives us the exact SalesRep name as it appears in sales data
-    const taskRows = await tryFetch('Rep name lookup', 'EP-Tasks', {
-      '$select': 'Login,Owner',
-      '$filter': `Login eq '${USER.username}'`,
-      '$top':    '1',
+    // Look up user profile from GC-CurrentUser GI
+    const userRows = await odataGet('GC-CurrentUser', {
+      '$select': 'Login,FullName,Salesperson,Name,UserType',
     });
+    addLog('GC-CurrentUser rows: ' + userRows.length, 'ok');
+    if (userRows.length > 0) addLog('Sample: ' + JSON.stringify(userRows[0]), 'ok');
 
-    if (taskRows.length > 0 && taskRows[0].Owner) {
-      USER.salespersonName = taskRows[0].Owner.trim();
-      addLog(`Rep name resolved: "${USER.salespersonName}"`, 'ok');
+    const myRow = userRows.find(r => (r.Login||'').toLowerCase().trim() === USER.username);
+    if (myRow) {
+      USER.isManager = isManagerUserType(myRow.UserType);
+      USER.salespersonName = (myRow.Name || myRow.FullName || '').trim() || USER.displayName;
+      addLog('UserType: "' + (myRow.UserType||'blank') + '" isManager: ' + USER.isManager, USER.isManager ? 'ok' : 'warn');
+      addLog('Rep: "' + USER.salespersonName + '"', 'ok');
     } else {
-      // Fallback: use display name from userinfo
+      // No row found — fail closed (rep view)
+      USER.isManager = false;
       USER.salespersonName = USER.displayName;
-      addLog(`No EP-Tasks match for login "${USER.username}" — using display name: "${USER.salespersonName}"`, 'warn');
+      addLog('No GC-CurrentUser match for "' + USER.username + '" — LOCKED', 'warn');
     }
 
   } catch(e) {
-    // Fail closed — unknown users are locked to their own view
-    addLog('Identity resolution error: ' + e.message + ' — defaulting to LOCKED view', 'error');
+    addLog('Identity error: ' + e.message + ' — defaulting to LOCKED view', 'error');
     USER.isManager       = false;
     USER.salespersonName = USER.displayName || USER.username || null;
   }
+  updateUserBadge();
+}
 
-  // Update header badge
+function updateUserBadge() {
   document.getElementById('user-badge').style.display = 'flex';
-  document.getElementById('user-badge-name').textContent = USER.displayName || USER.username || '—';
+  document.getElementById('user-badge-name').textContent = USER.displayName || USER.username || '\u2014';
   document.getElementById('user-badge-role').textContent = USER.isManager
     ? 'Manager · All Reps'
-    : (USER.salespersonName ? `Rep · ${USER.salespersonName}` : 'Sales Rep');
-
-  // Show rep lock banner for non-managers
+    : (USER.salespersonName ? 'Rep · ' + USER.salespersonName : 'Sales Rep');
   if (!USER.isManager) {
     document.getElementById('rep-lock-banner').style.display = 'flex';
     document.getElementById('rep-lock-text').textContent =
-      `Viewing data for: ${USER.salespersonName || USER.displayName} only`;
+      'Viewing data for: ' + (USER.salespersonName || USER.displayName || '...') + ' only';
   }
 }
+
 
 // ── Get the currently active rep filter ─────────────────────────────────────
 // Returns null (all reps) for managers, or the rep name for locked users
@@ -1854,6 +1875,25 @@ function clearErr() { document.getElementById('err-banner').style.display='none'
 function showLoginErr(msg) { hideOverlay(); document.getElementById('loading-overlay').style.display='none'; document.getElementById('login-screen').style.display='flex'; const e=document.getElementById('login-err'); e.textContent=msg; e.style.display='block'; }
 function addLog(msg,type='') { const d=document.createElement('div'); d.className='log-l'+(type?' '+type:''); d.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`; document.getElementById('log-lines').appendChild(d); document.getElementById('debug-log').scrollTop=9999; }
 function clearLog() { document.getElementById('log-lines').innerHTML=''; }
+// ── Print / PDF ──────────────────────────────────────────────────────────────
+function printDashboard() {
+  // Temporarily show all tab panes for printing, then restore
+  const panes = document.querySelectorAll('.tab-pane');
+  const tabs  = document.querySelectorAll('.tab');
+  const prev  = [];
+  panes.forEach((p, i) => {
+    prev.push(p.className);
+    p.classList.add('active');
+  });
+  // Let charts re-render at full size before printing
+  window.dispatchEvent(new Event('resize'));
+  setTimeout(() => {
+    window.print();
+    // Restore state
+    panes.forEach((p, i) => { p.className = prev[i]; });
+  }, 400);
+}
+
 let logVisible=false;
 function toggleLog() { logVisible=!logVisible; document.getElementById('debug-log').style.display=logVisible?'block':'none'; document.querySelector('.hbtn[onclick="toggleLog()"]').textContent=logVisible?'HIDE LOG':'DEBUG LOG'; }
 function showDashboard() {
@@ -1861,10 +1901,11 @@ function showDashboard() {
   document.getElementById('login-screen').style.display='none';
   document.getElementById('dashboard').style.display='block';
   document.getElementById('nav-tabs').style.display='flex';
-  // Show rep selector only for managers
   if (USER.isManager) {
     document.getElementById('rep-selector-wrap').style.display='flex';
   }
+  // Show badge immediately with what we know so far
+  updateUserBadge();
 }
 function setLoadTxt(t) { document.getElementById('load-txt').textContent=t; }
 function hideOverlay() { document.getElementById('loading-overlay').style.display='none'; }
