@@ -120,14 +120,15 @@
   .card-hdr { padding: 11px 16px; border-bottom: 1px solid var(--border2); background: var(--surface2); display: flex; align-items: center; justify-content: space-between; }
   .card-title { font-size: 10px; font-weight: 700; color: var(--asf-navy); letter-spacing: 0.09em; text-transform: uppercase; }
   .card-badge { font-size: 10px; font-weight: 600; color: var(--muted); }
-  .card-body { padding: 16px; }
+  .card-body { padding: 14px; }
+  .card-body-sm { padding: 10px 14px; } /* tighter padding for KPI cards in 5-col row */
   .card-scroll { max-height: 460px; overflow-y: auto; }
 
   /* KPI cards */
-  .kpi-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 8px; }
+  .kpi-label { font-size: 9px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 6px; }
   .kpi-val {
     font-family: 'Syne', sans-serif;
-    font-size: clamp(16px, 3.5vw, 28px);
+    font-size: clamp(14px, 2.2vw, 22px);
     font-weight: 800;
     color: var(--asf-navy);
     letter-spacing: -0.02em;
@@ -135,8 +136,8 @@
     word-break: break-word;
     overflow-wrap: break-word;
   }
-  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 6px; font-weight: 500; line-height: 1.4; }
-  .kpi-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 99px; font-size: 10px; font-weight: 700; margin-top: 8px; }
+  .kpi-sub { font-size: 10px; color: var(--muted); margin-top: 4px; font-weight: 500; line-height: 1.4; }
+  .kpi-pill { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 99px; font-size: 9px; font-weight: 700; margin-top: 6px; }
   .pill-green { background: rgba(90,158,69,0.12); color: #3a7a28; border: 1px solid rgba(90,158,69,0.3); }
   .pill-red   { background: rgba(184,50,40,0.10); color: var(--red); border: 1px solid rgba(184,50,40,0.25); }
   .pill-yellow{ background: rgba(196,137,10,0.10); color: #7a5500; border: 1px solid rgba(196,137,10,0.3); }
@@ -349,7 +350,7 @@
       <div class="row cols-5">
         <div class="card">
           <div class="card-hdr"><span class="card-title">YTD Actual Sales</span></div>
-          <div class="card-body">
+          <div class="card-body card-body-sm">
             <div class="kpi-val" id="kpi-ytd-actual">—</div>
             <div class="kpi-sub" id="kpi-ytd-sub">through current period</div>
             <div id="kpi-ytd-pill"></div>
@@ -357,7 +358,7 @@
         </div>
         <div class="card">
           <div class="card-hdr"><span class="card-title">YTD vs Prior Year</span></div>
-          <div class="card-body">
+          <div class="card-body card-body-sm">
             <div class="kpi-val" id="kpi-yoy-var">—</div>
             <div class="kpi-sub" id="kpi-yoy-sub">—</div>
             <div id="kpi-yoy-pill"></div>
@@ -365,7 +366,7 @@
         </div>
         <div class="card">
           <div class="card-hdr"><span class="card-title">YTD vs Budget</span></div>
-          <div class="card-body">
+          <div class="card-body card-body-sm">
             <div class="kpi-val" id="kpi-vs-budget" style="color:var(--asf-blue)">—</div>
             <div class="kpi-sub" id="kpi-vs-budget-sub">—</div>
             <div id="kpi-budget-pill"></div>
@@ -373,7 +374,7 @@
         </div>
         <div class="card">
           <div class="card-hdr"><span class="card-title">YTD vs BHAG</span></div>
-          <div class="card-body">
+          <div class="card-body card-body-sm">
             <div class="kpi-val" id="kpi-vs-bhag" style="color:var(--asf-green)">—</div>
             <div class="kpi-sub" id="kpi-vs-bhag-sub">—</div>
             <div id="kpi-bhag-pill"></div>
@@ -381,7 +382,7 @@
         </div>
         <div class="card">
           <div class="card-hdr"><span class="card-title">Annual Budget / BHAG</span></div>
-          <div class="card-body">
+          <div class="card-body card-body-sm">
             <div class="kpi-val" style="font-size:20px;color:var(--asf-navy)" id="kpi-annual-budget">$17.71M</div>
             <div class="kpi-sub" id="kpi-annual-budget-sub">Budget target (FY 2025)</div>
             <div class="kpi-val" style="font-size:17px;color:var(--asf-green);margin-top:8px" id="kpi-annual-bhag">$19.66M</div>
