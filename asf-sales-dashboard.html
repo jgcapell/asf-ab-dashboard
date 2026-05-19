@@ -548,7 +548,7 @@
               <th>Customer</th>
               <th>Sales Rep</th>
               <th style="text-align:right">YTD Sales</th>
-              <th style="text-align:right">Prior YTD</th>
+              <th style="text-align:right" id="prior-ytd-header">Prior YTD</th>
               <th style="text-align:right">YoY Variance</th>
               <th style="text-align:right">Avg Days to Pay</th>
               <th style="text-align:right">Credit Limit</th>
@@ -634,6 +634,7 @@
         <div class="card-hdr"><span class="card-title">All Open Opportunities</span></div>
         <div class="ctrl-bar">
           <input class="ctrl-input" id="opp-search" placeholder="Search account or ID…" oninput="renderOppTable()">
+          <input class="ctrl-input" id="opp-project-search" placeholder="Search project name…" oninput="renderOppTable()" style="width:180px">
           <select class="ctrl-select" id="opp-stage-filter" onchange="renderOppTable()"><option value="">All Stages</option></select>
           <select class="ctrl-select" id="opp-rep-filter" onchange="renderOppTable()"><option value="">All Owners</option></select>
           <div class="row-count" id="opp-count"></div>
@@ -643,6 +644,7 @@
             <thead><tr>
               <th>Opp ID</th>
               <th>Account</th>
+              <th>Project Name</th>
               <th>Owner</th>
               <th>Stage</th>
               <th>Status</th>
@@ -650,7 +652,6 @@
               <th>Est. Close</th>
               <th style="text-align:right">Total</th>
               <th style="text-align:right">Weighted</th>
-              <th>Notes</th>
             </tr></thead>
             <tbody id="opp-tbody"></tbody>
           </table>
@@ -1026,6 +1027,9 @@ async function loadData() {
     D.curSales   = D.sales.filter(r => r._year === curFyLabel);
     // Prior YTD = same elapsed period as current (up to priEnd date) for apples-to-apples
     D.priorSales = D.sales.filter(r => r._year === priFyLabel && r.InvoiceDate <= priEnd + 'T23:59:59Z');
+    // Update the Prior YTD column header to show the actual comparison window
+    const priorYtdEl = document.getElementById('prior-ytd-header');
+    if (priorYtdEl) priorYtdEl.textContent = `Prior YTD (Nov–${priEnd.slice(5).replace('-','/')})`;
     // Trailing 12: dynamically filter to exactly 12 months before today
     const t12StartDate = new Date(todayDate);
     t12StartDate.setFullYear(t12StartDate.getFullYear() - 1);
@@ -1353,7 +1357,8 @@ function renderCustomerData() {
   const priorYear   = String(CUR_YEAR - 1);  // prior FY label
   const repSales    = D.sales.filter(r => !activeRep || r.SalesRep === activeRep);
   const curRepSales = repSales.filter(r => r._year === fetchYear);
-  const priRepSales = repSales.filter(r => r._year === priorYear);
+  // Prior YTD = same elapsed period as current FY (uses D.priorSales which is already date-capped)
+  const priRepSales = D.priorSales.filter(r => !activeRep || r.SalesRep === activeRep);
 
   // Aggregate YTD sales (current year) per customer
   const salesMap = {};
@@ -1864,13 +1869,16 @@ function renderAct120Table() {
 }
 
 function renderOppTable() {
-  const search    = document.getElementById('opp-search').value.toLowerCase();
-  const stage     = document.getElementById('opp-stage-filter').value;
-  const activeRep = getActiveRepFilter();
+  const search        = document.getElementById('opp-search').value.toLowerCase();
+  const projectSearch = document.getElementById('opp-project-search').value.toLowerCase();
+  const stage         = document.getElementById('opp-stage-filter').value;
+  const activeRep     = getActiveRepFilter();
+  const today         = new Date(); today.setHours(0,0,0,0);
 
   let rows = D.opportunities.filter(r => {
     if (activeRep && !ownerMatchesRep(r.DisplayName||'', activeRep)) return false;
     if (search && !((r.AccountName||'').toLowerCase().includes(search)||(r.OpportunityID||'').toLowerCase().includes(search))) return false;
+    if (projectSearch && !(r.Description||'').toLowerCase().includes(projectSearch)) return false;
     if (stage && r.Stage !== stage) return false;
     return true;
   });
@@ -1883,11 +1891,20 @@ function renderOppTable() {
   };
 
   document.getElementById('opp-tbody').innerHTML = rows.length ? rows.map(r => {
-    const prob = +r.Probability||0;
-    const wt   = (+r.Total||0) * prob / 100;
-    return `<tr>
+    const prob     = +r.Probability||0;
+    const wt       = (+r.Total||0) * prob / 100;
+    const closeDate = r.EstimatedCloseDate ? new Date(r.EstimatedCloseDate) : null;
+    const isOverdue = closeDate && closeDate < today;
+    const rowStyle  = isOverdue
+      ? 'background:rgba(184,50,40,0.06);border-left:3px solid var(--red)'
+      : '';
+    const dateStyle = isOverdue
+      ? 'color:var(--red);font-weight:700;white-space:nowrap'
+      : 'color:var(--dim);white-space:nowrap';
+    return `<tr style="${rowStyle}">
       <td style="color:var(--asf-blue);font-weight:600;white-space:nowrap">${r.OpportunityID||'—'}</td>
       <td style="font-weight:500">${r.AccountName||'—'}</td>
+      <td style="color:var(--dim);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.Description||'').replace(/"/g,'&quot;')}">${r.Description||'—'}</td>
       <td style="color:var(--dim)">${r.DisplayName||'—'}</td>
       <td><span class="badge ${stageCls(r.Stage)}">${r.Stage||'—'}</span></td>
       <td><span class="badge b-dim">${r.Status||'—'}</span></td>
@@ -1897,10 +1914,9 @@ function renderOppTable() {
           <span style="font-size:10px;color:var(--muted);font-weight:600">${prob}%</span>
         </div>
       </td>
-      <td style="color:var(--dim);white-space:nowrap">${fmtDate(r.EstimatedCloseDate)}</td>
+      <td style="${dateStyle}">${isOverdue ? '⚠ ' : ''}${fmtDate(r.EstimatedCloseDate)}</td>
       <td style="text-align:right;color:var(--asf-navy);font-weight:700">${fmt$(r.Total)}</td>
       <td style="text-align:right;color:var(--asf-green);font-weight:600">${fmt$(wt)}</td>
-      <td style="color:var(--muted);font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.Description||'').replace(/"/g,'&quot;')}">${r.Description||'—'}</td>
     </tr>`;
   }).join('')
     : '<tr><td colspan="10" class="empty">No matching opportunities.</td></tr>';
