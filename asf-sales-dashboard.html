@@ -533,6 +533,7 @@
         <div class="ctrl-bar">
           <input class="ctrl-input" id="cust-search" placeholder="Search customer…" oninput="renderCustomerTable()">
           <select class="ctrl-select" id="cust-rep-filter" onchange="renderCustomerTable()"><option value="">All Reps</option></select>
+          <select class="ctrl-select" id="cust-display-filter" onchange="renderCustomerTable()"><option value="">All Displays</option></select>
           <select class="ctrl-select" id="cust-sort" onchange="renderCustomerTable()">
             <option value="sales-desc">Sales ↓</option>
             <option value="sales-asc">Sales ↑</option>
@@ -1444,13 +1445,20 @@ function renderCustomerData() {
     const reps = [...new Set(D.sales.map(r=>r.SalesRep).filter(Boolean))].sort();
     const repSel = document.getElementById('cust-rep-filter');
     const curVal = repSel.value;
-    // pre-select active global filter
     repSel.innerHTML = '<option value="">All Reps</option>' + reps.map(r=>`<option${r===curVal?' selected':''}>${r}</option>`).join('');
     if (activeRep && !curVal) repSel.value = activeRep;
   } else {
-    // Non-managers: hide rep column filter
     document.getElementById('cust-rep-filter').style.display = 'none';
   }
+
+  // Populate display filter with all unique display names across all customers
+  const allDisplays = [...new Set(
+    custData.flatMap(c => c.displayList)
+  )].sort();
+  const dispSel = document.getElementById('cust-display-filter');
+  const curDisp = dispSel.value;
+  dispSel.innerHTML = '<option value="">All Displays</option>' +
+    allDisplays.map(d => `<option${d===curDisp?' selected':''}>${d}</option>`).join('');
   document.getElementById('cust-kpi-count').textContent = custData.length;
   const daysArr = custData.filter(r=>r.avgDaysToPay!==null).map(r=>r.avgDaysToPay);
   const avgDays = daysArr.length ? Math.round(daysArr.reduce((a,b)=>a+b,0)/daysArr.length) : 0;
@@ -1653,10 +1661,14 @@ function renderCustomerTable() {
   const rep    = document.getElementById('cust-rep-filter').value;
   const sort   = document.getElementById('cust-sort').value;
 
+  const displayFilter = document.getElementById('cust-display-filter').value;
+
   let rows = custData.filter(r => {
     if(activeCustTab && r.name !== activeCustTab) return false;
     if(search && !r.name.toLowerCase().includes(search)) return false;
     if(rep && r.rep !== rep) return false;
+    // Filter by specific display — customer must have this display in their list
+    if(displayFilter && !r.displayList.includes(displayFilter)) return false;
     return true;
   });
 
