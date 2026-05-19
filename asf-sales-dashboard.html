@@ -1404,16 +1404,76 @@ function renderCustomerData() {
     daysToPayMap[name].count++;
   });
 
+  // Normalize display names — map short codes to full readable names
+  // Both short codes (from Attributes tab) and any long-form variants map to the same canonical long name
+  const DISPLAY_NORM = {
+    // Tower displays
+    'T1 WPC OB':    '1 Tower - WPC Outer Banks',
+    '1 Tower - WPC Outer Banks': '1 Tower - WPC Outer Banks',
+    'T2 LWood':     '2 Tower - LifeWood',
+    '2 Tower - LifeWood': '2 Tower - LifeWood',
+    'T2 SPC':       '2 Tower - SPC Gulf Coast/Whiskey Barrel',
+    '2 Tower - SPC Gulf Coast/Whiskey Barrel': '2 Tower - SPC Gulf Coast/Whiskey Barrel',
+    'T3 GCWBART':   '3 Tower - Gulf Coast/Whiskey Barrel/Artisan',
+    '3 Tower - Gulf Coast/Whiskey Barrel/Artisan': '3 Tower - Gulf Coast/Whiskey Barrel/Artisan',
+    // Lifewood
+    'LW Trl/Trc':   'Lifewood Trail/Trace',
+    'Lifewood Trail/Trace - Stacker': 'Lifewood Trail/Trace',
+    'LW Rss/Ban':   'Lifewood Ross/Banning',
+    'Lifewood Ross': 'Lifewood Ross/Banning',
+    'LW Sequoia':   'Lifewood Sequoia',
+    'Sequoia Display': 'Lifewood Sequoia',
+    // Echelon Wood
+    'EW PLB':       'Echelon Wood Pacific Longboard',
+    'Echelon Wood Pacific Longboard': 'Echelon Wood Pacific Longboard',
+    'EW CASC':      'Echelon Wood Cascadia',
+    'EW ISLR':      'Echelon Wood Island Retreat',
+    'EW RC':        'Echelon Wood Rustic/Vintage Charm',
+    'Echelon Wood Rustic/Vintage Charm': 'Echelon Wood Rustic/Vintage Charm',
+    'EW CH':        'Echelon Wood Coastal Highlands',
+    'EW Coast':     'Echelon Wood Coast',
+    // Gulf Coast / Whiskey Barrel
+    'GC Display':   'Gulf Coast Display',
+    'Gulf Coast Stacker Display': 'Gulf Coast Display',
+    'WB Display':   'Whiskey Barrel Display',
+    'Whiskey Barrel Stacker Display': 'Whiskey Barrel Display',
+    // Artisan
+    'ART Displa':   'Artisan Stacker Display',
+    'Artisan Stacker Display': 'Artisan Stacker Display',
+    'ART WILF':     'Artisan - Elias Wilf',
+    'Artisan - Elias Wilf': 'Artisan - Elias Wilf',
+    // Barlinek
+    'NEXTSTEP':     'Barlinek NextStep',
+    'Barlinek NextStep': 'Barlinek NextStep',
+    'YESWOOD':      'Barlinek YesWood',
+    'Barlinek YesWood': 'Barlinek YesWood',
+    // Sequoia BPI
+    'SequoiaBPI':   'Sequoia - BPI',
+    'Sequoia - BPI': 'Sequoia - BPI',
+    // TrueTouch
+    'TT Inv+':      'TrueTouch Invincible+',
+    'TrueTouch Invincible+': 'TrueTouch Invincible+',
+    'TT Grande':    'TrueTouch Grande',
+    'TT Venti':     'TrueTouch Venti',
+    // Impresso
+    'IMP INS':      'Impresso Instalite',
+    // LG
+    'LG Display':   'LG Display',
+  };
+
+  function normalizeDisplay(raw) {
+    const trimmed = raw.trim();
+    return DISPLAY_NORM[trimmed] || trimmed;
+  }
+
   // Build displays from DisplayingDealers field on InvoicedItems
-  // The field is a comma-separated list of display names — unique per customer (same value on every line)
-  // Count unique display names and store the list for expansion
   const dispMap = {};
   repSales.forEach(r => {
     const name = (r.CustomerName||'').trim();
     const raw  = (r.DisplayingDealers||'').trim();
     if (!name || !raw) return;
     if (!dispMap[name]) dispMap[name] = { displays: new Set() };
-    raw.split(',').map(d => d.trim()).filter(Boolean).forEach(d => dispMap[name].displays.add(d));
+    raw.split(',').map(d => normalizeDisplay(d)).filter(Boolean).forEach(d => dispMap[name].displays.add(d));
   });
 
   // Build merged list
