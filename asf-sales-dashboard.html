@@ -210,6 +210,7 @@
     .page { padding: 10px 14px !important; gap: 10px !important; }
     .row { gap: 8px !important; }
     .cols-4 { grid-template-columns: repeat(4, 1fr) !important; }
+    .cols-5 { grid-template-columns: repeat(5, 1fr) !important; }
     .cols-2 { grid-template-columns: 1fr 1fr !important; }
     .cols-3 { grid-template-columns: repeat(3, 1fr) !important; }
 
@@ -345,13 +346,21 @@
     <div class="page">
 
       <!-- KPI row -->
-      <div class="row cols-4">
+      <div class="row cols-5">
         <div class="card">
           <div class="card-hdr"><span class="card-title">YTD Actual Sales</span></div>
           <div class="card-body">
             <div class="kpi-val" id="kpi-ytd-actual">—</div>
             <div class="kpi-sub" id="kpi-ytd-sub">through current period</div>
             <div id="kpi-ytd-pill"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">YTD vs Prior Year</span></div>
+          <div class="card-body">
+            <div class="kpi-val" id="kpi-yoy-var">—</div>
+            <div class="kpi-sub" id="kpi-yoy-sub">—</div>
+            <div id="kpi-yoy-pill"></div>
           </div>
         </div>
         <div class="card">
@@ -1169,6 +1178,19 @@ function renderOverview() {
   // KPIs
   document.getElementById('kpi-ytd-actual').textContent = fmtKpi(ytdActual);
   document.getElementById('kpi-ytd-sub').textContent = `through ${MONTHS[lastMonthIdx]} ${lastCalYear} (${monthsIn} periods)`;
+
+  // YoY comparison — prior year same elapsed period
+  const priorYtdActual = (activeRep ? D.priorSales.filter(r => r.SalesRep === activeRep) : D.priorSales)
+    .reduce((s,r) => s + (+r.ExtAmount||0), 0);
+  const yoyVar = ytdActual - priorYtdActual;
+  const yoyPct = priorYtdActual > 0 ? (yoyVar / priorYtdActual) * 100 : null;
+  const yoyUp  = yoyVar >= 0;
+  document.getElementById('kpi-yoy-var').textContent = fmtKpi(Math.abs(yoyVar));
+  document.getElementById('kpi-yoy-var').style.color = yoyUp ? 'var(--asf-green)' : 'var(--red)';
+  document.getElementById('kpi-yoy-sub').textContent = `${yoyUp ? 'AHEAD of' : 'BEHIND'} prior year (${fmtKpi(priorYtdActual)})`;
+  document.getElementById('kpi-yoy-pill').innerHTML = yoyPct !== null
+    ? pill(yoyUp, (yoyUp ? '+' : '') + yoyPct.toFixed(1) + '% YoY')
+    : '';
   document.getElementById('kpi-annual-budget').textContent = fmtKpi(targets.annualBudget);
   document.getElementById('kpi-annual-budget-sub').textContent = `Budget target (FY ${fiscalYear})${activeRep ? ' · '+activeRep : ''}`;
   document.getElementById('kpi-annual-bhag').textContent = fmtKpi(targets.annualBhag);
