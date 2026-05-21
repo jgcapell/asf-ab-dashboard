@@ -550,6 +550,7 @@
             <option value="sales-asc">Sales ↑</option>
             <option value="name">Name A–Z</option>
             <option value="days-desc">AR Days ↓</option>
+            <option value="t12-desc">Trailing 12M ↓</option>
           </select>
           <div class="row-count" id="cust-count"></div>
         </div>
@@ -562,6 +563,7 @@
               <th style="text-align:right">YTD Sales</th>
               <th style="text-align:right" id="prior-ytd-header">Prior YTD</th>
               <th style="text-align:right">YoY Variance</th>
+              <th style="text-align:right">Trailing 12M</th>
               <th style="text-align:right">Avg Days to Pay</th>
               <th style="text-align:right">Credit Limit</th>
               <th>Terms</th>
@@ -1501,6 +1503,17 @@ function renderCustomerData() {
   });
 
   // Build merged list
+  // Aggregate trailing 12M sales per customer from D.trailing12rows (rep-filtered)
+  const t12CustMap = {};
+  const t12Source = D.trailing12rows
+    ? D.trailing12rows.filter(r => !activeRep || r.SalesRep === activeRep)
+    : [];
+  t12Source.forEach(r => {
+    const name = (r.CustomerName||'').trim(); if (!name) return;
+    if (!t12CustMap[name]) t12CustMap[name] = 0;
+    t12CustMap[name] += +r.ExtAmount||0;
+  });
+
   custData = Object.values(salesMap).map(s => {
     const ar   = arMap[s.name] || {};
     const dp   = dispMap[s.name] || { displays: new Set() };
@@ -1510,10 +1523,12 @@ function renderCustomerData() {
     const displayList  = [...dp.displays].sort();
     const yoyVar = prior.ytd > 0 ? s.ytd - prior.ytd : null;
     const yoyPct = prior.ytd > 0 ? ((s.ytd - prior.ytd) / prior.ytd) * 100 : null;
+    const t12sales = t12CustMap[s.name] || 0;
     return {
       name: s.name, rep: s.rep, ytd: s.ytd, invoices: s.invoices,
       priorYtd: prior.ytd,
       yoyVar, yoyPct,
+      t12sales,
       avgDaysToPay,
       daysPastDue: parseInt(ar.CreditDaysPastDue)||0,
       limit: parseFloat(ar.CreditLimit)||0,
@@ -1761,6 +1776,7 @@ function renderCustomerTable() {
     if(sort==='sales-asc')  return a.ytd-b.ytd;
     if(sort==='name')       return a.name.localeCompare(b.name);
     if(sort==='days-desc')  return b.days-a.days;
+    if(sort==='t12-desc')   return b.t12sales-a.t12sales;
     return 0;
   });
 
@@ -1790,6 +1806,7 @@ function renderCustomerTable() {
       <td style="text-align:right;color:var(--asf-blue);font-weight:600">${fmt$(r.ytd)}</td>
       <td style="text-align:right;color:var(--muted)">${r.priorYtd > 0 ? fmt$(r.priorYtd) : '—'}</td>
       <td style="text-align:right;font-weight:700;color:${yoyCol}">${yoyTxt}</td>
+      <td style="text-align:right;color:var(--asf-blue);font-weight:600">${r.t12sales > 0 ? fmt$(r.t12sales) : '—'}</td>
       <td style="text-align:right;font-weight:700;color:${dayCol}">${r.avgDaysToPay !== null ? r.avgDaysToPay+'d' : '—'}</td>
       <td style="text-align:right;color:var(--dim)">${fmt$(r.limit)}</td>
       <td><span class="badge b-dim">${r.terms}</span></td>
