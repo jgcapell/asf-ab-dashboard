@@ -485,10 +485,17 @@
     <div class="page">
 
       <!-- KPI row -->
-      <div class="row cols-3">
+      <div class="row cols-4">
         <div class="card">
           <div class="card-hdr"><span class="card-title">Total Customers (YTD Sales)</span></div>
           <div class="card-body"><div class="kpi-val" id="cust-kpi-count">—</div><div class="kpi-sub">active accounts</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">New Customers (Last 90 Days)</span></div>
+          <div class="card-body">
+            <div class="kpi-val" id="cust-kpi-new" style="color:var(--asf-green)">—</div>
+            <div class="kpi-sub" id="cust-kpi-new-sub">new accounts</div>
+          </div>
         </div>
         <div class="card">
           <div class="card-hdr"><span class="card-title">Avg Days to Pay</span></div>
@@ -814,8 +821,9 @@ async function resolveUserIdentity() {
       const myRow = userRows.find(r => (r.Login||'').toLowerCase().trim() === USER.username);
       if (myRow) {
         USER.isManager = isManagerUserType(myRow.UserType);
-        // Trim trailing spaces from Name field (Salesperson field has trailing spaces in Acumatica)
         USER.salespersonName = (myRow.Name || myRow.FullName || '').trim() || USER.displayName;
+        USER.salespersonCode = (myRow.Salesperson || '').trim(); // 2-letter code e.g. "AJ", "SM"
+        addLog('Salesperson code: "' + USER.salespersonCode + '"', 'ok');
         addLog('UserType: ' + (myRow.UserType === null ? 'null (manager)' : myRow.UserType) + ' isManager: ' + USER.isManager, USER.isManager ? 'ok' : 'warn');
         addLog('Rep: "' + USER.salespersonName + '"', 'ok');
         gcLoaded = true;
@@ -927,13 +935,13 @@ async function tryFetch(label, endpoint, params) {
 }
 
 // ─── DATA STORE ───────────────────────────────────────────────────────────────
-let D = { sales:[], ar:[], displays:[], opportunities:[], activities:[], tasks:[], empCodeToName:{}, trailing12:[], trailing12rows:[], salesByClass:[], priorSales:[] };
+let D = { sales:[], ar:[], displays:[], opportunities:[], activities:[], tasks:[], newCustomers:[], empCodeToName:{}, trailing12:[], trailing12rows:[], salesByClass:[], priorSales:[] };
 
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
 async function loadData() {
   setLoading(true); clearErr();
   // Don't clearLog() here — preserve identity resolution logs from resolveUserIdentity
-  const STEPS = 6; let done = 0;
+  const STEPS = 7; let done = 0;
   const step = lbl => { done++; setProgress(done,STEPS,lbl); };
 
   try {
@@ -1006,7 +1014,15 @@ async function loadData() {
     });
     step(`OPPORTUNITIES — ${D.opportunities.length} rows`);
 
-    // 4b. Activities — fetch a broad window (past 120 + future 30 days)
+    // 4b. New customers (AR-Customers created in last 90 days)
+    const newCustStart = (() => { const d=new Date(); d.setDate(d.getDate()-90); return d.toISOString().slice(0,10); })();
+    D.newCustomers = await tryFetch('New Customers', 'AR-Customers', {
+      '$select': 'CustomerID,CustomerName,CreatedOn,SalespersonID,CustomerStatus,CustomerClass',
+      '$filter': `CreatedOn ge datetime'${newCustStart}T00:00:00' and CustomerStatus eq 'Active'`,
+      '$orderby': 'CreatedOn desc',
+    });
+
+    // 4c. Activities — fetch a broad window (past 120 + future 30 days)
     //     StartDate on GC-ActivityTracking is the scheduled/activity date (can be future)
     const actWinStart = (() => { const d=new Date(); d.setDate(d.getDate()-120); return d.toISOString().slice(0,10); })();
     const actWinEnd   = (() => { const d=new Date(); d.setDate(d.getDate()+30);  return d.toISOString().slice(0,10); })();
@@ -1567,6 +1583,21 @@ function renderCustomerData() {
   kpiDays.style.color = avgDays > 45 ? 'var(--red)' : avgDays > 30 ? 'var(--yellow)' : 'var(--asf-green)';
   const totalDisp = custData.reduce((s,r)=>s+r.displayCount,0);
   document.getElementById('cust-kpi-disp').textContent = totalDisp;
+
+  // New customers KPI — filter by rep salesperson code
+  const newCusts = D.newCustomers.filter(r => {
+    if (!activeRep) return true;
+    // Match via salesperson code stored on USER, or via rep name→code lookup
+    const spCode = (r.SalespersonID||'').trim();
+    // Try to match using the rep's salesperson code from GC-CurrentUser
+    if (USER.salespersonCode && spCode === USER.salespersonCode) return true;
+    // Fallback: match via empCodeToName lookup
+    const codeName = D.empCodeToName[spCode] || '';
+    return codeName === activeRep;
+  });
+  document.getElementById('cust-kpi-new').textContent = newCusts.length;
+  document.getElementById('cust-kpi-new-sub').textContent =
+    newCusts.length === 1 ? 'new account' : 'new accounts';
 
   // Populate rep filter
   const reps = [...new Set(custData.map(r=>r.rep).filter(r=>r&&r!=='—'))].filter(r => !EXCLUDED_REPS.has(r)).sort();
