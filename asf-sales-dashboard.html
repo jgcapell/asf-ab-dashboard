@@ -1810,10 +1810,10 @@ function ownerName(idOrRow) {
 function ownerMatchesRep(name, activeRep) {
   if (!activeRep) return true;
   if (!name || name === '—') return false;
-  const n = name.toLowerCase(), r = activeRep.toLowerCase();
-  const parts = r.split(' ');
-  return n === r || n.includes(r) || parts.some(p => p.length > 2 && n.includes(p));
+  // Exact full-name match only — prevents 'Mitchell Jones' matching 'Austin Jones'
+  return name.toLowerCase().trim() === activeRep.toLowerCase().trim();
 }
+
 
 function renderOpportunities() {
   const activeRep = getActiveRepFilter();
