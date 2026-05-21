@@ -826,6 +826,13 @@ async function resolveUserIdentity() {
         addLog('Salesperson code: "' + USER.salespersonCode + '"', 'ok');
         addLog('UserType: ' + (myRow.UserType === null ? 'null (manager)' : myRow.UserType) + ' isManager: ' + USER.isManager, USER.isManager ? 'ok' : 'warn');
         addLog('Rep: "' + USER.salespersonName + '"', 'ok');
+        // Build name→code map from all rows for manager rep-filter support
+        USER.repNameToCode = {};
+        userRows.forEach(function(r) {
+          var n = (r.Name||'').trim(), c = (r.Salesperson||'').trim();
+          if (n && c) USER.repNameToCode[n] = c;
+        });
+        addLog('repNameToCode: ' + Object.keys(USER.repNameToCode).length + ' entries', 'ok');
         gcLoaded = true;
       } else {
         addLog('No GC-CurrentUser row for "' + USER.username + '" — trying fallback', 'warn');
@@ -1585,16 +1592,19 @@ function renderCustomerData() {
   document.getElementById('cust-kpi-disp').textContent = totalDisp;
 
   // New customers KPI — filter by rep salesperson code
+  // Resolve the 2-letter SP code for the active rep (works for both manager selecting a rep
+  // and a rep viewing their own data)
+  const activeRepCode = activeRep
+    ? (USER.isManager
+        ? (USER.repNameToCode[activeRep] || '')   // manager selected a rep — look up their code
+        : USER.salespersonCode)                    // rep viewing own data — use their own code
+    : '';                                          // all reps
+
   const newCusts = D.newCustomers.filter(r => {
-    if (!activeRep) return true;
-    // Match via salesperson code stored on USER, or via rep name→code lookup
-    const spCode = (r.SalespersonID||'').trim();
-    // Try to match using the rep's salesperson code from GC-CurrentUser
-    if (USER.salespersonCode && spCode === USER.salespersonCode) return true;
-    // Fallback: match via empCodeToName lookup
-    const codeName = D.empCodeToName[spCode] || '';
-    return codeName === activeRep;
+    if (!activeRepCode) return true;
+    return (r.SalespersonID||'').trim() === activeRepCode;
   });
+  addLog('New customers filter: activeRep="' + (activeRep||'All') + '" code="' + activeRepCode + '" count=' + newCusts.length);
   document.getElementById('cust-kpi-new').textContent = newCusts.length;
   document.getElementById('cust-kpi-new-sub').textContent =
     newCusts.length === 1 ? 'new account' : 'new accounts';
