@@ -408,7 +408,6 @@
       <button class="hbtn" onclick="printDashboard()">PRINT / PDF</button>
       <button class="hbtn" onclick="toggleLog()">DEBUG LOG</button>
       <span id="sync-indicator" style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:600;letter-spacing:0.06em;margin-right:4px">● Live</span>
-      <button class="hbtn" id="eater-refresh-btn" onclick="manualEaterRefresh()" style="display:none">↻ Refresh</button>
       <button class="hbtn primary" id="refresh-btn" onclick="loadData()">
         <span id="refresh-icon">⟳</span> REFRESH
       </button>
@@ -1520,6 +1519,19 @@ async function loadData() {
     renderOpportunities();
     addLog('All data loaded.','ok');
 
+    // Also refresh EATER data from KV if the tab has been opened this session
+    if (eaterTabInitialized) {
+      try {
+        await eaterLoadFromKV();
+        lastKVFingerprint = JSON.stringify(
+          EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited)
+        );
+        eaterRenderAll();
+        eaterLoadExisting();
+        showSyncPulse();
+      } catch(e) { /* non-fatal — EATER data refresh failed silently */ }
+    }
+
   } catch(e) { showErr(e.message); addLog('FATAL: '+e.message,'error'); }
   finally { setLoading(false); }
 }
@@ -2506,9 +2518,6 @@ function showTab(btn) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('pane-' + btn.dataset.tab).classList.add('active');
-  // Show EATER refresh button only when on the EATER tab
-  const eaterBtn = document.getElementById('eater-refresh-btn');
-  if (eaterBtn) eaterBtn.style.display = btn.dataset.tab === 'eater' ? '' : 'none';
 }
 
 // ─── UI HELPERS ───────────────────────────────────────────────────────────────
@@ -3248,21 +3257,8 @@ function showSyncPulse() {
   }, 2000);
 }
 
-// Manual refresh — re-fetches KV immediately on demand
-async function manualEaterRefresh() {
-  const btn = document.getElementById('eater-refresh-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '↻ Syncing…'; }
-  try {
-    await eaterLoadFromKV();
-    lastKVFingerprint = JSON.stringify(
-      EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited)
-    );
-    eaterRenderAll();
-    eaterLoadExisting();
-    showSyncPulse();
-  } catch(e) {}
-  if (btn) { btn.disabled = false; btn.textContent = '↻ Refresh'; }
-}
+// EATER manual refresh is handled by the main REFRESH button (loadData),
+// which calls eaterLoadFromKV() when eaterTabInitialized is true.
 
 function eaterRenderAll() {
   eaterRenderKPIs();
