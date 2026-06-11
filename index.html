@@ -299,9 +299,9 @@ const WORKER_URL = 'https://asf-scoreboard-proxy.greg-capell.workers.dev';
 async function loadLiveData() {
   try {
     const res = await fetch(`${WORKER_URL}/data`);
-    if (!res.ok) { console.warn('Worker error', res.status); return; }
+    if (!res.ok) { console.warn('Worker error', res.status); return false; }
     const d = await res.json();
-    if (d.error) { console.warn('Data error:', d.error); return; }
+    if (d.error) { console.warn('Data error:', d.error); return false; }
 
     // Compute Monday of current week
     const now = new Date();
@@ -413,8 +413,11 @@ async function loadLiveData() {
       DATA.dealers = dealers;
     }
 
+    return true; // live data loaded successfully
+
   } catch(e) {
     console.warn('loadLiveData error', e);
+    return false;
   }
 }
 
@@ -645,9 +648,16 @@ function render(){
 // INIT
 // ════════════════════════════════════════════
 async function init(){
-  render(); // show snapshot immediately
-  await loadLiveData().catch(()=>{});
-  render(); // re-render with live data
+  // Try to load live data first — only fall back to snapshot if it fails
+  const loaded = await loadLiveData();
+  render();
+  // If live data failed, try once more after a short delay
+  if (!loaded) {
+    setTimeout(async () => {
+      const retry = await loadLiveData();
+      if (retry) render();
+    }, 3000);
+  }
 }
 
 init();
