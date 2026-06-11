@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASF · E.A.T.E.R. Assessment</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
+  :root {
+    --asf-blue:  #5b8fcc;
+    --asf-navy:  #1e5080;
+    --asf-green: #5a9e45;
+    --bg:        #eef2f7;
+    --surface:   #ffffff;
+    --surface2:  #f5f8fc;
+    --border:    #ccd8e8;
+    --border2:   #dde7f3;
+    --muted:     #7a96b0;
+    --dim:       #4a6278;
+    --text:      #1e3448;
+    --red:       #b83228;
+    --yellow:    #c4890a;
+    --orange:    #c4621a;
+    --purple:    #6b52b8;
+    --radius:    8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── Loading ── */
+  #loading-overlay { position: fixed; inset: 0; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 16px; }
+  .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--asf-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .loading-text { font-size: 12px; color: var(--muted); letter-spacing: 0.08em; font-weight: 500; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Login ── */
+  #login-screen { display: none; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+  .login-card { width: 420px; padding: 48px 40px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; text-align: center; box-shadow: 0 8px 40px rgba(30,80,128,0.12); }
+  .login-logo { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 5px; line-height: 1.1; }
+  .login-logo .w1 { color: var(--asf-blue); }
+  .login-logo .w2 { color: var(--asf-navy); }
+  .login-logo .w3 { color: var(--asf-green); }
+  .login-sub { font-size: 10px; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+  .login-sub2 { font-size: 11px; color: var(--dim); margin-bottom: 32px; font-weight: 500; }
+  .login-btn { width: 100%; padding: 14px; background: var(--asf-navy); border: none; color: #fff; border-radius: var(--radius); font-size: 13px; font-family: inherit; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: background 0.2s; }
+  .login-btn:hover { background: #174068; }
+  .login-note { font-size: 10px; color: var(--muted); margin-top: 18px; line-height: 1.8; }
+  .error-box { background: rgba(184,50,40,0.07); border: 1px solid rgba(184,50,40,0.25); color: var(--red); padding: 10px 14px; border-radius: var(--radius); font-size: 11px; margin-bottom: 20px; display: none; }
+
+  /* ── App shell ── */
+  #app { display: none; }
+
+  /* ── Header ── */
+  .header { background: var(--asf-navy); height: 58px; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .header-brand { display: flex; align-items: center; gap: 14px; }
+  .header-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: #fff; }
+  .header-title .g { color: #7ec462; }
+  .header-sub { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; font-weight: 500; }
+  .header-right { display: flex; gap: 8px; align-items: center; }
+  .hbtn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.75); padding: 6px 14px; border-radius: 6px; font-size: 10px; font-family: inherit; font-weight: 600; cursor: pointer; letter-spacing: 0.07em; transition: all 0.15s; white-space: nowrap; }
+  .hbtn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+  .user-badge { display: flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18); border-radius: 6px; padding: 5px 11px; }
+  .user-badge-name { font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 600; }
+  .user-badge-role { font-size: 9px; color: rgba(255,255,255,0.45); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* ── Role banner ── */
+  #role-banner { background: rgba(91,143,204,0.12); border-bottom: 1px solid rgba(91,143,204,0.25); padding: 7px 28px; font-size: 11px; color: var(--asf-navy); font-weight: 600; align-items: center; gap: 8px; display: none; }
+
+  /* ── Layout ── */
+  .page { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+  .row { display: grid; gap: 20px; }
+  .cols-2 { grid-template-columns: 1fr 1fr; }
+
+  /* ── Card ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: 0 1px 8px rgba(30,80,128,0.07); }
+  .card-hdr { padding: 11px 16px; border-bottom: 1px solid var(--border2); background: var(--surface2); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+  .card-title { font-size: 10px; font-weight: 700; color: var(--asf-navy); letter-spacing: 0.09em; text-transform: uppercase; }
+  .card-badge { font-size: 10px; font-weight: 600; color: var(--muted); }
+  .card-body { padding: 14px; }
+  .card-scroll { max-height: 480px; overflow-y: auto; }
+
+  /* ── KPI ── */
+  .kpi-val { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--asf-navy); line-height: 1.1; }
+  .kpi-sub { font-size: 10px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+  /* ── EATER styles ── */
+  .eater-score-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+  .eater-score-col { padding: 14px 16px; border-right: 1px solid var(--border2); }
+  .eater-score-col:last-child { border-right: none; }
+  .eater-col-hdr { font-size: 10px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid var(--border); }
+  .eater-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .eater-cat-lbl { width: 90px; font-size: 11px; font-weight: 600; color: var(--dim); flex-shrink: 0; }
+  .eater-cat-icon { font-size: 13px; margin-right: 2px; }
+  .eater-input { width: 64px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 700; font-family: inherit; background: var(--surface); color: var(--text); text-align: center; outline: none; }
+  .eater-input:focus { border-color: var(--asf-blue); outline: 2px solid rgba(91,143,204,0.2); }
+  .eater-input:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+  .eater-total-row { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 10px; border-top: 2px solid var(--border); }
+  .eater-total-lbl { font-size: 11px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.06em; }
+  .eater-total-val { font-size: 22px; font-weight: 800; color: var(--asf-navy); }
+  .eater-rating-badge { margin-top: 6px; text-align: right; }
+
+  /* ── Rating badges ── */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; }
+  .b-dim    { background: rgba(30,80,128,0.07); color: var(--dim); border: 1px solid rgba(30,80,128,0.15); }
+  .b-blue   { background: rgba(91,143,204,0.12); color: var(--asf-navy); border: 1px solid rgba(91,143,204,0.3); }
+  .r-dnm    { background: rgba(184,50,40,0.12);  color: #b83228; border: 1px solid rgba(184,50,40,0.3); }
+  .r-ni     { background: rgba(196,137,10,0.12); color: #7a5500; border: 1px solid rgba(196,137,10,0.3); }
+  .r-me     { background: rgba(91,143,204,0.12); color: var(--asf-navy); border: 1px solid rgba(91,143,204,0.3); }
+  .r-exc    { background: rgba(90,158,69,0.12);  color: #3a7a28; border: 1px solid rgba(90,158,69,0.3); }
+  .r-out    { background: rgba(131,90,204,0.12); color: #5a2aa0; border: 1px solid rgba(131,90,204,0.3); }
+
+  /* ── QTR mini cards ── */
+  .eater-qtr-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+  .eater-qtr-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .eater-qtr-lbl { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+  .eater-qtr-val { font-size: 20px; font-weight: 800; color: var(--asf-navy); }
+  .eater-qtr-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Entry meta ── */
+  .eater-meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border2); background: var(--surface2); }
+  .eater-meta label { font-size: 10px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.07em; display: block; margin-bottom: 4px; }
+  .eater-meta select, .eater-meta input { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; background: var(--surface); color: var(--text); outline: none; }
+  .eater-meta select:focus, .eater-meta input:focus { border-color: var(--asf-blue); }
+  .eater-save-bar { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border2); background: var(--surface2); }
+  .eater-save-btn { padding: 8px 22px; background: var(--asf-navy); color: #fff; border: none; border-radius: 6px; font-size: 12px; font-family: inherit; font-weight: 700; cursor: pointer; letter-spacing: 0.05em; transition: background 0.15s; }
+  .eater-save-btn:hover { background: var(--asf-blue); }
+  .eater-save-msg { font-size: 11px; font-weight: 600; color: var(--asf-green); }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th { text-align: left; padding: 8px 10px; color: var(--asf-navy); font-weight: 700; font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; background: var(--surface2); border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border2); }
+  tbody tr:hover td { background: #eef4fb; }
+  tbody td { padding: 8px 10px; vertical-align: middle; }
+  .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 12px; }
+
+  /* ── Expand detail row ── */
+  .eater-expand-btn { background: none; border: none; cursor: pointer; color: var(--asf-blue); font-size: 11px; font-weight: 600; padding: 0; }
+  .eater-detail-row { display: none; }
+  .eater-detail-row.open { display: table-row; }
+  .eater-detail-inner { padding: 10px 16px; background: #f0f5fb; font-size: 11px; }
+  .eater-detail-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; }
+  .eater-detail-cat { text-align: center; }
+  .eater-detail-cat-lbl { font-size: 9px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+  .eater-detail-scores { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .eater-score-pill { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+  .s-self { background: rgba(91,143,204,0.12); color: var(--asf-navy); }
+  .s-mgr  { background: rgba(196,137,10,0.10); color: #7a5500; }
+  .s-cal  { background: rgba(90,158,69,0.15); color: #3a7a28; }
+  .eater-hist-calbr { font-weight: 700; color: var(--asf-navy); }
+  .eater-mgr-only { font-size: 10px; color: var(--muted); font-style: italic; padding: 8px 16px; }
+
+  /* ── Controls ── */
+  .ctrl-bar { display: flex; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border2); background: var(--surface2); flex-wrap: wrap; align-items: center; }
+  .ctrl-input { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 11px; font-family: inherit; outline: none; width: 210px; }
+  .ctrl-input:focus { border-color: var(--asf-blue); outline: 2px solid rgba(91,143,204,0.2); }
+  .ctrl-select { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 11px; font-family: inherit; outline: none; cursor: pointer; }
+  .row-count { margin-left: auto; font-size: 10px; color: var(--muted); font-weight: 600; }
+
+  /* ── Framework overview panel ── */
+  .fw-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 0; border-top: 1px solid var(--border2); }
+  .fw-cell { padding: 16px 18px; border-right: 1px solid var(--border2); }
+  .fw-cell:last-child { border-right: none; }
+  .fw-icon { font-size: 22px; }
+  .fw-letter { font-size: 13px; font-weight: 800; color: var(--asf-navy); letter-spacing: 0.04em; }
+  .fw-label { font-size: 11px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.07em; }
+  .fw-list { margin: 10px 0 0; padding-left: 14px; font-size: 11px; color: var(--dim); line-height: 1.8; }
+
+  /* ── Coaching notes panel ── */
+  .coaching-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .coaching-section { padding: 12px 16px; border-bottom: 1px solid var(--border2); }
+  .coaching-section:last-child { border-bottom: none; }
+  .coaching-section-lbl { font-size: 10px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .coaching-textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; font-family: inherit; background: var(--surface); color: var(--text); resize: vertical; min-height: 64px; outline: none; }
+  .coaching-textarea:focus { border-color: var(--asf-blue); outline: 2px solid rgba(91,143,204,0.2); }
+  .coaching-textarea:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+
+  /* ── Access denied ── */
+  #access-denied { display: none; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+  .denied-card { width: 420px; padding: 48px 40px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; text-align: center; box-shadow: 0 8px 40px rgba(30,80,128,0.12); }
+  .denied-icon { font-size: 48px; margin-bottom: 16px; }
+  .denied-title { font-size: 16px; font-weight: 700; color: var(--red); margin-bottom: 8px; }
+  .denied-msg { font-size: 12px; color: var(--dim); line-height: 1.7; margin-bottom: 24px; }
+
+  /* ── Goal items ── */
+  .goal-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border2); }
+  .goal-item:last-child { border-bottom: none; }
+  .goal-num { font-size: 10px; font-weight: 800; color: var(--muted); min-width: 18px; padding-top: 8px; text-align: right; flex-shrink: 0; }
+  .goal-input-wrap { flex: 1; }
+  .goal-text-input { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; background: var(--surface); color: var(--text); outline: none; }
+  .goal-text-input:focus { border-color: var(--asf-blue); outline: 2px solid rgba(91,143,204,0.2); }
+  .goal-text-input:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+  .goal-status-select { margin-top: 5px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 10px; font-family: inherit; font-weight: 700; background: var(--surface); color: var(--text); cursor: pointer; outline: none; }
+  .goal-status-select:disabled { cursor: not-allowed; opacity: 0.6; }
+  .goal-status-select.gs-pending    { border-color: rgba(30,80,128,0.3);  color: var(--asf-navy); background: rgba(91,143,204,0.08); }
+  .goal-status-select.gs-complete   { border-color: rgba(90,158,69,0.4);  color: #3a7a28;         background: rgba(90,158,69,0.10); }
+  .goal-status-select.gs-incomplete { border-color: rgba(184,50,40,0.3);  color: #b83228;         background: rgba(184,50,40,0.08); }
+  /* History goal pills */
+  .goal-pill { display: flex; align-items: flex-start; gap: 6px; padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 500; color: var(--dim); background: var(--surface); border: 1px solid var(--border); margin-bottom: 5px; }
+  .goal-pill.gp-complete   { background: rgba(90,158,69,0.08);  border-color: rgba(90,158,69,0.3);  color: #3a7a28; }
+  .goal-pill.gp-incomplete { background: rgba(184,50,40,0.07); border-color: rgba(184,50,40,0.25); color: #b83228; }
+  .goal-pill.gp-pending    { background: rgba(91,143,204,0.07); border-color: rgba(91,143,204,0.2); color: var(--asf-navy); }
+  .goal-pill-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+  .goal-pill-body { flex: 1; line-height: 1.5; }
+  .goal-pill-text { display: block; }
+  .goal-pill-status-btn { display: inline-block; margin-top: 3px; font-size: 9px; font-weight: 700; padding: 1px 7px; border-radius: 4px; border: none; cursor: pointer; letter-spacing: 0.05em; text-transform: uppercase; }
+  .goal-pill-status-btn.gsb-complete   { background: rgba(90,158,69,0.15);  color: #3a7a28; }
+  .goal-pill-status-btn.gsb-incomplete { background: rgba(184,50,40,0.12); color: #b83228; }
+  .goal-pill-status-btn.gsb-pending    { background: rgba(91,143,204,0.12); color: var(--asf-navy); }
+  .goal-pill-status-btn:hover { filter: brightness(0.9); }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--surface2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .eater-score-grid { grid-template-columns: 1fr; }
+    .eater-meta { grid-template-columns: 1fr 1fr; }
+    .fw-grid { grid-template-columns: 1fr 1fr; }
+    .eater-qtr-grid { grid-template-columns: repeat(2,1fr); }
+    .cols-2 { grid-template-columns: 1fr; }
+    .page { padding: 16px; }
+    .header { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="load-txt">Initializing…</div>
+</div>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo"><span class="w1">ALL </span><span class="w2">SOUTH </span><span class="w3">FLOORING</span></div>
+    <div class="login-sub">E.A.T.E.R. Performance Hub</div>
+    <div class="login-sub2">Operations &amp; Administration</div>
+    <div id="login-err" class="error-box"></div>
+    <button class="login-btn" onclick="startLogin()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      SIGN IN WITH ACUMATICA
+    </button>
+    <div class="login-note">Your credentials are handled directly by Acumatica.<br>This app never stores your password.</div>
+  </div>
+</div>
+
+<!-- Access denied -->
+<div id="access-denied">
+  <div class="denied-card">
+    <div class="denied-icon">🔒</div>
+    <div class="denied-title">Access Restricted</div>
+    <div class="denied-msg" id="denied-msg">Your account does not have access to this application. Please contact your manager or IT administrator.</div>
+    <button class="login-btn" onclick="logout()" style="background:var(--red)">Sign Out</button>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+
+  <div class="header">
+    <div class="header-brand">
+      <div>
+        <div class="header-title">ALL SOUTH <span class="g">FLOORING</span></div>
+        <div class="header-sub">E.A.T.E.R. PERFORMANCE HUB · OPS &amp; ADMIN</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-badge" id="user-badge">
+        <div>
+          <div class="user-badge-name" id="user-badge-name">—</div>
+          <div class="user-badge-role" id="user-badge-role">—</div>
+        </div>
+      </div>
+      <button class="hbtn" onclick="logout()">SIGN OUT</button>
+    </div>
+  </div>
+
+  <div id="role-banner">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span id="role-banner-text"></span>
+  </div>
+
+  <div class="page">
+
+    <!-- Framework Overview -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">E.A.T.E.R. Framework</span>
+        <span style="font-size:10px;color:var(--muted);font-weight:500">Assessment · Calibration · Coaching — each category rated 1 (does not meet) to 10 (outstanding)</span>
+      </div>
+      <div class="fw-grid">
+        <div class="fw-cell">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span class="fw-icon">💪</span>
+            <div><div class="fw-letter">E</div><div class="fw-label">Effort</div></div>
+          </div>
+          <ul class="fw-list">
+            <li>Push hard — always</li><li>Go the extra mile</li><li>Start fast, finish strong</li>
+            <li>Own even routine tasks</li><li>Maintain a sense of urgency</li>
+          </ul>
+        </div>
+        <div class="fw-cell">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span class="fw-icon">😊</span>
+            <div><div class="fw-letter">A</div><div class="fw-label">Attitude</div></div>
+          </div>
+          <ul class="fw-list">
+            <li>Positive energy &amp; humility</li><li>Be hungry &amp; coachable</li><li>Commit to company initiatives</li>
+            <li>Value service to others</li><li>Attitude is contagious</li>
+          </ul>
+        </div>
+        <div class="fw-cell">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span class="fw-icon">🤝</span>
+            <div><div class="fw-letter">T</div><div class="fw-label">Teamwork</div></div>
+          </div>
+          <ul class="fw-list">
+            <li>Elevate others</li><li>Drive shared accountability</li><li>Support the mission</li>
+            <li>Communicate constructively</li><li>Teams build empires — not lone wolves</li>
+          </ul>
+        </div>
+        <div class="fw-cell">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span class="fw-icon">⚡</span>
+            <div><div class="fw-letter">E</div><div class="fw-label">Engagement</div></div>
+          </div>
+          <ul class="fw-list">
+            <li>Be solutions-oriented</li><li>Be proactive, not reactive</li><li>Build relationships that matter</li>
+            <li>Learn beyond your role</li><li>Cross-dept. synergies</li>
+          </ul>
+        </div>
+        <div class="fw-cell">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span class="fw-icon">🏆</span>
+            <div><div class="fw-letter">R</div><div class="fw-label">Results</div></div>
+          </div>
+          <ul class="fw-list">
+            <li>Quality &amp; accuracy of output</li><li>Control expenses</li><li>Process improvements</li>
+            <li>Customer satisfaction</li><li>A scorecard measures results — not future effort</li>
+          </ul>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;padding:10px 18px;background:var(--surface2);border-top:1px solid var(--border2);flex-wrap:wrap">
+        <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-right:4px">Score Thresholds:</span>
+        <span class="badge r-dnm">≤10 Does Not Meet</span>
+        <span class="badge r-ni">≤24 Needs Improvement</span>
+        <span class="badge r-me">≤39 Meets Expectation</span>
+        <span class="badge r-exc">≤47 Exceeds Expectation</span>
+        <span class="badge r-out">≤50 Outstanding</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--muted);font-style:italic">Each team member self-assesses quarterly. Managers calibrate. Growth is the goal — always.</span>
+      </div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="row cols-2">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">YTD Average — Calibrated Score</span><span class="card-badge" id="kpi-scope-badge"></span></div>
+        <div class="card-body" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div>
+            <div class="kpi-val" id="eater-kpi-avg" style="color:var(--asf-navy)">—</div>
+            <div class="kpi-sub" id="eater-kpi-sub">no data</div>
+          </div>
+          <div id="eater-kpi-badge"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Calibrated Score by Quarter</span></div>
+        <div class="card-body">
+          <div class="eater-qtr-grid">
+            <div class="eater-qtr-card"><div class="eater-qtr-lbl">Q1</div><div class="eater-qtr-val" id="eq-q1">—</div><div class="eater-qtr-sub" id="eq-q1-r"></div></div>
+            <div class="eater-qtr-card"><div class="eater-qtr-lbl">Q2</div><div class="eater-qtr-val" id="eq-q2">—</div><div class="eater-qtr-sub" id="eq-q2-r"></div></div>
+            <div class="eater-qtr-card"><div class="eater-qtr-lbl">Q3</div><div class="eater-qtr-val" id="eq-q3">—</div><div class="eater-qtr-sub" id="eq-q3-r"></div></div>
+            <div class="eater-qtr-card"><div class="eater-qtr-lbl">Q4</div><div class="eater-qtr-val" id="eq-q4">—</div><div class="eater-qtr-sub" id="eq-q4-r"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry / Edit Form -->
+    <div class="card" id="eater-entry-card">
+      <div class="card-hdr">
+        <span class="card-title" id="eater-entry-title">Enter / Edit Review</span>
+        <span id="eater-entry-access-note" class="eater-mgr-only"></span>
+      </div>
+
+      <div class="eater-meta">
+        <div>
+          <label>Quarter</label>
+          <select id="eater-quarter">
+            <option value="Q1-2026">Q1 2026 (Nov–Jan)</option>
+            <option value="Q2-2026">Q2 2026 (Feb–Apr)</option>
+            <option value="Q3-2026">Q3 2026 (May–Jul)</option>
+            <option value="Q4-2026">Q4 2026 (Aug–Oct)</option>
+          </select>
+        </div>
+        <div>
+          <label>Employee Name</label>
+          <select id="eater-employee"></select>
+        </div>
+        <div>
+          <label>Department</label>
+          <input type="text" id="eater-dept" placeholder="e.g. Customer Service" readonly style="background:var(--surface2);color:var(--muted)">
+        </div>
+      </div>
+
+      <div class="eater-score-grid">
+        <!-- SELF -->
+        <div class="eater-score-col">
+          <div class="eater-col-hdr">Self Assessment</div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">💪</span>Effort</span>      <input class="eater-input" id="s-E"  type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">😊</span>Attitude</span>    <input class="eater-input" id="s-A"  type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">🤝</span>Teamwork</span>    <input class="eater-input" id="s-T"  type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">⚡</span>Engagement</span>  <input class="eater-input" id="s-En" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">🏆</span>Results</span>     <input class="eater-input" id="s-R"  type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+          <div class="eater-total-row"><span class="eater-total-lbl">Total</span><span class="eater-total-val" id="s-total">—</span></div>
+          <div class="eater-rating-badge"><span class="badge" id="s-badge">—</span></div>
+        </div>
+        <!-- MANAGER -->
+        <div class="eater-score-col">
+          <div class="eater-col-hdr">Manager Rating</div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">💪</span>Effort</span>      <input class="eater-input" id="m-E"  type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">😊</span>Attitude</span>    <input class="eater-input" id="m-A"  type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">🤝</span>Teamwork</span>    <input class="eater-input" id="m-T"  type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">⚡</span>Engagement</span>  <input class="eater-input" id="m-En" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">🏆</span>Results</span>     <input class="eater-input" id="m-R"  type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+          <div class="eater-total-row"><span class="eater-total-lbl">Total</span><span class="eater-total-val" id="m-total">—</span></div>
+          <div class="eater-rating-badge"><span class="badge" id="m-badge">—</span></div>
+        </div>
+        <!-- CALIBRATED -->
+        <div class="eater-score-col">
+          <div class="eater-col-hdr" style="color:var(--asf-green)">Calibrated ✓</div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">💪</span>Effort</span>      <input class="eater-input" id="c-E"  type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()" style="border-color:rgba(90,158,69,0.5)"></div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">😊</span>Attitude</span>    <input class="eater-input" id="c-A"  type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()" style="border-color:rgba(90,158,69,0.5)"></div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">🤝</span>Teamwork</span>    <input class="eater-input" id="c-T"  type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()" style="border-color:rgba(90,158,69,0.5)"></div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">⚡</span>Engagement</span>  <input class="eater-input" id="c-En" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()" style="border-color:rgba(90,158,69,0.5)"></div>
+          <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">🏆</span>Results</span>     <input class="eater-input" id="c-R"  type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()" style="border-color:rgba(90,158,69,0.5)"></div>
+          <div class="eater-total-row"><span class="eater-total-lbl">Total</span><span class="eater-total-val" id="c-total" style="color:var(--asf-green)">—</span></div>
+          <div class="eater-rating-badge"><span class="badge" id="c-badge">—</span></div>
+        </div>
+      </div>
+
+      <!-- Coaching Notes (manager only) -->
+      <div class="coaching-grid" id="coaching-notes-section">
+        <div style="padding:10px 16px;background:var(--surface2);border-top:1px solid var(--border2)">
+          <span style="font-size:10px;font-weight:700;color:var(--asf-navy);text-transform:uppercase;letter-spacing:0.08em">Coaching Notes</span>
+          <span style="font-size:10px;color:var(--muted);margin-left:8px">(visible to managers &amp; owners only)</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-top:1px solid var(--border2)">
+          <div style="padding:12px 16px;border-right:1px solid var(--border2)">
+            <div class="coaching-section-lbl">Areas of Concern</div>
+            <textarea class="coaching-textarea" id="note-concerns" placeholder="Enter areas of concern…"></textarea>
+          </div>
+          <div style="padding:12px 16px;border-right:1px solid var(--border2)">
+            <div class="coaching-section-lbl">Opportunities for Improvement</div>
+            <textarea class="coaching-textarea" id="note-opportunities" placeholder="Enter improvement opportunities…"></textarea>
+          </div>
+          <div style="padding:12px 16px">
+            <div class="coaching-section-lbl">Goals for Next Period</div>
+            <div id="goals-form-list">
+              <div class="goal-item">
+                <span class="goal-num">1</span>
+                <div class="goal-input-wrap">
+                  <input type="text" class="goal-text-input" id="goal-text-0" placeholder="Enter goal #1…">
+                  <select class="goal-status-select gs-pending" id="goal-status-0" onchange="updateGoalSelectStyle(this)">
+                    <option value="pending">⏳ Pending</option>
+                    <option value="complete">✅ Complete</option>
+                    <option value="incomplete">❌ Incomplete</option>
+                  </select>
+                </div>
+              </div>
+              <div class="goal-item">
+                <span class="goal-num">2</span>
+                <div class="goal-input-wrap">
+                  <input type="text" class="goal-text-input" id="goal-text-1" placeholder="Enter goal #2…">
+                  <select class="goal-status-select gs-pending" id="goal-status-1" onchange="updateGoalSelectStyle(this)">
+                    <option value="pending">⏳ Pending</option>
+                    <option value="complete">✅ Complete</option>
+                    <option value="incomplete">❌ Incomplete</option>
+                  </select>
+                </div>
+              </div>
+              <div class="goal-item">
+                <span class="goal-num">3</span>
+                <div class="goal-input-wrap">
+                  <input type="text" class="goal-text-input" id="goal-text-2" placeholder="Enter goal #3…">
+                  <select class="goal-status-select gs-pending" id="goal-status-2" onchange="updateGoalSelectStyle(this)">
+                    <option value="pending">⏳ Pending</option>
+                    <option value="complete">✅ Complete</option>
+                    <option value="incomplete">❌ Incomplete</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="eater-save-bar">
+        <button class="eater-save-btn" onclick="eaterSaveReview()">Save Review</button>
+        <button class="eater-save-btn" style="background:var(--muted)" onclick="eaterClearForm()">Clear</button>
+        <span id="eater-save-msg" class="eater-save-msg"></span>
+      </div>
+    </div>
+
+    <!-- Review History -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">Review History</span>
+        <span class="card-badge" id="eater-hist-badge"></span>
+      </div>
+      <div class="ctrl-bar">
+        <input class="ctrl-input" id="eater-hist-search" placeholder="Search employee…" oninput="eaterRenderHistory()">
+        <select class="ctrl-select" id="eater-hist-qtr" onchange="eaterRenderHistory()">
+          <option value="">All Quarters</option>
+          <option value="Q1-2026">Q1 2026</option>
+          <option value="Q2-2026">Q2 2026</option>
+          <option value="Q3-2026">Q3 2026</option>
+          <option value="Q4-2026">Q4 2026</option>
+        </select>
+        <div class="row-count" id="eater-hist-count"></div>
+      </div>
+      <div class="card-scroll">
+        <table id="eater-hist-table">
+          <thead><tr>
+            <th style="width:24px"></th>
+            <th>Employee</th>
+            <th>Quarter</th>
+            <th>Department</th>
+            <th style="text-align:center">Self</th>
+            <th style="text-align:center">Manager</th>
+            <th style="text-align:center">Calibrated</th>
+            <th>Rating</th>
+            <th style="width:60px"></th>
+          </tr></thead>
+          <tbody id="eater-hist-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /#app -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════════════
+const CONFIG = {
+  acumaticaUrl: 'https://allsouthflooring.acumatica.com',
+  clientId:     '6337533B-4E40-14F2-F483-DD653A38138B@ASF',
+  clientSecret: 'djA-sMyV_8128aNE8g5IKg',
+  scopes:       'api offline_access openid profile email',
+  redirectUri:  window.location.origin + window.location.pathname,
+  workerUrl:    'https://asf-inventory-dashboard.greg-capell.workers.dev',
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// ROLE-BASED ACCESS — Ops & Admin users only
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Access levels:
+//   'exec'    — Owner/Executive: full access, sees ALL staff
+//   'manager' — Department manager: sees own direct reports + self; can edit all 3 columns
+//   'staff'   — Direct report: self-assessment only (own record only)
+//
+// reportingTo: username of direct manager
+// directReports: array of usernames this person manages
+
+const USER_ROSTER = {
+  'todd': {
+    displayName: 'Todd Good',
+    access: 'exec',
+    dept: null,
+    reportingTo: null,
+    directReports: []
+  },
+  'greg': {
+    displayName: 'Greg Capell',
+    access: 'exec',
+    dept: null,
+    reportingTo: null,
+    directReports: ['lgood', 'jflores', 'dstorr']
+  },
+  'lgood': {
+    displayName: 'Lauren Good',
+    access: 'manager',
+    dept: 'Customer Service / Marketing',
+    reportingTo: 'greg',
+    directReports: ['vhuggins', 'jstorr']
+  },
+  'vhuggins': {
+    displayName: 'Vannessa Huggins',
+    access: 'staff',
+    dept: 'Customer Service / Marketing',
+    reportingTo: 'lgood',
+    directReports: []
+  },
+  'jstorr': {
+    displayName: "Jate'h Storr",
+    access: 'staff',
+    dept: 'Customer Service / Marketing',
+    reportingTo: 'lgood',
+    directReports: []
+  },
+  'jflores': {
+    displayName: 'Jenny Flores',
+    access: 'staff',
+    dept: 'Accounting',
+    reportingTo: 'greg',
+    directReports: []
+  },
+  'dstorr': {
+    displayName: 'Darold Storr',
+    access: 'manager',
+    dept: 'Warehouse Operations',
+    reportingTo: 'greg',
+    directReports: ['icromwell']
+  },
+  'icromwell': {
+    displayName: 'Isaiah Cromwell',
+    access: 'staff',
+    dept: 'Warehouse Operations',
+    reportingTo: 'dstorr',
+    directReports: []
+  },
+};
+
+// Build a flat employee list from the roster
+const EATER_EMPLOYEES = Object.entries(USER_ROSTER).map(([username, u]) => ({
+  username,
+  name: u.displayName,
+  dept: u.dept || 'Operations'
+}));
+
+// ═══════════════════════════════════════════════════════════════════════
+// SEED DATA — Q1 2026 calibration from uploaded worksheets
+// ═══════════════════════════════════════════════════════════════════════
+const EATER_SEED = [
+  // ── Customer Service / Marketing ──
+  { qtr:'Q1-2026', name:'Lauren Good',    dept:'Customer Service / Marketing',
+    self:{E:7,A:8,T:7,En:8,R:8},   mgr:{E:7,A:8,T:8,En:8,R:7},   cal:{E:7,A:7,T:7,En:6,R:6},
+    notes:{ concerns:'How do we free you up enough to carry some of the marketing functions — Lack of defined marketing strategy — Operating within a Marketing Budget', opportunities:'Staying flexible while playing by the "rules" — Engagement with Bob & Phil — Direct communication when it comes to confrontation' },
+    goals:[
+      { text:'Implement customer follow up calls - 10 per week', status:'pending' },
+      { text:'Get INVIUS on Material Bank', status:'pending' },
+      { text:'Increase Social Media Following by 10% across all platforms & create report for tracking', status:'pending' }
+    ]},
+  { qtr:'Q1-2026', name:'Vannessa Huggins', dept:'Customer Service / Marketing',
+    self:{E:10,A:7,T:7,En:8,R:7},  mgr:{E:9,A:9,T:7,En:7,R:7},  cal:{E:7,A:7,T:6,En:5,R:5},
+    notes:{ concerns:'Punctuality — Sometimes sacrificing accuracy for speed of processing', opportunities:'Leaning on your sales reps as a resource — Taking the initiative to share the load when you have time — Continuing to learn product knowledge' },
+    goals:[
+      { text:'Be here on time', status:'pending' },
+      { text:'Implement customer follow up calls - 5 per week', status:'pending' },
+      { text:'', status:'pending' }
+    ]},
+  { qtr:'Q1-2026', name:"Jate'h Storr", dept:'Customer Service / Marketing',
+    self:{E:null,A:null,T:null,En:null,R:null}, mgr:{E:null,A:null,T:null,En:null,R:null}, cal:{E:null,A:null,T:null,En:null,R:null},
+    notes:{}, goals:[{text:'',status:'pending'},{text:'',status:'pending'},{text:'',status:'pending'}] },
+  // ── Accounting ──
+  { qtr:'Q1-2026', name:'Jenny Flores',   dept:'Accounting',
+    self:{E:5,A:6,T:6,En:0,R:5},   mgr:{E:8,A:7,T:5,En:5,R:6},   cal:{E:6,A:6,T:5,En:5,R:5},
+    notes:{ concerns:'Do we have repeatable/scalable systems in place? — Answers without assurance — Speed of processing payables', opportunities:'Clear communication of details — Be willing to dig deeper when problems arise — Be purposeful with how you engage with customers and reps' },
+    goals:[
+      { text:'Clean up all AR credits older than 60 days', status:'pending' },
+      { text:'0 payables processed with discounts missed', status:'pending' },
+      { text:'Close month-end and submit financials & bank documents by the 10th day of the following month', status:'pending' }
+    ]},
+  // ── Warehouse ──
+  { qtr:'Q1-2026', name:'Darold Storr',   dept:'Warehouse Operations',
+    self:{E:9,A:9,T:8,En:9,R:9},   mgr:{E:8,A:8,T:6,En:6,R:6},   cal:{E:7,A:7,T:6,En:6,R:5},
+    notes:{ concerns:'Order accuracy — Is there a true system for quality control - i.e. how does it continue if you\'re not there? — What paperwork is being used to pull orders?', opportunities:'' },
+    goals:[
+      { text:'', status:'pending' },
+      { text:'', status:'pending' },
+      { text:'', status:'pending' }
+    ]},
+  { qtr:'Q1-2026', name:'Isaiah Cromwell', dept:'Warehouse Operations',
+    self:{E:7,A:8,T:8,En:7,R:7},   mgr:{E:6,A:6,T:6,En:6,R:7},   cal:{E:5,A:6,T:6,En:5,R:5},
+    notes:{ concerns:'Order accuracy — Checking ASF email', opportunities:'Take advantage of idle time to get ahead — Setting the standard — Ownership of QC process even without oversight — Positive engagement with customers' },
+    goals:[
+      { text:'<3 mistakes on outbound shipments', status:'pending' },
+      { text:'Perform bi-weekly cycle counts', status:'pending' },
+      { text:'Complete daily/weekly WH task list', status:'pending' }
+    ]},
+];
+
+// ═══════════════════════════════════════════════════════════════════════
+// AUTH STATE
+// ═══════════════════════════════════════════════════════════════════════
+let auth = { accessToken: null, refreshToken: null };
+let USER = {
+  username: null,
+  displayName: null,
+  rosterEntry: null,   // reference to USER_ROSTER[username]
+  access: null,        // 'exec' | 'manager' | 'staff' | null
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// LOGIN / OAUTH
+// ═══════════════════════════════════════════════════════════════════════
+function startLogin() {
+  const state = Math.random().toString(36).substring(2);
+  sessionStorage.setItem('oauth_state', state);
+  const p = new URLSearchParams({
+    client_id: CONFIG.clientId,
+    response_type: 'code',
+    redirect_uri: CONFIG.redirectUri,
+    scope: CONFIG.scopes,
+    state
+  });
+  window.location.href = `${CONFIG.acumaticaUrl}/identity/connect/authorize?${p}`;
+}
+
+async function handleCallback(code, state) {
+  if (state !== sessionStorage.getItem('oauth_state')) {
+    showLoginErr('OAuth state mismatch. Please try again.'); return;
+  }
+  setLoadTxt('Signing you in…');
+  try {
+    const resp = await fetch(`${CONFIG.workerUrl}/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code', code,
+        redirect_uri: CONFIG.redirectUri,
+        client_id: CONFIG.clientId, client_secret: CONFIG.clientSecret
+      }),
+    });
+    if (!resp.ok) throw new Error(`Token exchange failed (${resp.status})`);
+    const t = await resp.json();
+    auth.accessToken  = t.access_token;
+    auth.refreshToken = t.refresh_token;
+    window.history.replaceState({}, '', window.location.pathname);
+
+    await resolveIdentity();
+  } catch(e) {
+    showLoginErr(e.message);
+  }
+}
+
+async function resolveIdentity() {
+  setLoadTxt('Verifying identity…');
+  try {
+    const uiResp = await fetch(`${CONFIG.workerUrl}/userinfo`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` }
+    });
+    const ui = uiResp.ok ? await uiResp.json() : {};
+    const raw = (ui.preferred_username || ui.sub || ui.email || '').toLowerCase().trim();
+    // Strip domain if present (e.g. john@allsouthflooring.com → john)
+    USER.username = raw.includes('@') ? raw.split('@')[0] : raw;
+    USER.displayName = ui.name || ui.given_name || USER.username;
+  } catch(e) {
+    showLoginErr('Could not retrieve user identity: ' + e.message);
+    return;
+  }
+
+  // Check roster
+  const entry = USER_ROSTER[USER.username];
+  if (!entry) {
+    showAccessDenied(`Account "${USER.username}" does not have access to this application. Please contact Todd Good or Greg Capell.`);
+    return;
+  }
+
+  USER.rosterEntry = entry;
+  USER.access      = entry.access;
+  USER.displayName = entry.displayName; // Use roster display name for consistency
+
+  launchApp();
+}
+
+function showAccessDenied(msg) {
+  hideOverlay();
+  document.getElementById('access-denied').style.display = 'flex';
+  document.getElementById('denied-msg').textContent = msg;
+}
+
+function launchApp() {
+  hideOverlay();
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  // User badge
+  document.getElementById('user-badge-name').textContent = USER.displayName;
+  const roleLabel = USER.access === 'exec' ? 'Owner / Executive'
+    : USER.access === 'manager' ? 'Manager · ' + USER.rosterEntry.dept
+    : USER.rosterEntry.dept || 'Staff';
+  document.getElementById('user-badge-role').textContent = roleLabel;
+
+  // Role banner for non-exec
+  if (USER.access !== 'exec') {
+    const banner = document.getElementById('role-banner');
+    banner.style.display = 'flex';
+    const scope = USER.access === 'manager'
+      ? `Manager view — showing your team (${USER.rosterEntry.dept})`
+      : `Your reviews only — contact your manager to update Manager or Calibrated scores`;
+    document.getElementById('role-banner-text').textContent = '🔒 ' + scope;
+  }
+
+  initEaterForm();
+  eaterRenderAll();
+}
+
+function logout() {
+  auth = { accessToken: null, refreshToken: null };
+  USER = { username: null, displayName: null, rosterEntry: null, access: null };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('access-denied').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  eaterInitialized = false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// VISIBILITY — who can this user see?
+// ═══════════════════════════════════════════════════════════════════════
+function visibleNames() {
+  if (USER.access === 'exec') return null; // null = all
+  const myName = USER.rosterEntry.displayName;
+  if (USER.access === 'manager') {
+    // Self + all direct reports (recursive one level)
+    const drNames = USER.rosterEntry.directReports
+      .map(u => USER_ROSTER[u]?.displayName)
+      .filter(Boolean);
+    return new Set([myName, ...drNames]);
+  }
+  // Staff: only own record
+  return new Set([myName]);
+}
+
+function isManager() {
+  return USER.access === 'exec' || USER.access === 'manager';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// DATA STORE
+// ═══════════════════════════════════════════════════════════════════════
+let EATER_RECORDS = null;
+const STORAGE_KEY = 'asf-ops-eater-records';
+
+function eaterGetRecords() {
+  if (EATER_RECORDS !== null) return EATER_RECORDS;
+  EATER_RECORDS = EATER_SEED.map((r,i) => Object.assign({ id:'seed-'+i }, r));
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const seedKeys = new Set(EATER_RECORDS.map(r => r.qtr+'|'+r.name));
+    for (const r of saved) {
+      const k = r.qtr+'|'+r.name;
+      if (seedKeys.has(k)) {
+        const idx = EATER_RECORDS.findIndex(x => x.qtr===r.qtr && x.name===r.name);
+        if (idx >= 0) { EATER_RECORDS[idx] = r; }
+        else { EATER_RECORDS.push(r); }
+      } else {
+        EATER_RECORDS.push(r);
+        seedKeys.add(k);
+      }
+    }
+  } catch(e) {}
+  return EATER_RECORDS;
+}
+
+function eaterPersist() {
+  try {
+    const editable = EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(editable));
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SCORING HELPERS
+// ═══════════════════════════════════════════════════════════════════════
+function eaterRating(total) {
+  if (total === null || total === undefined || isNaN(total)) return { label:'—', cls:'' };
+  if (total <= 10) return { label:'Does Not Meet Expectation', cls:'r-dnm' };
+  if (total <= 24) return { label:'Needs Improvement',          cls:'r-ni'  };
+  if (total <= 39) return { label:'Meets Expectation',          cls:'r-me'  };
+  if (total <= 47) return { label:'Exceeds Expectation',        cls:'r-exc' };
+  return              { label:'Outstanding',                     cls:'r-out' };
+}
+
+function eaterSum(scores) {
+  if (!scores) return null;
+  const vals = [scores.E, scores.A, scores.T, scores.En, scores.R];
+  if (vals.some(v => v === null || v === undefined)) return null;
+  const s = vals.reduce((a,b) => a + parseFloat(b||0), 0);
+  return Math.round(s * 10) / 10;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// FORM INIT & POPULATION
+// ═══════════════════════════════════════════════════════════════════════
+let eaterInitialized = false;
+
+function initEaterForm() {
+  if (eaterInitialized) return;
+  eaterInitialized = true;
+
+  const sel = document.getElementById('eater-employee');
+  sel.innerHTML = '';
+  const visible = visibleNames();
+  const empList = visible
+    ? EATER_EMPLOYEES.filter(e => visible.has(e.name))
+    : EATER_EMPLOYEES;
+
+  empList.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.name; opt.textContent = e.name; sel.appendChild(opt);
+  });
+
+  sel.addEventListener('change', () => {
+    const emp = EATER_EMPLOYEES.find(e => e.name === sel.value);
+    document.getElementById('eater-dept').value = emp ? emp.dept : '';
+    eaterLoadExisting();
+  });
+  document.getElementById('eater-quarter').addEventListener('change', eaterLoadExisting);
+
+  // Lock mgr/cal inputs for staff
+  if (!isManager()) {
+    ['m-E','m-A','m-T','m-En','m-R','c-E','c-A','c-T','c-En','c-R'].forEach(id => {
+      const el = document.getElementById(id);
+      el.disabled = true; el.placeholder = '—';
+    });
+    // Lock coaching notes and goals
+    ['note-concerns','note-opportunities'].forEach(id => {
+      document.getElementById(id).disabled = true;
+    });
+    [0,1,2].forEach(i => {
+      document.getElementById('goal-text-'+i).disabled = true;
+      document.getElementById('goal-status-'+i).disabled = true;
+    });
+    document.querySelector('#eater-entry-card .eater-score-col:nth-child(2) .eater-col-hdr').style.color = 'var(--muted)';
+    document.querySelector('#eater-entry-card .eater-score-col:nth-child(3) .eater-col-hdr').style.color = 'var(--muted)';
+    document.getElementById('eater-entry-title').textContent = 'Self Assessment';
+    document.getElementById('eater-entry-access-note').textContent = 'You can update your self-assessment. Manager and Calibrated scores are set by your manager.';
+    document.getElementById('coaching-notes-section').style.display = 'none';
+  }
+
+  // Trigger initial load
+  if (empList.length) sel.dispatchEvent(new Event('change'));
+}
+
+function eaterLoadExisting() {
+  const qtr  = document.getElementById('eater-quarter').value;
+  const name = document.getElementById('eater-employee').value;
+  const rec  = eaterGetRecords().find(r => r.qtr === qtr && r.name === name);
+  const cats = ['E','A','T','En','R'];
+  if (rec) {
+    cats.forEach(c => {
+      document.getElementById('s-'+c).value  = rec.self?.[c] ?? '';
+      document.getElementById('m-'+c).value  = rec.mgr?.[c]  ?? '';
+      document.getElementById('c-'+c).value  = rec.cal?.[c]  ?? '';
+    });
+    if (isManager()) {
+      document.getElementById('note-concerns').value      = rec.notes?.concerns      || '';
+      document.getElementById('note-opportunities').value = rec.notes?.opportunities || '';
+      // Load structured goals
+      const goals = rec.goals || [{text:'',status:'pending'},{text:'',status:'pending'},{text:'',status:'pending'}];
+      [0,1,2].forEach(i => {
+        const g = goals[i] || {text:'',status:'pending'};
+        document.getElementById('goal-text-'+i).value   = g.text   || '';
+        const sel = document.getElementById('goal-status-'+i);
+        sel.value = g.status || 'pending';
+        updateGoalSelectStyle(sel);
+      });
+    }
+  } else {
+    cats.forEach(c => ['s-','m-','c-'].forEach(p => { document.getElementById(p+c).value = ''; }));
+    if (isManager()) {
+      ['note-concerns','note-opportunities'].forEach(id => { document.getElementById(id).value = ''; });
+      [0,1,2].forEach(i => {
+        document.getElementById('goal-text-'+i).value = '';
+        const sel = document.getElementById('goal-status-'+i);
+        sel.value = 'pending';
+        updateGoalSelectStyle(sel);
+      });
+    }
+  }
+  eaterCalcTotals();
+}
+
+function eaterClearForm() {
+  const selfIds = ['s-E','s-A','s-T','s-En','s-R'];
+  const allIds  = [...selfIds,'m-E','m-A','m-T','m-En','m-R','c-E','c-A','c-T','c-En','c-R'];
+  (isManager() ? allIds : selfIds).forEach(id => { document.getElementById(id).value = ''; });
+  if (isManager()) {
+    ['note-concerns','note-opportunities'].forEach(id => { document.getElementById(id).value = ''; });
+    [0,1,2].forEach(i => {
+      document.getElementById('goal-text-'+i).value = '';
+      const sel = document.getElementById('goal-status-'+i);
+      sel.value = 'pending';
+      updateGoalSelectStyle(sel);
+    });
+  }
+  eaterCalcTotals();
+  document.getElementById('eater-save-msg').textContent = '';
+}
+
+function eaterCalcTotals() {
+  ['s','m','c'].forEach(pfx => {
+    const vals = ['E','A','T','En','R'].map(c => {
+      const v = parseFloat(document.getElementById(pfx+'-'+c).value);
+      return isNaN(v) ? null : v;
+    });
+    const allFilled = vals.every(v => v !== null);
+    const total = allFilled ? Math.round(vals.reduce((a,b)=>a+b,0)*10)/10 : null;
+    document.getElementById(pfx+'-total').textContent = total !== null ? total : '—';
+    const r = eaterRating(total);
+    const badge = document.getElementById(pfx+'-badge');
+    badge.textContent = total !== null ? r.label : '—';
+    badge.className = 'badge ' + (r.cls || 'b-dim');
+  });
+}
+
+function eaterSaveReview() {
+  const qtr  = document.getElementById('eater-quarter').value;
+  const name = document.getElementById('eater-employee').value;
+  const dept = document.getElementById('eater-dept').value;
+  const cats = ['E','A','T','En','R'];
+  function readScores(pfx) {
+    const out = {};
+    cats.forEach(c => { const v = parseFloat(document.getElementById(pfx+'-'+c).value); out[c] = isNaN(v) ? null : v; });
+    return out;
+  }
+
+  const recs   = eaterGetRecords();
+  const exists = recs.find(r => r.qtr===qtr && r.name===name);
+
+  let rec;
+  if (!isManager()) {
+    rec = Object.assign({}, exists || {
+      id: qtr+'|'+name, qtr, name, dept,
+      mgr: {E:null,A:null,T:null,En:null,R:null},
+      cal: {E:null,A:null,T:null,En:null,R:null},
+      notes: {},
+      goals: [{text:'',status:'pending'},{text:'',status:'pending'},{text:'',status:'pending'}]
+    });
+    rec.self    = readScores('s');
+    rec._edited = true;
+    rec.savedAt = new Date().toISOString();
+  } else {
+    const notes = {
+      concerns:      document.getElementById('note-concerns').value.trim(),
+      opportunities: document.getElementById('note-opportunities').value.trim(),
+    };
+    const goals = [0,1,2].map(i => ({
+      text:   document.getElementById('goal-text-'+i).value.trim(),
+      status: document.getElementById('goal-status-'+i).value || 'pending',
+    }));
+    rec = {
+      id: qtr+'|'+name, qtr, name, dept,
+      self: readScores('s'), mgr: readScores('m'), cal: readScores('c'),
+      notes, goals, _edited: true, savedAt: new Date().toISOString()
+    };
+  }
+
+  const idx = recs.findIndex(r => r.qtr===qtr && r.name===name);
+  if (idx >= 0) { recs[idx] = rec; } else { recs.push(rec); }
+  eaterPersist();
+
+  const msg = document.getElementById('eater-save-msg');
+  msg.textContent = '✓ Saved — ' + name + ' ' + qtr;
+  setTimeout(() => { msg.textContent = ''; }, 3500);
+  eaterRenderAll();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI RENDERING
+// ═══════════════════════════════════════════════════════════════════════
+function eaterRenderKPIs() {
+  const visible = visibleNames();
+  const recs = eaterGetRecords().filter(r => !visible || visible.has(r.name));
+
+  // Scope badge
+  const badge = document.getElementById('kpi-scope-badge');
+  if (USER.access === 'exec') badge.textContent = 'All Departments';
+  else if (USER.access === 'manager') badge.textContent = USER.rosterEntry.dept;
+  else badge.textContent = USER.displayName;
+
+  const qtrs = ['Q1-2026','Q2-2026','Q3-2026','Q4-2026'];
+  const qtrScores = {};
+  qtrs.forEach(q => {
+    const totals = recs.filter(r=>r.qtr===q).map(r=>eaterSum(r.cal)).filter(v=>v!==null);
+    qtrScores[q] = totals.length ? Math.round(totals.reduce((a,b)=>a+b,0)/totals.length*10)/10 : null;
+  });
+  qtrs.forEach((q,i) => {
+    const label = ['q1','q2','q3','q4'][i];
+    const val   = qtrScores[q];
+    const r     = eaterRating(val);
+    const colorMap = {'r-out':'#5a2aa0','r-exc':'#3a7a28','r-me':'var(--asf-navy)','r-ni':'#7a5500','r-dnm':'#b83228'};
+    document.getElementById('eq-'+label).textContent = val !== null ? val : '—';
+    const subEl = document.getElementById('eq-'+label+'-r');
+    subEl.textContent = val !== null ? r.label : 'No data';
+    subEl.style.color = val !== null ? (colorMap[r.cls]||'var(--muted)') : 'var(--muted)';
+  });
+  const ytdVals = qtrs.map(q=>qtrScores[q]).filter(v=>v!==null);
+  const ytdAvg  = ytdVals.length ? Math.round(ytdVals.reduce((a,b)=>a+b,0)/ytdVals.length*10)/10 : null;
+  document.getElementById('eater-kpi-avg').textContent = ytdAvg !== null ? ytdAvg : '—';
+  document.getElementById('eater-kpi-sub').textContent = ytdVals.length
+    ? ytdVals.length+' quarter'+(ytdVals.length>1?'s':'')+' with calibrated data'
+    : 'no calibrated data yet';
+  const kr = eaterRating(ytdAvg);
+  document.getElementById('eater-kpi-badge').innerHTML = ytdAvg !== null
+    ? `<span class="badge ${kr.cls}" style="font-size:13px;padding:5px 14px">${kr.label}</span>` : '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// HISTORY TABLE
+// ═══════════════════════════════════════════════════════════════════════
+function eaterRenderHistory() {
+  const visible  = visibleNames();
+  const search   = (document.getElementById('eater-hist-search').value||'').toLowerCase();
+  const qtrFilt  = document.getElementById('eater-hist-qtr').value;
+  const qOrder   = {'Q1-2026':1,'Q2-2026':2,'Q3-2026':3,'Q4-2026':4};
+
+  let recs = eaterGetRecords().filter(r => {
+    if (visible && !visible.has(r.name)) return false;
+    if (qtrFilt && r.qtr !== qtrFilt) return false;
+    if (search && !r.name.toLowerCase().includes(search)) return false;
+    if (eaterSum(r.self)===null && eaterSum(r.mgr)===null && eaterSum(r.cal)===null) return false;
+    return true;
+  });
+  recs.sort((a,b) => (qOrder[b.qtr]||0)-(qOrder[a.qtr]||0) || a.name.localeCompare(b.name));
+
+  document.getElementById('eater-hist-count').textContent = recs.length + ' records';
+  document.getElementById('eater-hist-badge').textContent = recs.length;
+
+  const tbody = document.getElementById('eater-hist-tbody');
+  tbody.innerHTML = '';
+  const cats      = ['E','A','T','En','R'];
+  const catLabels = ['Effort','Attitude','Teamwork','Engagement','Results'];
+
+  recs.forEach((r, idx) => {
+    const selfT = eaterSum(r.self);
+    const mgrT  = eaterSum(r.mgr);
+    const calT  = eaterSum(r.cal);
+    const cr    = eaterRating(calT);
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><button class="eater-expand-btn" onclick="eaterToggleDetail('edet-${idx}',this)">▶</button></td>
+      <td style="font-weight:600">${r.name}</td>
+      <td><span class="badge b-dim">${r.qtr}</span></td>
+      <td style="color:var(--muted);font-size:11px">${r.dept||''}</td>
+      <td style="text-align:center;color:var(--muted)">${selfT!==null?selfT:'—'}</td>
+      <td style="text-align:center;color:var(--muted)">${mgrT!==null?mgrT:'—'}</td>
+      <td style="text-align:center" class="eater-hist-calbr">${calT!==null?calT:'—'}</td>
+      <td>${calT!==null?`<span class="badge ${cr.cls}">${cr.label}</span>`:'<span style="color:var(--muted);font-size:11px">Pending</span>'}</td>
+      <td>${isManager()?`<button class="eater-expand-btn" style="color:var(--asf-navy)" onclick="eaterEditRecord('${r.qtr}','${r.name.replace(/'/g,"\\'")}')">Edit</button>`:''}</td>`;
+    tbody.appendChild(tr);
+
+    // Detail breakdown
+    const detTr = document.createElement('tr');
+    detTr.className = 'eater-detail-row';
+    detTr.id = 'edet-'+idx;
+    const detHtml = cats.map((c,i) => `
+      <div class="eater-detail-cat">
+        <div class="eater-detail-cat-lbl">${catLabels[i]}</div>
+        <div class="eater-detail-scores">
+          <span class="eater-score-pill s-self" title="Self">${r.self?.[c]??'—'}</span>
+          <span class="eater-score-pill s-mgr"  title="Mgr">${r.mgr?.[c]??'—'}</span>
+          <span class="eater-score-pill s-cal"  title="Cal">${r.cal?.[c]??'—'}</span>
+        </div>
+      </div>`).join('');
+
+    // Coaching notes + goals — only visible to managers
+    let notesHtml = '';
+    if (isManager()) {
+      const statusIcon  = { pending:'⏳', complete:'✅', incomplete:'❌' };
+      const statusClass = { pending:'gp-pending', complete:'gp-complete', incomplete:'gp-incomplete' };
+      const statusBtnClass = { pending:'gsb-pending', complete:'gsb-complete', incomplete:'gsb-incomplete' };
+      // Next status cycle: pending → complete → incomplete → pending
+      const nextStatus  = { pending:'complete', complete:'incomplete', incomplete:'pending' };
+      const nextLabel   = { pending:'Mark Complete', complete:'Mark Incomplete', incomplete:'Mark Pending' };
+
+      const goals = r.goals || [];
+      const hasGoals = goals.some(g => g && g.text);
+
+      const goalsHtml = hasGoals ? goals.map((g, gi) => {
+        if (!g || !g.text) return '';
+        const st   = g.status || 'pending';
+        const next = nextStatus[st];
+        const qtrSafe  = r.qtr.replace(/'/g,"\\'");
+        const nameSafe = r.name.replace(/'/g,"\\'");
+        return `<div class="goal-pill ${statusClass[st]}">
+          <span class="goal-pill-icon">${statusIcon[st]}</span>
+          <div class="goal-pill-body">
+            <span class="goal-pill-text">${g.text}</span>
+            <button class="goal-pill-status-btn ${statusBtnClass[next]}"
+              onclick="toggleGoalStatus('${qtrSafe}','${nameSafe}',${gi},'${next}')">${nextLabel[st]}</button>
+          </div>
+        </div>`;
+      }).filter(Boolean).join('') : '<div style="font-size:11px;color:var(--muted);font-style:italic">No goals set for this period</div>';
+
+      notesHtml = `
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border2);display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px">Areas of Concern</div>
+          <div style="font-size:11px;color:var(--dim);white-space:pre-wrap;line-height:1.6">${r.notes?.concerns||'—'}</div>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px">Opportunities for Improvement</div>
+          <div style="font-size:11px;color:var(--dim);white-space:pre-wrap;line-height:1.6">${r.notes?.opportunities||'—'}</div>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px">Goals for Next Period</div>
+          ${goalsHtml}
+        </div>
+      </div>`;
+    }
+
+    detTr.innerHTML = `<td colspan="9"><div class="eater-detail-inner">
+      <div style="margin-bottom:8px;font-size:10px;color:var(--muted)">
+        <span class="eater-score-pill s-self">Self</span>&nbsp;
+        <span class="eater-score-pill s-mgr">Manager</span>&nbsp;
+        <span class="eater-score-pill s-cal">Calibrated</span>
+      </div>
+      <div class="eater-detail-grid">${detHtml}</div>
+      ${notesHtml}
+    </div></td>`;
+    tbody.appendChild(detTr);
+  });
+
+  if (!recs.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">No reviews found for this filter</td></tr>`;
+  }
+}
+
+function eaterToggleDetail(id, btn) {
+  const row = document.getElementById(id);
+  if (!row) return;
+  const open = row.classList.toggle('open');
+  btn.textContent = open ? '▼' : '▶';
+}
+
+function eaterEditRecord(qtr, name) {
+  document.getElementById('eater-quarter').value  = qtr;
+  document.getElementById('eater-employee').value = name;
+  const emp = EATER_EMPLOYEES.find(e => e.name === name);
+  document.getElementById('eater-dept').value = emp ? emp.dept : '';
+  eaterLoadExisting();
+  document.getElementById('eater-entry-card').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function updateGoalSelectStyle(sel) {
+  sel.classList.remove('gs-pending','gs-complete','gs-incomplete');
+  sel.classList.add('gs-' + (sel.value || 'pending'));
+}
+
+// Called from goal status buttons in the history panel (managers only)
+function toggleGoalStatus(qtr, name, goalIdx, nextStatus) {
+  const recs = eaterGetRecords();
+  const rec  = recs.find(r => r.qtr === qtr && r.name === name);
+  if (!rec) return;
+  if (!rec.goals) rec.goals = [{text:'',status:'pending'},{text:'',status:'pending'},{text:'',status:'pending'}];
+  if (!rec.goals[goalIdx]) rec.goals[goalIdx] = {text:'',status:'pending'};
+  rec.goals[goalIdx].status = nextStatus;
+  rec._edited = true;
+  rec.savedAt = new Date().toISOString();
+  eaterPersist();
+  eaterRenderHistory();
+  // If this record is currently loaded in the form, refresh goal status dropdowns
+  const formQtr  = document.getElementById('eater-quarter').value;
+  const formName = document.getElementById('eater-employee').value;
+  if (formQtr === qtr && formName === name && isManager()) {
+    const sel = document.getElementById('goal-status-'+goalIdx);
+    if (sel) { sel.value = nextStatus; updateGoalSelectStyle(sel); }
+  }
+}
+
+function eaterRenderAll() {
+  eaterRenderKPIs();
+  eaterRenderHistory();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════════════
+function setLoadTxt(t) { document.getElementById('load-txt').textContent = t; }
+function hideOverlay() { document.getElementById('loading-overlay').style.display = 'none'; }
+function showLoginErr(msg) {
+  hideOverlay();
+  document.getElementById('login-screen').style.display = 'flex';
+  const e = document.getElementById('login-err');
+  e.textContent = msg; e.style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════
+(async function init() {
+  const p     = new URLSearchParams(window.location.search);
+  const code  = p.get('code'), state = p.get('state'), error = p.get('error');
+  if (error) { showLoginErr('Login error: ' + (p.get('error_description') || error)); return; }
+  if (code && state) { await handleCallback(code, state); return; }
+  hideOverlay();
+  document.getElementById('login-screen').style.display = 'flex';
+})();
+</script>
+</body>
+</html>
