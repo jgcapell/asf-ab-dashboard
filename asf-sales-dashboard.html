@@ -407,6 +407,8 @@
       </div>
       <button class="hbtn" onclick="printDashboard()">PRINT / PDF</button>
       <button class="hbtn" onclick="toggleLog()">DEBUG LOG</button>
+      <span id="sync-indicator" style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:600;letter-spacing:0.06em;margin-right:4px">● Live</span>
+      <button class="hbtn" id="eater-refresh-btn" onclick="manualEaterRefresh()" style="display:none">↻ Refresh</button>
       <button class="hbtn primary" id="refresh-btn" onclick="loadData()">
         <span id="refresh-icon">⟳</span> REFRESH
       </button>
@@ -1325,11 +1327,12 @@ async function doRefreshToken() {
 }
 
 function logout() {
+  stopBackgroundSync();
+  lastKVFingerprint = null;
   auth = { accessToken: null, refreshToken: null };
   USER = { username:null, displayName:null, email:null, roles:[], isManager:false, salespersonId:null, salespersonName:null };
   document.getElementById('rep-lock-banner').style.display='none';
   document.getElementById('rep-selector-wrap').style.display='none';
-
   document.getElementById('user-badge').style.display='none';
   document.getElementById('dashboard').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
@@ -2503,6 +2506,9 @@ function showTab(btn) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('pane-' + btn.dataset.tab).classList.add('active');
+  // Show EATER refresh button only when on the EATER tab
+  const eaterBtn = document.getElementById('eater-refresh-btn');
+  if (eaterBtn) eaterBtn.style.display = btn.dataset.tab === 'eater' ? '' : 'none';
 }
 
 // ─── UI HELPERS ───────────────────────────────────────────────────────────────
@@ -2771,7 +2777,12 @@ async function initEaterTab() {
 
   // Load from KV before doing anything else
   await eaterLoadFromKV();
+  // Store initial fingerprint so background sync can detect remote changes
+  lastKVFingerprint = JSON.stringify(
+    EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited)
+  );
   loadingEl.remove();
+  startBackgroundSync();
 
   // Populate employee dropdown — scoped by role:
   // exec/admin → all employees | sales manager → own team | rep → self only
@@ -2944,8 +2955,14 @@ async function eaterSaveReview() {
   const idx = recs.findIndex(r => r.qtr===qtr && r.name===name);
   if (idx >= 0) { recs[idx] = rec; } else { recs.push(rec); }
   const msg = document.getElementById('eater-save-msg');
+  msg.style.color = 'var(--muted)';
   msg.textContent = '⏳ Saving…';
   await eaterPersist();
+  // Update fingerprint so background sync doesn't re-render our own just-saved data
+  lastKVFingerprint = JSON.stringify(
+    EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited)
+  );
+  msg.style.color = 'var(--asf-green)';
   msg.textContent = '✓ Saved — ' + name + ' ' + qtr;
   setTimeout(() => { msg.textContent = ''; }, 3500);
   eaterRenderAll();
@@ -3178,6 +3195,73 @@ async function toggleGoalStatus(qtr, name, goalIdx, nextStatus) {
     const sel = document.getElementById('goal-status-'+goalIdx);
     if (sel) { sel.value = nextStatus; updateGoalSelectStyle(sel); }
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BACKGROUND SYNC — silently re-fetches KV every 60s while logged in.
+// Updates display only if data has changed (compares JSON fingerprint).
+// Skips refresh if the user is actively typing in a form field.
+// ═══════════════════════════════════════════════════════════════════════════
+let bgSyncInterval  = null;
+let lastKVFingerprint = null;
+
+function startBackgroundSync() {
+  stopBackgroundSync();
+  bgSyncInterval = setInterval(async () => {
+    // Don't interrupt active form input
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
+    if (!auth.accessToken) return;
+    // Only run while EATER tab is visible
+    if (!document.getElementById('pane-eater')?.classList.contains('active')) return;
+    try {
+      const resp = await fetch(EATER_KV_URL, {
+        headers: { Authorization: `Bearer ${auth.accessToken}` }
+      });
+      if (!resp.ok) return;
+      const text = await resp.text();
+      if (text === lastKVFingerprint) return; // nothing changed
+      lastKVFingerprint = text;
+      const saved = JSON.parse(text);
+      EATER_RECORDS = eaterMergeRecords(Array.isArray(saved) ? saved : []);
+      try { localStorage.setItem(EATER_LS_CACHE, text); } catch(e) {}
+      eaterRenderAll();
+      eaterLoadExisting(); // silently refresh the loaded form record
+      showSyncPulse();
+    } catch(e) { /* silent — network blip, retry next interval */ }
+  }, 60000);
+}
+
+function stopBackgroundSync() {
+  if (bgSyncInterval) { clearInterval(bgSyncInterval); bgSyncInterval = null; }
+}
+
+// Brief visual pulse on the ● Live indicator when new data arrives
+function showSyncPulse() {
+  const el = document.getElementById('sync-indicator');
+  if (!el) return;
+  el.style.color = 'var(--asf-green)';
+  el.textContent = '● Synced';
+  setTimeout(() => {
+    el.style.color = 'rgba(255,255,255,0.3)';
+    el.textContent = '● Live';
+  }, 2000);
+}
+
+// Manual refresh — re-fetches KV immediately on demand
+async function manualEaterRefresh() {
+  const btn = document.getElementById('eater-refresh-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '↻ Syncing…'; }
+  try {
+    await eaterLoadFromKV();
+    lastKVFingerprint = JSON.stringify(
+      EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited)
+    );
+    eaterRenderAll();
+    eaterLoadExisting();
+    showSyncPulse();
+  } catch(e) {}
+  if (btn) { btn.disabled = false; btn.textContent = '↻ Refresh'; }
 }
 
 function eaterRenderAll() {
