@@ -154,7 +154,7 @@ const FULLNAME_MAP = {
   'Anthony Deel':'AD','Austin Jones':'AJ','Bob Brown':'BB','Bobby Townsend':'BT',
   'Derrick Almond':'DA','Damon Lockhart':'DL','Jason Beamer':'JB',
   'Mitchell Jones':'MJ','Michael McLeod':'MM','Nikki Petriello':'NP','Sean Mitchell':'SM',
-  'Tom Goldston':'TOM G','Todd Good':'TG','Greg Capell':'GC',
+  'Tom Goldston':'TOM G','Greg Capell':'GC',
 };
 
 // Seasonal budget weights (Q1=0.22, Q2=0.2363, Q3=0.2849, Q4=0.2588)
@@ -517,7 +517,7 @@ function renderLeaderboard() {
 // ════════════════════════════════════════════
 function topRepsTable(rows,limit=3){
   // Only show reps that are active (exist in REPS array)
-  const activeRows = rows.filter(r=>r.ytd>0 && REPS.find(x=>x.code===r.code));
+  const activeRows = rows.filter(r=>r.ytd>0 && r.code && REPS.find(x=>x.code===r.code));
   const top=activeRows.sort((a,b)=>b.ytd-a.ytd).slice(0,limit);
   const tot=activeRows.reduce((s,r)=>s+r.ytd,0);
   if(!top.length) return '<div style="padding:8px 13px;font-size:11px;color:var(--muted)">No data yet</div>';
