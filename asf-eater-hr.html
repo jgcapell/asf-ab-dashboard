@@ -876,7 +876,7 @@ function isManager() {
 // Reads from / writes to Cloudflare KV via the Worker proxy.
 // Falls back to localStorage cache if the Worker is unreachable.
 // ═══════════════════════════════════════════════════════════════════════
-const EATER_KV_URL   = CONFIG.workerUrl + '/eater-records';
+const EATER_KV_URL   = CONFIG.workerUrl + '/ops-eater-records';
 const EATER_LS_CACHE = 'asf-ops-eater-records-cache'; // local mirror for offline use
 const EATER_LS_KEY   = 'asf-ops-eater-records';       // legacy localStorage key
 
