@@ -2653,35 +2653,82 @@ function eaterSum(scores) {
   return Math.round(s * 10) / 10;
 }
 
-// ── In-memory store (seeded from EATER_SEED, additive) ────────────────────
-let EATER_RECORDS = null;
+// ── KV-backed shared data store ───────────────────────────────────────────
+// Reads from / writes to Cloudflare KV via the Worker proxy.
+// Falls back to localStorage if the Worker is unreachable.
+const EATER_KV_URL  = CONFIG.workerUrl + '/eater-records';
+const EATER_LS_KEY  = 'asf-eater-records';       // localStorage fallback key
+const EATER_LS_CACHE = 'asf-eater-records-cache'; // local mirror for offline use
 
-function eaterGetRecords() {
-  if (EATER_RECORDS !== null) return EATER_RECORDS;
-  EATER_RECORDS = EATER_SEED.map((r,i) => Object.assign({ id:'seed-'+i }, r));
-  try {
-    const saved = JSON.parse(localStorage.getItem('asf-eater-records') || '[]');
-    const seedKeys = new Set(EATER_RECORDS.map(r => r.qtr+'|'+r.name));
-    for (const r of saved) {
-      const k = r.qtr+'|'+r.name;
-      if (seedKeys.has(k)) {
-        const idx = EATER_RECORDS.findIndex(x => x.qtr===r.qtr && x.name===r.name);
-        if (idx >= 0) { EATER_RECORDS[idx] = r; }
-        else { EATER_RECORDS.push(r); }
-      } else {
-        EATER_RECORDS.push(r);
-        seedKeys.add(k);
-      }
+let EATER_RECORDS = null; // in-memory cache; null = not yet loaded
+
+// Merge saved records over the seed (saved overrides seed for same qtr|name)
+function eaterMergeRecords(saved) {
+  const merged = EATER_SEED.map((r,i) => Object.assign({ id:'seed-'+i }, r));
+  const seedKeys = new Set(merged.map(r => r.qtr+'|'+r.name));
+  for (const r of saved) {
+    const k = r.qtr+'|'+r.name;
+    if (seedKeys.has(k)) {
+      const idx = merged.findIndex(x => x.qtr===r.qtr && x.name===r.name);
+      if (idx >= 0) { merged[idx] = r; } else { merged.push(r); }
+    } else {
+      merged.push(r);
+      seedKeys.add(k);
     }
-  } catch(e) {}
+  }
+  return merged;
+}
+
+// Load records from KV (with localStorage fallback)
+async function eaterLoadFromKV() {
+  try {
+    const resp = await fetch(EATER_KV_URL, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` }
+    });
+    if (!resp.ok) throw new Error('KV fetch failed: ' + resp.status);
+    const saved = await resp.json();
+    // Mirror to localStorage for offline fallback
+    try { localStorage.setItem(EATER_LS_CACHE, JSON.stringify(saved)); } catch(e) {}
+    EATER_RECORDS = eaterMergeRecords(Array.isArray(saved) ? saved : []);
+  } catch(e) {
+    console.warn('EATER KV load failed, using localStorage cache:', e.message);
+    try {
+      const cached = JSON.parse(localStorage.getItem(EATER_LS_CACHE) || localStorage.getItem(EATER_LS_KEY) || '[]');
+      EATER_RECORDS = eaterMergeRecords(cached);
+    } catch(e2) {
+      EATER_RECORDS = eaterMergeRecords([]);
+    }
+  }
   return EATER_RECORDS;
 }
 
-function eaterPersist() {
+// Synchronous accessor — returns current in-memory records (must call eaterLoadFromKV first)
+function eaterGetRecords() {
+  if (EATER_RECORDS !== null) return EATER_RECORDS;
+  // Emergency fallback: return seed only until async load completes
+  return EATER_SEED.map((r,i) => Object.assign({ id:'seed-'+i }, r));
+}
+
+// Save records to KV (with localStorage fallback)
+async function eaterPersist() {
+  // Only persist edited/new records (seed records pass through from JS constant)
+  const toSave = EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited);
+  // Always mirror locally
+  try { localStorage.setItem(EATER_LS_CACHE, JSON.stringify(toSave)); } catch(e) {}
+  // Push to KV
   try {
-    const editable = EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited);
-    localStorage.setItem('asf-eater-records', JSON.stringify(editable));
-  } catch(e) {}
+    const resp = await fetch(EATER_KV_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.accessToken}`
+      },
+      body: JSON.stringify(toSave)
+    });
+    if (!resp.ok) throw new Error('KV save failed: ' + resp.status);
+  } catch(e) {
+    console.warn('EATER KV save failed, data preserved in localStorage cache:', e.message);
+  }
 }
 
 // ── Determine which names the current user may see ────────────────────────
@@ -2710,9 +2757,21 @@ function eaterVisibleNames() {
 
 // ── Tab init ──────────────────────────────────────────────────────────────
 let eaterTabInitialized = false;
-function initEaterTab() {
+async function initEaterTab() {
   if (eaterTabInitialized) { eaterRenderAll(); return; }
   eaterTabInitialized = true;
+
+  // Show loading state in the tab content
+  const page = document.querySelector('#pane-eater .page');
+  const loadingEl = document.createElement('div');
+  loadingEl.id = 'eater-loading';
+  loadingEl.style.cssText = 'text-align:center;padding:40px;color:var(--muted);font-size:12px;letter-spacing:0.06em';
+  loadingEl.innerHTML = '<div style="margin-bottom:8px">⏳</div>Loading review data…';
+  page.prepend(loadingEl);
+
+  // Load from KV before doing anything else
+  await eaterLoadFromKV();
+  loadingEl.remove();
 
   // Populate employee dropdown — scoped by role:
   // exec/admin → all employees | sales manager → own team | rep → self only
@@ -2735,7 +2794,8 @@ function initEaterTab() {
 
   document.getElementById('eater-quarter').addEventListener('change', eaterLoadExisting);
 
-  // Access control: reps can enter self-assessment only; mgr/cal cols and coaching are manager-only
+  // Access control: reps can enter self-assessment only; mgr/cal cols are manager-only
+  // Coaching notes section is visible to reps but fully read-only
   if (!USER.isManager) {
     // Lock manager and calibrated inputs
     ['m-E','m-A','m-T','m-En','m-R',
@@ -2751,8 +2811,17 @@ function initEaterTab() {
     // Update card title and note
     document.getElementById('eater-entry-title').textContent = 'Self Assessment';
     document.getElementById('eater-entry-access-note').textContent = 'You can edit your self-assessment scores. Manager and Calibrated ratings are set by your manager.';
-    // Hide coaching notes + goals entirely from reps
-    document.getElementById('coaching-notes-section').style.display = 'none';
+    // Coaching section visible but all fields read-only
+    ['note-concerns','note-opportunities'].forEach(id => {
+      document.getElementById(id).disabled = true;
+    });
+    [0,1,2].forEach(i => {
+      document.getElementById('goal-text-'+i).disabled = true;
+      document.getElementById('goal-status-'+i).disabled = true;
+    });
+    // Update coaching header note
+    const coachingNote = document.querySelector('#coaching-notes-section span[style*="color:var(--muted)"]');
+    if (coachingNote) coachingNote.textContent = '(read-only)';
   }
 
   eaterRenderAll();
@@ -2769,31 +2838,29 @@ function eaterLoadExisting() {
       document.getElementById('m-'+c).value  = rec.mgr?.[c]  ?? '';
       document.getElementById('c-'+c).value  = rec.cal?.[c]  ?? '';
     });
-    if (USER.isManager) {
-      document.getElementById('note-concerns').value      = rec.notes?.concerns      || '';
-      document.getElementById('note-opportunities').value = rec.notes?.opportunities || '';
-      const goals = rec.goals || [{text:'',status:'pending'},{text:'',status:'pending'},{text:'',status:'pending'}];
-      [0,1,2].forEach(i => {
-        const g = goals[i] || {text:'',status:'pending'};
-        document.getElementById('goal-text-'+i).value = g.text || '';
-        const sel = document.getElementById('goal-status-'+i);
-        sel.value = g.status || 'pending';
-        updateGoalSelectStyle(sel);
-      });
-    }
+    // Load coaching notes and goals for all users (reps see read-only, managers can edit)
+    document.getElementById('note-concerns').value      = rec.notes?.concerns      || '';
+    document.getElementById('note-opportunities').value = rec.notes?.opportunities || '';
+    const goals = rec.goals || [{text:'',status:'pending'},{text:'',status:'pending'},{text:'',status:'pending'}];
+    [0,1,2].forEach(i => {
+      const g = goals[i] || {text:'',status:'pending'};
+      document.getElementById('goal-text-'+i).value = g.text || '';
+      const sel = document.getElementById('goal-status-'+i);
+      sel.value = g.status || 'pending';
+      updateGoalSelectStyle(sel);
+    });
   } else {
     cats.forEach(c => {
       ['s-','m-','c-'].forEach(p => { document.getElementById(p+c).value = ''; });
     });
-    if (USER.isManager) {
-      ['note-concerns','note-opportunities'].forEach(id => { document.getElementById(id).value = ''; });
-      [0,1,2].forEach(i => {
-        document.getElementById('goal-text-'+i).value = '';
-        const sel = document.getElementById('goal-status-'+i);
-        sel.value = 'pending';
-        updateGoalSelectStyle(sel);
-      });
-    }
+    // Clear coaching fields for all users
+    ['note-concerns','note-opportunities'].forEach(id => { document.getElementById(id).value = ''; });
+    [0,1,2].forEach(i => {
+      document.getElementById('goal-text-'+i).value = '';
+      const sel = document.getElementById('goal-status-'+i);
+      sel.value = 'pending';
+      updateGoalSelectStyle(sel);
+    });
   }
   eaterCalcTotals();
 }
@@ -2831,7 +2898,7 @@ function eaterCalcTotals() {
   });
 }
 
-function eaterSaveReview() {
+async function eaterSaveReview() {
   const qtr  = document.getElementById('eater-quarter').value;
   const name = document.getElementById('eater-employee').value;
   const dept = document.getElementById('eater-dept').value;
@@ -2876,8 +2943,9 @@ function eaterSaveReview() {
 
   const idx = recs.findIndex(r => r.qtr===qtr && r.name===name);
   if (idx >= 0) { recs[idx] = rec; } else { recs.push(rec); }
-  eaterPersist();
   const msg = document.getElementById('eater-save-msg');
+  msg.textContent = '⏳ Saving…';
+  await eaterPersist();
   msg.textContent = '✓ Saved — ' + name + ' ' + qtr;
   setTimeout(() => { msg.textContent = ''; }, 3500);
   eaterRenderAll();
@@ -3011,7 +3079,7 @@ function eaterRenderHistory() {
         <span class="eater-score-pill s-cal">Calibrated</span>
       </div>
       <div class="eater-detail-grid">${detHtml}</div>
-      ${USER.isManager ? eaterCoachingDetailHtml(r) : ''}
+      ${eaterCoachingDetailHtml(r, USER.isManager)}
     </div></td>`;
     tbody.appendChild(detTr);
   });
@@ -3038,7 +3106,7 @@ function eaterEditRecord(qtr, name) {
 }
 
 // Build coaching notes + goals HTML for expanded history detail (managers only)
-function eaterCoachingDetailHtml(r) {
+function eaterCoachingDetailHtml(r, canEdit = true) {
   const statusIcon  = { pending:'⏳', complete:'✅', incomplete:'❌' };
   const statusClass = { pending:'gp-pending', complete:'gp-complete', incomplete:'gp-incomplete' };
   const statusBtnClass = { pending:'gsb-pending', complete:'gsb-complete', incomplete:'gsb-incomplete' };
@@ -3055,12 +3123,15 @@ function eaterCoachingDetailHtml(r) {
         if (!g || !g.text) return '';
         const st   = g.status || 'pending';
         const next = nextStatus[st];
+        const actionBtn = canEdit
+          ? `<button class="goal-pill-status-btn ${statusBtnClass[next]}"
+              onclick="toggleGoalStatus('${qtrSafe}','${nameSafe}',${gi},'${next}')">${nextLabel[st]}</button>`
+          : '';
         return `<div class="goal-pill ${statusClass[st]}">
           <span class="goal-pill-icon">${statusIcon[st]}</span>
           <div class="goal-pill-body">
             <span class="goal-pill-text">${g.text}</span>
-            <button class="goal-pill-status-btn ${statusBtnClass[next]}"
-              onclick="toggleGoalStatus('${qtrSafe}','${nameSafe}',${gi},'${next}')">${nextLabel[st]}</button>
+            ${actionBtn}
           </div>
         </div>`;
       }).filter(Boolean).join('')
@@ -3089,7 +3160,7 @@ function updateGoalSelectStyle(sel) {
 }
 
 // Cycle goal status from the history panel — no form re-open needed
-function toggleGoalStatus(qtr, name, goalIdx, nextStatus) {
+async function toggleGoalStatus(qtr, name, goalIdx, nextStatus) {
   const recs = eaterGetRecords();
   const rec  = recs.find(r => r.qtr === qtr && r.name === name);
   if (!rec) return;
@@ -3098,7 +3169,7 @@ function toggleGoalStatus(qtr, name, goalIdx, nextStatus) {
   rec.goals[goalIdx].status = nextStatus;
   rec._edited = true;
   rec.savedAt = new Date().toISOString();
-  eaterPersist();
+  await eaterPersist();
   eaterRenderHistory();
   // Sync form dropdown if this record is currently loaded
   const formQtr  = document.getElementById('eater-quarter').value;
