@@ -182,6 +182,13 @@
   .denied-title { font-size: 16px; font-weight: 700; color: var(--red); margin-bottom: 8px; }
   .denied-msg { font-size: 12px; color: var(--dim); line-height: 1.7; margin-bottom: 24px; }
 
+  /* ── Rep YTD avg KPI cards ── */
+  .eater-rep-kpi-grid { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .eater-rep-kpi-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; min-width: 140px; flex: 1; }
+  .eater-rep-kpi-name { font-size: 11px; font-weight: 700; color: var(--asf-navy); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .eater-rep-kpi-val  { font-size: 20px; font-weight: 800; color: var(--asf-navy); line-height: 1.2; }
+  .eater-rep-kpi-sub  { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
   /* ── Goal items ── */
   .goal-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border2); }
   .goal-item:last-child { border-bottom: none; }
@@ -376,6 +383,17 @@
             <div class="eater-qtr-card"><div class="eater-qtr-lbl">Q4</div><div class="eater-qtr-val" id="eq-q4">—</div><div class="eater-qtr-sub" id="eq-q4-r"></div></div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Per-person YTD KPI cards -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">YTD Calibrated Average — By Employee</span>
+        <span class="card-badge" style="font-size:10px;color:var(--muted)">Average across all completed quarters</span>
+      </div>
+      <div class="eater-rep-kpi-grid" id="eater-rep-kpi-grid">
+        <div style="padding:10px;color:var(--muted);font-size:11px">Loading…</div>
       </div>
     </div>
 
@@ -1267,8 +1285,69 @@ function toggleGoalStatus(qtr, name, goalIdx, nextStatus) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// PER-PERSON KPI CARDS
+// ═══════════════════════════════════════════════════════════════════════
+function eaterRenderRepKPIs() {
+  const visible  = visibleNames();
+  const allRecs  = eaterGetRecords().filter(r => !visible || visible.has(r.name));
+  const qtrs     = ['Q1-2026','Q2-2026','Q3-2026','Q4-2026'];
+  const colorMap = {'r-out':'#5a2aa0','r-exc':'#3a7a28','r-me':'var(--asf-navy)','r-ni':'#7a5500','r-dnm':'#b83228'};
+
+  const grid = document.getElementById('eater-rep-kpi-grid');
+  if (!grid) return;
+
+  // Build ordered name list from the roster (respecting visibility), plus any extras
+  const rosterNames   = EATER_EMPLOYEES.map(e => e.name);
+  const orderedNames  = visible ? rosterNames.filter(n => visible.has(n)) : rosterNames;
+  const extraNames    = [...new Set(allRecs.map(r => r.name))].filter(n => !orderedNames.includes(n));
+  const repNames      = [...orderedNames, ...extraNames];
+
+  if (!repNames.length) {
+    grid.innerHTML = '<div style="padding:10px;color:var(--muted);font-size:11px">No data</div>';
+    return;
+  }
+
+  grid.innerHTML = repNames.map(name => {
+    const repRecs    = allRecs.filter(r => r.name === name);
+    const repQtrVals = qtrs.map(q => {
+      const rec = repRecs.find(r => r.qtr === q);
+      return rec ? eaterSum(rec.cal) : null;
+    }).filter(v => v !== null);
+
+    const repAvg = repQtrVals.length
+      ? Math.round(repQtrVals.reduce((a,b) => a+b, 0) / repQtrVals.length * 10) / 10
+      : null;
+    const rr  = eaterRating(repAvg);
+    const col = repAvg !== null ? (colorMap[rr.cls] || 'var(--asf-navy)') : 'var(--muted)';
+
+    // Quarter dots: blue = has calibrated data, grey = no data yet
+    const qtrDots = qtrs.map(q => {
+      const has = repRecs.find(r => r.qtr === q && eaterSum(r.cal) !== null);
+      return `<span title="${q}" style="width:7px;height:7px;border-radius:50%;display:inline-block;
+        background:${has ? 'var(--asf-blue)' : 'var(--border)'};margin-right:2px"></span>`;
+    }).join('');
+
+    const emp  = EATER_EMPLOYEES.find(e => e.name === name);
+    const dept = emp ? emp.dept : '';
+
+    return `<div class="eater-rep-kpi-card">
+      <div class="eater-rep-kpi-name" title="${name}">${name}</div>
+      <div style="font-size:9px;color:var(--muted);margin-bottom:5px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em">${dept}</div>
+      <div class="eater-rep-kpi-val" style="color:${col}">${repAvg !== null ? repAvg : '—'}</div>
+      <div class="eater-rep-kpi-sub" style="margin-top:5px">
+        ${repAvg !== null
+          ? `<span class="badge ${rr.cls}" style="font-size:9px;padding:1px 6px">${rr.label}</span>`
+          : '<span style="color:var(--muted);font-style:italic;font-size:10px">No calibrated data</span>'}
+      </div>
+      <div style="margin-top:8px">${qtrDots}</div>
+    </div>`;
+  }).join('');
+}
+
 function eaterRenderAll() {
   eaterRenderKPIs();
+  eaterRenderRepKPIs();
   eaterRenderHistory();
 }
 
