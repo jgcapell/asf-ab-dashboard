@@ -1,1035 +1,656 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Drop-Ship PO Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASF Sales Scoreboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9f9f8; color: #1a1a1a; }
-  .dash { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
-  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
-  .header h1 { font-size: 20px; font-weight: 500; }
-  .header-sub { font-size: 13px; color: #666; margin-top: 2px; }
-  .login-overlay { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f9f9f8; }
-  .login-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 2rem; width: 100%; max-width: 380px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-  .login-card h2 { font-size: 18px; font-weight: 500; margin-bottom: 0.5rem; }
-  .login-card p { font-size: 13px; color: #666; margin-bottom: 1.5rem; }
-  .field { margin-bottom: 1rem; }
-  .field label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; }
-  .field input { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
-  .field input:focus { border-color: #888; }
-  .btn-primary { background: #1a1a1a; color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; cursor: pointer; width: 100%; }
-  .btn-primary:hover { background: #333; }
-  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-  .error-msg { font-size: 13px; color: #c0392b; margin-top: 0.75rem; text-align: center; display: none; }
-  .tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 1px solid #e5e5e5; }
-  .tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #888; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; user-select: none; }
-  .tab:hover { color: #1a1a1a; }
-  .tab.active { color: #1a1a1a; font-weight: 500; border-bottom-color: #1a1a1a; }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
-  .kpi-card { background: #f1efe8; border-radius: 8px; padding: 1rem; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s, background 0.15s; user-select: none; }
-  .kpi-card:hover { border-color: #bbb; }
-  .kpi-card.active { border-color: #1a1a1a; background: #e2e0d9; }
-  .kpi-hint { font-size: 11px; color: #aaa; margin-top: 6px; }
-  .kpi-label { font-size: 12px; color: #666; margin-bottom: 6px; }
-  .kpi-value { font-size: 28px; font-weight: 500; color: #1a1a1a; }
-  .kpi-sub { font-size: 12px; color: #888; margin-top: 4px; }
-  .kpi-warning .kpi-value { color: #b8860b; }
-  .kpi-danger .kpi-value { color: #c0392b; }
-  .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-  @media (max-width: 600px) { .bottom-grid { grid-template-columns: 1fr; } }
-  .panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1rem 1.25rem; }
-  .section-title { font-size: 14px; font-weight: 500; margin-bottom: 0.75rem; }
-  .table-wrap { border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden; }
-  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-  .data-table th { background: #f9f9f8; padding: 10px 12px; text-align: left; font-weight: 500; font-size: 12px; color: #666; border-bottom: 1px solid #e5e5e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .data-table td { padding: 9px 12px; border-bottom: 1px solid #e5e5e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
-  .data-table tr:last-child td { border-bottom: none; }
-  .data-table tr.group-row { cursor: pointer; background: #fff; }
-  .data-table tr.group-row:hover td { background: #f5f5f3; }
-  .data-table tr.group-row.expanded td { background: #f5f5f3; }
-  .data-table tr.line-header-row th { background: #eeecea; padding: 6px 12px; font-size: 11px; color: #555; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0; }
-  .data-table tr.line-row td { background: #fafaf9; padding: 7px 12px; font-size: 12px; border-bottom: 1px solid #eeeeee; }
-  .data-table tr.line-row:last-child td { border-bottom: 1px solid #e5e5e5; }
-  .data-table tr.line-row:hover td { background: #f0f0ee; }
-  .expand-icon { display: inline-block; font-size: 10px; margin-right: 6px; transition: transform 0.15s; color: #999; }
-  .expanded .expand-icon { transform: rotate(90deg); }
-  .loading { text-align: center; padding: 3rem; color: #888; font-size: 14px; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
-  .badge-hold { background: #faeeda; color: #854f0b; }
-  .badge-open { background: #eaf3de; color: #3b6d11; }
-  .badge-late { background: #fcebeb; color: #a32d2d; }
-  .badge-nooa { background: #fcebeb; color: #a32d2d; font-size: 10px; }
-  .qty-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .qty-table th { font-size: 12px; font-weight: 500; color: #666; padding: 6px 8px; text-align: left; border-bottom: 1px solid #e5e5e5; }
-  .qty-table td { padding: 6px 8px; border-bottom: 1px solid #e5e5e5; }
-  .qty-table tr:last-child td { border-bottom: none; }
-  .refresh-btn { font-size: 13px; padding: 6px 14px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
-  .refresh-btn:hover { background: #f1efe8; }
-  .clear-filter-btn { font-size: 12px; padding: 4px 10px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #666; display: none; }
-  .clear-filter-btn:hover { background: #f1efe8; }
-  .active-filter-label { font-size: 12px; color: #666; background: #f1efe8; border: 1px solid #ddd; border-radius: 99px; padding: 3px 10px; display: none; }
-  .tag { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; background: #e6f1fb; color: #185fa5; margin-left: 8px; }
-  .no-oa-tag { background: #fcebeb; color: #a32d2d; }
-  input[type=text], input[type=password], input[type=date], input[type=number], select, textarea { border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 13px; outline: none; background: #fff; }
-  input:focus, select:focus, textarea:focus { border-color: #888; }
+:root {
+  --ink:     #0d1117;
+  --paper:   #f4f2ed;
+  --card:    #ffffff;
+  --border:  #e0dbd2;
+  --rule:    #c8c2b8;
+  --text:    #1a1a1a;
+  --muted:   #7a7167;
+  --green:   #1a7a4a;
+  --green-bg:#e8f5ee;
+  --red:     #b83232;
+  --red-bg:  #faeaea;
+  --amber:   #a05a00;
+  --amber-bg:#fff3e0;
+  --accent:  #c8410a;
+  --team1:   #1a4a7a;
+  --team2:   #6b1a3a;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--paper);color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;line-height:1.4;}
+.page{max-width:1320px;margin:0 auto;padding:18px 20px 32px;}
 
-  /* Project form */
-  .project-form { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
-  .project-form h3 { font-size: 14px; font-weight: 500; margin-bottom: 1rem; }
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 1rem; }
-  .form-field label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
-  .form-field input, .form-field select, .form-field textarea { width: 100%; }
-  .form-field textarea { resize: vertical; min-height: 60px; }
-  .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1rem; }
-  .btn-save { background: #1a1a1a; color: #fff; border: none; border-radius: 6px; padding: 8px 18px; font-size: 13px; cursor: pointer; }
-  .btn-save:hover { background: #333; }
-  .btn-cancel { background: #fff; color: #666; border: 1px solid #ddd; border-radius: 6px; padding: 8px 18px; font-size: 13px; cursor: pointer; }
-  .btn-cancel:hover { background: #f1efe8; }
-  .btn-add { background: #1a1a1a; color: #fff; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; cursor: pointer; }
-  .btn-add:hover { background: #333; }
-  .btn-edit { background: none; border: none; color: #378add; font-size: 12px; cursor: pointer; padding: 2px 6px; }
-  .btn-edit:hover { text-decoration: underline; }
-  .btn-delete { background: none; border: none; color: #c0392b; font-size: 12px; cursor: pointer; padding: 2px 6px; }
-  .btn-delete:hover { text-decoration: underline; }
+/* HEADER */
+.masthead{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:10px;border-bottom:3px solid var(--ink);margin-bottom:18px;}
+.mh-left{display:flex;align-items:flex-end;gap:14px;}
+.mh-title{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:800;letter-spacing:-.5px;line-height:1;text-transform:uppercase;color:var(--ink);}
+.mh-sub{display:block;font-size:11px;font-weight:600;letter-spacing:3px;color:var(--accent);font-family:'Barlow',sans-serif;text-transform:uppercase;margin-bottom:2px;}
+.mh-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+.live-tag{display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);background:var(--green-bg);border:1px solid var(--green);padding:3px 7px;border-radius:2px;}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 1.6s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.ts{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);}
 
-  /* Line items in form */
-  .line-items-section { margin-top: 1rem; }
-  .line-items-section label { display: block; font-size: 12px; color: #666; margin-bottom: 8px; font-weight: 500; }
-  .line-item-row { display: grid; grid-template-columns: 1fr 120px 80px 32px; gap: 8px; align-items: center; margin-bottom: 8px; }
-  .line-item-row input { width: 100%; }
-  .btn-remove-line { background: none; border: none; color: #c0392b; font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1; }
-  .btn-remove-line:hover { color: #a32d2d; }
-  .btn-add-line { background: none; border: 1px dashed #bbb; border-radius: 6px; color: #666; font-size: 12px; cursor: pointer; padding: 6px 12px; width: 100%; margin-top: 4px; }
-  .btn-add-line:hover { background: #f9f9f8; border-color: #888; }
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
 
-  /* Projects table */
-  .projects-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .projects-table th { background: #f9f9f8; padding: 10px 12px; text-align: left; font-weight: 500; font-size: 12px; color: #666; border-bottom: 1px solid #e5e5e5; white-space: nowrap; }
-  .projects-table td { padding: 10px 12px; border-bottom: 1px solid #e5e5e5; vertical-align: top; }
-  .projects-table tr:last-child td { border-bottom: none; }
-  .projects-table tr.proj-group-row { cursor: pointer; }
-  .projects-table tr.proj-group-row:hover td { background: #f9f9f8; }
-  .projects-table tr.proj-group-row.expanded td { background: #f5f5f3; }
-  .proj-lines-row td { background: #fafaf9; padding: 0; }
-  .proj-lines-inner { padding: 8px 16px 12px 32px; }
-  .proj-lines-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .proj-lines-table th { font-size: 11px; color: #888; font-weight: 500; padding: 4px 8px; border-bottom: 1px solid #eee; text-align: left; }
-  .proj-lines-table td { padding: 5px 8px; border-bottom: 1px solid #f0f0f0; color: #1a1a1a; }
-  .proj-lines-table tr:last-child td { border-bottom: none; }
-  .status-badge { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
-  .status-pending { background: #faeeda; color: #854f0b; }
-  .status-awaiting { background: #f1efe8; color: #555; }
-  .status-placed { background: #eaf3de; color: #3b6d11; }
-  .empty-state { text-align: center; padding: 3rem; color: #888; font-size: 14px; }
-  .items-summary { font-size: 12px; color: #666; }
-  .items-summary span { display: inline-block; background: #f1efe8; border-radius: 4px; padding: 1px 6px; margin: 1px 2px; font-size: 11px; }
+/* SECTIONS */
+.section{background:var(--card);border:1px solid var(--border);border-radius:3px;overflow:hidden;}
+.sec-head{display:flex;align-items:center;justify-content:space-between;padding:9px 13px 8px;border-bottom:2px solid var(--ink);background:var(--ink);}
+.sec-head h2{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;}
+.sec-tag{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;color:rgba(255,255,255,.45);letter-spacing:1px;text-transform:uppercase;}
+
+/* TEAM HEADER */
+.team-hdr{display:flex;align-items:center;padding:6px 13px;background:var(--tc,#111);border-bottom:1px solid rgba(0,0,0,.1);}
+.team-lbl{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;}
+.team-wtd{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.75);}
+
+/* LEADERBOARD TABLE */
+.lb-tbl{width:100%;border-collapse:collapse;}
+.lb-tbl thead tr{background:#f7f5f2;border-bottom:1px solid var(--rule);}
+.lb-tbl th{padding:4px 13px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:right;white-space:nowrap;}
+.lb-tbl th:first-child{text-align:left;}
+.lb-tbl tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+.lb-tbl tbody tr:last-child{border-bottom:none;}
+.lb-tbl tbody tr:hover{background:#faf9f6;}
+.lb-tbl td{padding:6px 13px;text-align:right;vertical-align:middle;}
+.lb-tbl td:first-child{text-align:left;}
+.rep-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;letter-spacing:.2px;}
+.rep-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+.mono{font-family:'JetBrains Mono',monospace;font-size:11px;}
+.pct-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
+.pct-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;}
+.bar-track{width:52px;height:3px;background:var(--border);border-radius:1px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:1px;transition:width .9s cubic-bezier(.4,0,.2,1);}
+
+/* INITIATIVES */
+.init{border-bottom:1px solid var(--border);}
+.init:last-child{border-bottom:none;}
+.init-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 13px 7px;background:#f9f8f5;border-bottom:1px solid var(--border);}
+.init-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.init-total{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--accent);}
+.init-sub{padding:3px 13px 2px;font-size:9px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);background:#f4f2ed;border-bottom:1px solid var(--border);}
+.init-reps-tbl{width:100%;border-collapse:collapse;}
+.init-reps-tbl th{padding:3px 13px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:right;background:#f7f5f2;}
+.init-reps-tbl th:first-child{text-align:left;}
+.init-reps-tbl td{padding:5px 13px;border-top:1px solid var(--border);text-align:right;font-size:12px;}
+.init-reps-tbl td:first-child{text-align:left;}
+.init-reps-tbl tr:hover td{background:#faf9f6;}
+.medal{font-size:13px;margin-right:4px;}
+
+/* DEALERS GRID */
+.dealers-wrap{border-top:1px solid var(--border);}
+.dealers-team-label{padding:5px 13px 3px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--border);background:#f4f2ed;}
+.dealers-row{display:flex;flex-wrap:wrap;gap:1px;background:var(--border);}
+.dealer-cell{background:var(--card);padding:7px 11px;flex:1;min-width:80px;}
+.d-name{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+.d-count{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;color:var(--accent);line-height:1.1;}
+.d-lbl{font-size:9px;color:var(--muted);}
+
+/* LOADING */
+.loading-state{padding:36px;text-align:center;color:var(--muted);font-size:12px;}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:7px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.fade-in{animation:fu .32s ease both;}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.s1{animation-delay:.04s}.s2{animation-delay:.08s}.s3{animation-delay:.12s}.s4{animation-delay:.16s}
+
+@media(max-width:940px){.layout{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
-<div id="app">
-  <div id="login-screen" class="login-overlay">
-    <div class="login-card">
-      <h2>Drop-Ship PO Dashboard</h2>
-      <p>Sign in with your Acumatica credentials to view the dashboard.</p>
-      <div class="field"><label>Username</label><input type="text" id="username" placeholder="Enter username" /></div>
-      <div class="field"><label>Password</label><input type="password" id="password" placeholder="Enter password" /></div>
-      <button class="btn-primary" id="login-btn" onclick="loadDashboard()">Sign in & load dashboard</button>
-      <div class="error-msg" id="error-msg"></div>
-    </div>
+<div class="page">
+
+<header class="masthead">
+  <div class="mh-left">
+    <h1 class="mh-title"><span class="mh-sub">All South Flooring</span>Sales Scoreboard</h1>
   </div>
-
-  <div id="dashboard-screen" style="display:none;">
-    <div class="dash">
-      <div class="header">
-        <div>
-          <h1>Drop-Ship PO Dashboard</h1>
-          <div class="header-sub" id="date-range-label"></div>
-        </div>
-        <button class="refresh-btn" onclick="refreshData()">Refresh data</button>
-      </div>
-
-      <div class="tabs">
-        <div class="tab active" onclick="switchTab('po')">PO Line Detail</div>
-        <div class="tab" onclick="switchTab('projects')">Upcoming Projects</div>
-      </div>
-
-      <!-- PO TAB -->
-      <div id="tab-po" class="tab-content active">
-        <div class="kpi-grid">
-          <div class="kpi-card" id="kpi-card-hold" onclick="toggleKpiFilter('hold')">
-            <div class="kpi-label">Total on hold orders</div>
-            <div class="kpi-value" id="kpi-hold">—</div>
-            <div class="kpi-sub">Unique order numbers</div>
-            <div class="kpi-hint">Click to filter</div>
-          </div>
-          <div class="kpi-card kpi-danger" id="kpi-card-nooa" onclick="toggleKpiFilter('nooa')">
-            <div class="kpi-label">Orders without OAs</div>
-            <div class="kpi-value" id="kpi-no-oa">—</div>
-            <div class="kpi-sub">Unique POs with no vendor ref</div>
-            <div class="kpi-hint">Click to filter</div>
-          </div>
-          <div class="kpi-card kpi-warning" id="kpi-card-late" onclick="toggleKpiFilter('late')">
-            <div class="kpi-label">Promised &gt; 3 months out</div>
-            <div class="kpi-value" id="kpi-late">—</div>
-            <div class="kpi-sub">Unique orders with late promise dates</div>
-            <div class="kpi-hint">Click to filter</div>
-          </div>
-          <div class="kpi-card" id="kpi-card-total" onclick="toggleKpiFilter('total')">
-            <div class="kpi-label">Total lines on order</div>
-            <div class="kpi-value" id="kpi-total">—</div>
-            <div class="kpi-sub">All loaded PO lines</div>
-            <div class="kpi-hint">Click to show all</div>
-          </div>
-        </div>
-        <div class="bottom-grid">
-          <div class="panel">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
-              <div class="section-title" style="margin:0;">Excess / Unallocated production</div>
-              <button class="btn-add" onclick="showExcessForm()" style="font-size:12px;padding:4px 12px;">+ Add</button>
-            </div>
-            <div id="excess-form" style="display:none;background:#f9f9f8;border:1px solid #e5e5e5;border-radius:8px;padding:10px;margin-bottom:10px;">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">AB PO #</label><input type="text" id="ex-po" placeholder="PO number" style="width:100%;font-size:12px;" /></div>
-                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Inventory ID</label><input type="text" id="ex-inventory" placeholder="Inventory ID" style="width:100%;font-size:12px;" /></div>
-                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Qty</label><input type="number" id="ex-qty" placeholder="0" min="0" style="width:100%;font-size:12px;" /></div>
-                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Production date</label><input type="date" id="ex-date" style="width:100%;font-size:12px;" /></div>
-                <div style="grid-column:1/-1;"><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Notes</label><input type="text" id="ex-notes" placeholder="Optional notes" style="width:100%;font-size:12px;" /></div>
-              </div>
-              <div style="display:flex;gap:6px;justify-content:flex-end;">
-                <button class="btn-cancel" onclick="cancelExcessForm()" style="font-size:12px;padding:5px 12px;">Cancel</button>
-                <button class="btn-save" id="ex-save-btn" onclick="saveExcessItem()" style="font-size:12px;padding:5px 12px;">Save</button>
-              </div>
-            </div>
-            <div id="excess-wrap"><div class="loading">Loading...</div></div>
-          </div>
-          <div class="panel">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
-              <div class="section-title" style="margin:0;">Hot list</div>
-              <button class="btn-add" onclick="showHotListForm()" style="font-size:12px;padding:4px 12px;">+ Add</button>
-            </div>
-            <div id="hotlist-form" style="display:none;background:#f9f9f8;border:1px solid #e5e5e5;border-radius:8px;padding:10px;margin-bottom:10px;">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">ASF PO #</label><input type="text" id="hl-po" placeholder="PO number" style="width:100%;font-size:12px;" /></div>
-                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Status</label>
-                  <select id="hl-status" style="width:100%;font-size:12px;">
-                    <option value="Requested">Requested</option>
-                    <option value="Accepted by Customer">Accepted by Customer</option>
-                    <option value="Canceled">Canceled</option>
-                  </select>
-                </div>
-                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Promised on date</label><input type="date" id="hl-promised" style="width:100%;font-size:12px;" /></div>
-                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Need by date</label><input type="date" id="hl-needby" style="width:100%;font-size:12px;" /></div>
-              </div>
-              <div style="display:flex;gap:6px;justify-content:flex-end;">
-                <button class="btn-cancel" onclick="cancelHotListForm()" style="font-size:12px;padding:5px 12px;">Cancel</button>
-                <button class="btn-save" id="hl-save-btn" onclick="saveHotListItem()" style="font-size:12px;padding:5px 12px;">Save</button>
-              </div>
-            </div>
-            <div id="hotlist-wrap"><div class="loading">Loading...</div></div>
-          </div>
-        </div>
-        <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <div class="section-title" style="margin:0;">Orders</div>
-          <span class="active-filter-label" id="active-filter-label"></span>
-          <button class="clear-filter-btn" id="clear-filter-btn" onclick="clearKpiFilter()">Clear filter</button>
-          <input type="text" id="search" placeholder="Search order, account, inventory, vendor ref..." style="flex:1;min-width:180px;" oninput="renderTable()" />
-          <select id="status-filter" onchange="renderTable()">
-            <option value="">All statuses</option>
-            <option value="On Hold">On Hold</option>
-            <option value="Open">Open</option>
-          </select>
-          <select id="salesrep-filter" onchange="renderTable()" style="min-width:140px;">
-            <option value="">All sales reps</option>
-          </select>
-        </div>
-        <div class="table-wrap">
-          <div id="table-container"><div class="loading">Loading...</div></div>
-        </div>
-        <div style="font-size:12px;color:#888;margin-top:8px;" id="row-count"></div>
-      </div>
-
-      <!-- PROJECTS TAB -->
-      <div id="tab-projects" class="tab-content">
-
-        <div class="project-form" id="project-form" style="display:none;">
-          <h3 id="form-title">Add upcoming project</h3>
-          <div class="form-grid">
-            <div class="form-field"><label>Project name *</label><input type="text" id="f-name" placeholder="e.g. Main St Renovation" /></div>
-            <div class="form-field"><label>Customer / Account</label><input type="text" id="f-account" placeholder="Account name" /></div>
-            <div class="form-field"><label>Need by date</label><input type="date" id="f-needbydate" /></div>
-            <div class="form-field"><label>Status</label>
-              <select id="f-status">
-                <option value="Pending Approval">Pending Approval</option>
-                <option value="Awaiting Customer Order">Awaiting Customer Order</option>
-                <option value="Order Placed">Order Placed</option>
-              </select>
-            </div>
-            <div class="form-field" style="grid-column: 1 / -1;"><label>Notes</label><textarea id="f-notes" placeholder="Additional notes..."></textarea></div>
-          </div>
-
-          <div class="line-items-section">
-            <label>Items needed</label>
-            <div style="display:grid;grid-template-columns:1fr 120px 80px 32px;gap:8px;margin-bottom:6px;">
-              <span style="font-size:11px;color:#888;padding:0 2px;">Inventory ID</span>
-              <span style="font-size:11px;color:#888;padding:0 2px;">UOM</span>
-              <span style="font-size:11px;color:#888;padding:0 2px;">Qty</span>
-              <span></span>
-            </div>
-            <div id="line-items-container"></div>
-            <button class="btn-add-line" onclick="addLineItem()">+ Add item</button>
-          </div>
-
-          <div class="form-actions">
-            <button class="btn-cancel" onclick="cancelForm()">Cancel</button>
-            <button class="btn-save" id="save-btn" onclick="saveProject()">Save project</button>
-          </div>
-        </div>
-
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:12px;">
-          <div class="section-title" style="margin:0;">Upcoming projects <span id="project-count" style="font-size:12px;color:#888;font-weight:400;"></span></div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <input type="text" id="project-search" placeholder="Search projects..." style="font-size:13px;padding:5px 10px;" oninput="renderProjects()" />
-            <button class="btn-add" onclick="showAddForm()">+ Add project</button>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <div id="projects-container"><div class="loading">Loading projects...</div></div>
-        </div>
-      </div>
-
-    </div>
+  <div class="mh-right">
+    <div class="live-tag"><div class="live-dot"></div>Live · Acumatica</div>
+    <div class="ts" id="ts">Loading…</div>
   </div>
+</header>
+
+<div id="body">
+  <div class="loading-state"><span class="spinner"></span>Connecting to Acumatica via CData…</div>
 </div>
 
+</div>
 <script>
-const PROXY = "https://abpoquery.greg-capell.workers.dev";
-let allData = [];
-let credentials = '';
-let expandedOrders = new Set();
-let expandedProjects = new Set();
-let activeKpiFilter = null;
-let projects = [];
-let editingProjectId = null;
-
-// ── Tabs ───────────────────────────────────────────────────────
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ['po','projects'][i] === tab));
-  document.getElementById('tab-po').classList.toggle('active', tab === 'po');
-  document.getElementById('tab-projects').classList.toggle('active', tab === 'projects');
-}
-
-// ── Auth & Init ────────────────────────────────────────────────
-function getDateRange() {
-  const today = new Date();
-  const start = new Date(today);
-  start.setMonth(start.getMonth() - 12);
-  const fmt = d => d.toISOString().split('T')[0];
-  return { today: fmt(today), start: fmt(start), todayObj: today };
-}
-
-async function loadDashboard() {
-  const user = document.getElementById('username').value.trim();
-  const pass = document.getElementById('password').value.trim();
-  if (!user || !pass) { showError('Please enter username and password.'); return; }
-  credentials = btoa(user + ':' + pass);
-  const btn = document.getElementById('login-btn');
-  btn.textContent = 'Connecting...';
-  btn.disabled = true;
-  document.getElementById('error-msg').style.display = 'none';
-  try {
-    await fetchData();
-    await loadProjects();
-    await loadHotList();
-    await loadExcess();
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('dashboard-screen').style.display = 'block';
-  } catch(e) {
-    showError('Unable to connect. Check your credentials and try again. (' + e.message + ')');
-    btn.textContent = 'Sign in & load dashboard';
-    btn.disabled = false;
-  }
-}
-
-function showError(msg) {
-  const el = document.getElementById('error-msg');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-// ── PO Data ────────────────────────────────────────────────────
-async function fetchData() {
-  const { today, start } = getDateRange();
-  const path = `/odata/ASF/DB-DS%20PO%20Line%20Detail?StartDate=${start}&EndDate=${today}`;
-  const resp = await fetch(PROXY + path, {
-    headers: { 'Authorization': 'Basic ' + credentials, 'Accept': 'application/json' }
-  });
-  if (!resp.ok) throw new Error('HTTP ' + resp.status);
-  const json = await resp.json();
-  const raw = json.value || json;
-  allData = raw.filter(r => {
-    const status = (r.Status || '').trim();
-    return status === 'On Hold' || status === 'Open';
-  }).filter(r => (r.ItemClass || '').trim() === 'AMERICANBILTRITESVT');
-  renderKPIs();
-  renderExcessTable();
-  populateSalesRepFilter();
-  renderTable();
-  const { start: s, today: t } = getDateRange();
-  document.getElementById('date-range-label').textContent = `${s} → ${t} · ${allData.length.toLocaleString()} lines loaded`;
-}
-
-async function refreshData() {
-  activeKpiFilter = null;
-  expandedOrders = new Set();
-  updateKpiCardStates();
-  document.getElementById('table-container').innerHTML = '<div class="loading">Refreshing...</div>';
-  await fetchData();
-  await loadProjects();
-  await loadHotList();
-  await loadExcess();
-}
-
-function toggleKpiFilter(filter) {
-  activeKpiFilter = activeKpiFilter === filter ? null : filter;
-  updateKpiCardStates();
-  renderTable();
-}
-
-function clearKpiFilter() {
-  activeKpiFilter = null;
-  updateKpiCardStates();
-  renderTable();
-}
-
-function updateKpiCardStates() {
-  ['hold','nooa','late','total'].forEach(f => {
-    const card = document.getElementById('kpi-card-' + f);
-    if (card) card.classList.toggle('active', activeKpiFilter === f);
-  });
-  const label = document.getElementById('active-filter-label');
-  const clearBtn = document.getElementById('clear-filter-btn');
-  const labels = { hold: 'On Hold orders', nooa: 'Orders without OAs', late: 'Promised > 3 months', total: 'All lines' };
-  if (activeKpiFilter) {
-    label.textContent = 'Filtered: ' + labels[activeKpiFilter];
-    label.style.display = 'inline-block';
-    clearBtn.style.display = 'inline-block';
-  } else {
-    label.style.display = 'none';
-    clearBtn.style.display = 'none';
-  }
-}
-
-function renderKPIs() {
-  const { todayObj } = getDateRange();
-  const threeMonths = new Date(todayObj);
-  threeMonths.setMonth(threeMonths.getMonth() + 3);
-  const holdOrders = new Set(allData.filter(r => (r.Status||'').trim() === 'On Hold').map(r => r.OrderNbr));
-  const noOAOrders = new Set(allData.filter(r => !r.VendorRef || r.VendorRef.toString().trim() === '').map(r => r.OrderNbr));
-  const lateOrders = new Set(allData.filter(r => r.PromisedOn && new Date(r.PromisedOn) > threeMonths).map(r => r.OrderNbr));
-  document.getElementById('kpi-hold').textContent = holdOrders.size.toLocaleString();
-  document.getElementById('kpi-no-oa').textContent = noOAOrders.size.toLocaleString();
-  document.getElementById('kpi-late').textContent = lateOrders.size.toLocaleString();
-  document.getElementById('kpi-total').textContent = allData.length.toLocaleString();
-}
-
-// ── Excess / Unallocated Production ───────────────────────────
-let excessList = [];
-let editingExcessId = null;
-
-async function loadExcess() {
-  try {
-    const resp = await fetch(PROXY + '/excess');
-    excessList = await resp.json();
-  } catch(e) {
-    excessList = [];
-  }
-  renderExcessTable();
-}
-
-function renderExcessTable() {
-  const wrap = document.getElementById('excess-wrap');
-  if (!excessList.length) {
-    wrap.innerHTML = '<div style="font-size:13px;color:#888;padding:0.75rem 0;">No items yet. Click + Add to get started.</div>';
-    return;
-  }
-  const totalQty = excessList.reduce((s, i) => s + (parseFloat(i.qty) || 0), 0);
-  wrap.innerHTML = `<div style="max-height:200px;overflow-y:auto;">
-    <table class="qty-table" style="font-size:12px;">
-      <thead><tr>
-        <th>AB PO #</th><th>Inventory ID</th><th style="text-align:right;">Qty</th><th>Prod. date</th><th>Notes</th><th style="width:60px;"></th>
-      </tr></thead>
-      <tbody>${excessList.map(item => `<tr>
-        <td style="font-family:monospace;font-weight:500;">${item.po||'—'}</td>
-        <td>${item.inventoryId||'—'}</td>
-        <td style="text-align:right;">${item.qty ? parseFloat(item.qty).toLocaleString() : '—'}</td>
-        <td>${fmtDate(item.productionDate)}</td>
-        <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${item.notes||''}">${item.notes||'—'}</td>
-        <td style="white-space:nowrap;">
-          <button class="btn-edit" onclick="editExcessItem('${item.id}')">Edit</button>
-          <button class="btn-delete" onclick="deleteExcessItem('${item.id}')">Del</button>
-        </td>
-      </tr>`).join('')}</tbody>
-    </table>
-  </div>
-  <div style="border-top:1px solid #e5e5e5;margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;align-items:center;">
-    <span style="font-size:12px;color:#666;">Total qty</span>
-    <span style="font-size:14px;font-weight:500;color:#1a1a1a;">${Math.round(totalQty).toLocaleString()}</span>
-  </div>`;
-}
-
-function showExcessForm() {
-  editingExcessId = null;
-  document.getElementById('ex-po').value = '';
-  document.getElementById('ex-inventory').value = '';
-  document.getElementById('ex-qty').value = '';
-  document.getElementById('ex-date').value = '';
-  document.getElementById('ex-notes').value = '';
-  document.getElementById('excess-form').style.display = 'block';
-  document.getElementById('ex-po').focus();
-}
-
-function editExcessItem(id) {
-  const item = excessList.find(i => i.id === id);
-  if (!item) return;
-  editingExcessId = id;
-  document.getElementById('ex-po').value = item.po || '';
-  document.getElementById('ex-inventory').value = item.inventoryId || '';
-  document.getElementById('ex-qty').value = item.qty || '';
-  document.getElementById('ex-date').value = item.productionDate || '';
-  document.getElementById('ex-notes').value = item.notes || '';
-  document.getElementById('excess-form').style.display = 'block';
-  document.getElementById('ex-po').focus();
-}
-
-function cancelExcessForm() {
-  editingExcessId = null;
-  document.getElementById('excess-form').style.display = 'none';
-}
-
-async function saveExcessItem() {
-  const payload = {
-    po: document.getElementById('ex-po').value.trim(),
-    inventoryId: document.getElementById('ex-inventory').value.trim(),
-    qty: document.getElementById('ex-qty').value,
-    productionDate: document.getElementById('ex-date').value,
-    notes: document.getElementById('ex-notes').value.trim(),
-  };
-  if (!payload.po && !payload.inventoryId) { alert('AB PO # or Inventory ID is required.'); return; }
-  const btn = document.getElementById('ex-save-btn');
-  btn.textContent = 'Saving...'; btn.disabled = true;
-  try {
-    if (editingExcessId) {
-      payload.id = editingExcessId;
-      await fetch(PROXY + '/excess', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const idx = excessList.findIndex(i => i.id === editingExcessId);
-      if (idx !== -1) excessList[idx] = { ...excessList[idx], ...payload };
-    } else {
-      const resp = await fetch(PROXY + '/excess', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      excessList.push(await resp.json());
-    }
-    cancelExcessForm();
-    renderExcessTable();
-  } catch(e) {
-    alert('Error saving. Please try again.');
-  } finally {
-    btn.textContent = 'Save'; btn.disabled = false;
-  }
-}
-
-async function deleteExcessItem(id) {
-  if (!confirm('Remove this item?')) return;
-  try {
-    await fetch(PROXY + '/excess', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-    excessList = excessList.filter(i => i.id !== id);
-    renderExcessTable();
-  } catch(e) {
-    alert('Error deleting. Please try again.');
-  }
-}
-
-// ── Hot List ───────────────────────────────────────────────────
-let hotList = [];
-let editingHotListId = null;
-
-const HL_STATUS_ORDER = { 'Requested': 0, 'Canceled': 1, 'Accepted by Customer': 2 };
-const HL_STATUS_STYLE = {
-  'Requested':            { bg: '#fff8e1', color: '#856404', border: '#f0c842' },
-  'Accepted by Customer': { bg: '#eaf3de', color: '#3b6d11', border: '#8bc34a' },
-  'Canceled':             { bg: '#fcebeb', color: '#a32d2d', border: '#e57373' },
+// ════════════════════════════════════════════
+// BUDGET CONFIG — loaded dynamically from
+// 20252026_Budget_BHAG.xlsx at runtime.
+// ════════════════════════════════════════════
+// BUDGET / TEAM CONFIG  (from Budget_BHAG.xlsx)
+// To update: share the new Excel in this Claude
+// project and ask for the constants to be refreshed.
+// ════════════════════════════════════════════
+const REPS = [
+  { code:'AD',    name:'Anthony Deel',      sub:'00024', team:'Bob Brown',   annualBudget:1400000, annualBhag:1571744.95 },
+  { code:'AJ',    name:'Austin Jones',      sub:'00032', team:'Bob Brown',   annualBudget:855000,  annualBhag:1178808.71 },
+  { code:'BB',    name:'Bob Brown',         sub:'00025', team:'Bob Brown',   annualBudget:520000,  annualBhag:589404.35  },
+  { code:'BT',    name:'Bobby Townsend',    sub:'00039', team:'Bob Brown',   annualBudget:1000000, annualBhag:1080574.65 },
+  { code:'DA',    name:'Derrick Almond',    sub:'00033', team:'Bob Brown',   annualBudget:1075000, annualBhag:1192564.81 },
+  { code:'MJ',    name:'Mitchell Jones',    sub:'00035', team:'Bob Brown',   annualBudget:930000,  annualBhag:982340.59  },
+  { code:'TOM G', name:'Tom Goldston',      sub:'00027', team:'Bob Brown',   annualBudget:600000,  annualBhag:687638.41  },
+  { code:'JB',    name:'Jason Beamer',      sub:'00044', team:'Phil Branon', annualBudget:500000,  annualBhag:628697.98  },
+  { code:'MM',    name:'Michael McLeod',    sub:'00030', team:'Phil Branon', annualBudget:250000,  annualBhag:300000     },
+  { code:'DL',    name:'Damon Lockhart',    sub:'00036', team:'Phil Branon', annualBudget:750000,  annualBhag:1178808.71 },
+  { code:'NP',    name:'Nikki Petriello',   sub:'00023', team:'Phil Branon', annualBudget:1500000, annualBhag:1664043.92 },
+  { code:'SM',    name:'Sean Mitchell',     sub:'00022', team:'Phil Branon', annualBudget:5200000, annualBhag:5402873.25 },
+];
+const TEAMS = ['Bob Brown','Phil Branon'];
+const TEAM_COLORS = { 'Bob Brown':'#1a4a7a', 'Phil Branon':'#6b1a3a' };
+const FULLNAME_MAP = {
+  'Anthony Deel':'AD','Austin Jones':'AJ','Bob Brown':'BB','Bobby Townsend':'BT',
+  'Derrick Almond':'DA','Damon Lockhart':'DL','Jason Beamer':'JB',
+  'Mitchell Jones':'MJ','Michael McLeod':'MM','Nikki Petriello':'NP','Sean Mitchell':'SM',
+  'Tom Goldston':'TOM G','Todd Good':'TG','Greg Capell':'GC',
 };
 
-async function loadHotList() {
-  try {
-    const resp = await fetch(PROXY + '/hotlist');
-    hotList = await resp.json();
-  } catch(e) {
-    hotList = [];
+// Seasonal budget weights (Q1=0.22, Q2=0.2363, Q3=0.2849, Q4=0.2588)
+const MONTH_WEIGHTS = {
+  '01':0.22/3,'02':0.22/3,'03':0.22/3,
+  '04':0.2363/3,'05':0.2363/3,'06':0.2363/3,
+  '07':0.2849/3,'08':0.2849/3,'09':0.2849/3,
+  '10':0.2588/3,'11':0.2588/3,'12':0.2588/3,
+};
+
+// Current Acumatica financial period (fiscal month = calendar +2 for this company)
+// Confirmed: InvoiceDate 2026-04-23 → FinancialPeriod 202606
+const NOW = new Date();
+function curFinPeriod() {
+  const calM = NOW.getMonth()+1; // 1-12
+  const fiscM = calM + 2;
+  const y = fiscM > 12 ? NOW.getFullYear()+1 : NOW.getFullYear();
+  const m = fiscM > 12 ? fiscM-12 : fiscM;
+  return `${y}${String(m).padStart(2,'0')}`;
+}
+const CUR_PERIOD = curFinPeriod(); // e.g. '202606'
+const CUR_MO_KEY = CUR_PERIOD.slice(4); // '06'
+const CUR_YEAR = CUR_PERIOD.slice(0,4); // '2026'
+// YTD periods: fiscal year starts at period 01 (Nov of prior calendar year)
+// Build dynamically from 202601 up to current period
+const YTD_PERIODS = (() => {
+  const periods = [];
+  const curNum = parseInt(CUR_PERIOD); // e.g. 202606
+  const yearStart = parseInt(CUR_PERIOD.slice(0,4) + '01'); // e.g. 202601
+  for(let p = yearStart; p <= curNum; p++) {
+    const mo = p % 100;
+    if(mo >= 1 && mo <= 12) periods.push(String(p));
   }
-  renderHotList();
+  return periods;
+})();
+
+function monthBudget(rep) { return rep.annualBudget * (MONTH_WEIGHTS[CUR_MO_KEY] || 1/12); }
+function monthBhag(rep)   { return rep.annualBhag   * (MONTH_WEIGHTS[CUR_MO_KEY] || 1/12); }
+function weekBudget(rep)  { return monthBudget(rep) / 4.33; }
+
+// YTD budget = sum of each completed+current period's weight × annual target
+function ytdBudget(rep) {
+  return YTD_PERIODS.reduce((s,p) => s + rep.annualBudget * (MONTH_WEIGHTS[p.slice(4)] || 1/12), 0);
+}
+function ytdBhag(rep) {
+  return YTD_PERIODS.reduce((s,p) => s + rep.annualBhag * (MONTH_WEIGHTS[p.slice(4)] || 1/12), 0);
 }
 
-function renderHotList() {
-  const sorted = [...hotList].sort((a, b) =>
-    (HL_STATUS_ORDER[a.status] ?? 99) - (HL_STATUS_ORDER[b.status] ?? 99)
-  );
-  const wrap = document.getElementById('hotlist-wrap');
-  if (!sorted.length) {
-    wrap.innerHTML = '<div style="font-size:13px;color:#888;padding:0.75rem 0;">No items yet. Click + Add to get started.</div>';
-    return;
-  }
-  wrap.innerHTML = `<div style="max-height:220px;overflow-y:auto;">
-    <table class="qty-table" style="font-size:12px;">
-      <thead><tr>
-        <th>ASF PO #</th>
-        <th>Promised on</th>
-        <th>Need by</th>
-        <th>Status</th>
-        <th style="width:60px;"></th>
-      </tr></thead>
-      <tbody>${sorted.map(item => {
-        const s = HL_STATUS_STYLE[item.status] || {};
-        return `<tr style="background:${s.bg||''};">
-          <td style="font-family:monospace;font-weight:500;">${item.po||'—'}</td>
-          <td>${fmtDate(item.promisedOn)}</td>
-          <td>${fmtDate(item.needBy)}</td>
-          <td><span style="display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;background:${s.bg||'#eee'};color:${s.color||'#333'};border:1px solid ${s.border||'#ccc'};">${item.status||'—'}</span></td>
-          <td style="white-space:nowrap;">
-            <button class="btn-edit" onclick="editHotListItem('${item.id}')">Edit</button>
-            <button class="btn-delete" onclick="deleteHotListItem('${item.id}')">Del</button>
-          </td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table>
-  </div>`;
+// Week start (Monday)
+function weekStart() {
+  const d=new Date(NOW); const day=d.getDay(); const diff=day===0?-6:1-day;
+  d.setDate(d.getDate()+diff); d.setHours(0,0,0,0);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
 
-function showHotListForm() {
-  editingHotListId = null;
-  document.getElementById('hl-po').value = '';
-  document.getElementById('hl-promised').value = '';
-  document.getElementById('hl-needby').value = '';
-  document.getElementById('hl-status').value = 'Requested';
-  document.getElementById('hotlist-form').style.display = 'block';
-  document.getElementById('hl-po').focus();
+// Period label: '202606' → 'Apr 2026'  (fiscal month - 2 = calendar)
+function periodLabel(fp) {
+  const MONTHS=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const y=fp.slice(0,4), fm=parseInt(fp.slice(4));
+  const cm = fm-2 <= 0 ? fm-2+12 : fm-2;
+  return `${MONTHS[cm]} ${y}`;
 }
 
-function editHotListItem(id) {
-  const item = hotList.find(i => i.id === id);
-  if (!item) return;
-  editingHotListId = id;
-  document.getElementById('hl-po').value = item.po || '';
-  document.getElementById('hl-promised').value = item.promisedOn || '';
-  document.getElementById('hl-needby').value = item.needBy || '';
-  document.getElementById('hl-status').value = item.status || 'Requested';
-  document.getElementById('hotlist-form').style.display = 'block';
-  document.getElementById('hl-po').focus();
-}
+// ════════════════════════════════════════════
+// EMBEDDED SNAPSHOT DATA  (from live queries)
+// ════════════════════════════════════════════
+const DATA = {
+  repMonthly: {
+    'AD':   { '202601':49161.66,  '202602':22405.99,  '202603':53800.06,  '202604':72563.64,  '202605':144913.44, '202606':81043.36 },
+    'AJ':   { '202601':56027.91,  '202602':44696.12,  '202603':60672.63,  '202604':51630.96,  '202605':42247.49,  '202606':53298.36 },
+    'BB':   { '202601':12735.68,  '202602':20663.70,  '202603':23684.65,  '202604':19045.78,  '202605':33103.20,  '202606':22101.37 },
+    'BT':   { '202601':29251.08,  '202602':115049.21, '202603':66621.19,  '202604':130822.05, '202605':68326.61,  '202606':82214.85 },
+    'DA':   { '202601':20565.71,  '202602':59717.92,  '202603':64090.82,  '202604':72636.51,  '202605':123966.60, '202606':100346.28},
+    'DL':   { '202601':16871.72,  '202602':40680.78,  '202603':54569.08,  '202604':64370.43,  '202605':48636.20,  '202606':22467.36 },
+    'JB':   { '202601':0,         '202602':0,         '202603':0,         '202604':0,         '202605':0,         '202606':0        },
+    'MM':   { '202601':35066.97,  '202602':7835.47,   '202603':28657.51,  '202604':27822.40,  '202605':71879.41,  '202606':18027.56 },
+    'MJ':   { '202601':55197.55,  '202602':58035.98,  '202603':47613.05,  '202604':49936.88,  '202605':30198.30,  '202606':54446.96 },
+    'NP':   { '202601':399267.93, '202602':96847.30,  '202603':45848.72,  '202604':67918.20,  '202605':117465.73, '202606':79000.75 },
+    'SM':   { '202601':702202.58, '202602':600635.36, '202603':119228.31, '202604':41877.84,  '202605':60720.36,  '202606':295471.27},
+    'TOM G':{ '202601':19025.26,  '202602':36028.37,  '202603':56687.32,  '202604':45666.91,  '202605':51681.11,  '202606':32352.18 },
+  },
+  weekSales: {
+    'DA':11369.72,'AD':4031.50,'NP':3661.83,'AJ':390.88,
+    'BB':365.87,'MM':141.25,'TOM G':94.00,
+    'SM':0,'BT':0,'DL':0,'JB':0,'MJ':0,
+  },
+  // INVIUS NOX LVT + EVT YTD (fiscal year, all periods)
+  invius: [
+    {rep:'Michael McLeod', code:'MM',    ytd:138373.48+1667.80},
+    {rep:'Anthony Deel',   code:'AD',    ytd:76782.37},
+    {rep:'Tom Goldston',   code:'TOM G', ytd:25357.23},
+    {rep:'Nikki Petriello',code:'NP',    ytd:24808.53+10168.20},
+    {rep:'Sean Mitchell',  code:'SM',    ytd:13237.39},
+    {rep:'Jason Beamer',   code:'JB',    ytd:7852.60},
+    {rep:'Derrick Almond', code:'DA',    ytd:14571.55+104.04},
+    {rep:'Bob Brown',      code:'BB',    ytd:4031.56},
+    {rep:'Mitchell Jones', code:'MJ',    ytd:2501.70},
+    {rep:'Bobby Townsend', code:'BT',    ytd:1980.51},
+  ],
+  maxxon: [
+    {rep:'Sean Mitchell',  code:'SM',    ytd:46249.08},
+    {rep:'Tom Goldston',   code:'TOM G', ytd:20150.58},
+    {rep:'Michael McLeod', code:'MM',    ytd:8826.00},
+    {rep:'Jason Beamer',   code:'JB',    ytd:6844.00},
+    {rep:'Damon Lockhart', code:'DL',    ytd:9330.00},
+    {rep:'Derrick Almond', code:'DA',    ytd:3901.00},
+    {rep:'Nikki Petriello',code:'NP',    ytd:2556.00},
+    {rep:'Bobby Townsend', code:'BT',    ytd:450.00},
+  ],
+  mckinley: [
+    {rep:'Anthony Deel',   code:'AD',    ytd:7145.53},
+    {rep:'Tom Goldston',   code:'TOM G', ytd:2455.95},
+    {rep:'Michael McLeod', code:'MM',    ytd:2133.18},
+    {rep:'Derrick Almond', code:'DA',    ytd:1894.73},
+    {rep:'Jason Beamer',   code:'JB',    ytd:892.32},
+    {rep:'Nikki Petriello',code:'NP',    ytd:844.33},
+  ],
+  dealers: {
+    'AD':    { name:'Anthony Deel',     count:9,  customers:[] },
+    'AJ':    { name:'Austin Jones',     count:7,  customers:[] },
+    'BB':    { name:'Bob Brown',        count:3,  customers:[] },
+    'BT':    { name:'Bobby Townsend',   count:6,  customers:[] },
+    'DA':    { name:'Derrick Almond',   count:11, customers:[] },
+    'DL':    { name:'Damon Lockhart',   count:4,  customers:[] },
+    'JB':    { name:'Jason Beamer',     count:0,  customers:[] },
+    'MM':    { name:'Michael McLeod',   count:2,  customers:[] },
+    'MJ':    { name:'Mitchell Jones',   count:7,  customers:[] },
+    'NP':    { name:'Nikki Petriello',  count:5,  customers:[] },
+    'SM':    { name:'Sean Mitchell',    count:0,  customers:[] },
+    'TOM G': { name:'Tom Goldston',     count:4,  customers:[] },
+  },
+};
 
-function cancelHotListForm() {
-  editingHotListId = null;
-  document.getElementById('hotlist-form').style.display = 'none';
-}
+// ════════════════════════════════════════════
+// LIVE DATA FETCH
+// Reads pre-cached data from Cloudflare KV
+// via the scoreboard Worker. Worker refreshes
+// from Acumatica at 6am and 3pm daily.
+// ════════════════════════════════════════════
+const WORKER_URL = 'https://asf-scoreboard-proxy.greg-capell.workers.dev';
 
-async function saveHotListItem() {
-  const payload = {
-    po: document.getElementById('hl-po').value.trim(),
-    promisedOn: document.getElementById('hl-promised').value,
-    needBy: document.getElementById('hl-needby').value,
-    status: document.getElementById('hl-status').value,
-  };
-  if (!payload.po) { alert('ASF PO # is required.'); return; }
-  const btn = document.getElementById('hl-save-btn');
-  btn.textContent = 'Saving...';
-  btn.disabled = true;
+async function loadLiveData() {
   try {
-    if (editingHotListId) {
-      payload.id = editingHotListId;
-      await fetch(PROXY + '/hotlist', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const idx = hotList.findIndex(i => i.id === editingHotListId);
-      if (idx !== -1) hotList[idx] = { ...hotList[idx], ...payload };
-    } else {
-      const resp = await fetch(PROXY + '/hotlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const newItem = await resp.json();
-      hotList.push(newItem);
+    const res = await fetch(`${WORKER_URL}/data`);
+    if (!res.ok) { console.warn('Worker error', res.status); return; }
+    const d = await res.json();
+    if (d.error) { console.warn('Data error:', d.error); return; }
+
+    // Compute Monday of current week
+    const now = new Date();
+    const day = now.getDay();
+    const mon = new Date(now);
+    mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+    mon.setHours(0,0,0,0);
+    const sixMoAgo = new Date(now);
+    sixMoAgo.setMonth(sixMoAgo.getMonth() - 6);
+
+    // ── Monthly sales by rep ──────────────────────────────────────────
+    if (d.repMonthly?.length) {
+      const m = {};
+      d.repMonthly.forEach(r => {
+        const sub = (r.Subaccount||'').trim();
+        const rep = REPS.find(x => x.sub === sub);
+        if (!rep) return;
+        if (!m[rep.code]) m[rep.code] = {};
+        m[rep.code][r.FinancialPeriod] = parseFloat(r.Sales) || 0;
+      });
+      Object.assign(DATA.repMonthly, m);
     }
-    cancelHotListForm();
-    renderHotList();
+
+    // ── Weekly sales by rep ───────────────────────────────────────────
+    if (d.weekSales?.length) {
+      d.weekSales.forEach(r => {
+        const sub = (r.Subaccount||'').trim();
+        const rep = REPS.find(x => x.sub === sub);
+        if (rep) DATA.weekSales[rep.code] = parseFloat(r.Sales) || 0;
+      });
+    }
+
+    // ── INVIUS (NOX LVT + EVT) ────────────────────────────────────────
+    if (d.noxItems?.length) {
+      const agg = {};
+      d.noxItems.forEach(r => {
+        const ic = (r.ItemClass||'');
+        if (!ic.includes('LVT') && !ic.includes('EVT')) return;
+        const n = (r.SalesRep||'').trim();
+        agg[n] = (agg[n]||0) + (parseFloat(r.Sales)||0);
+      });
+      if (Object.keys(agg).length > 0) {
+        DATA.invius = Object.entries(agg)
+          .map(([n,s]) => ({ rep:n, code:FULLNAME_MAP[n]||null, ytd:s }))
+          .filter(x => x.ytd > 0).sort((a,b) => b.ytd - a.ytd);
+      }
+    }
+
+    // ── Maxxon SkimFill ───────────────────────────────────────────────
+    if (d.maxxonItems?.length) {
+      const agg = {};
+      d.maxxonItems.forEach(r => {
+        const n = (r.SalesRep||'').trim();
+        if (n === 'Default') return;
+        agg[n] = (agg[n]||0) + (parseFloat(r.Sales)||0);
+      });
+      if (Object.keys(agg).length > 0) {
+        DATA.maxxon = Object.entries(agg)
+          .map(([n,s]) => ({ rep:n, code:FULLNAME_MAP[n]||null, ytd:s }))
+          .filter(x => x.ytd > 0).sort((a,b) => b.ytd - a.ytd);
+      }
+    }
+
+    // ── McKinley LVT ──────────────────────────────────────────────────
+    if (d.mckinleyItems?.length) {
+      const agg = {};
+      d.mckinleyItems.forEach(r => {
+        const n = (r.SalesRep||'').trim();
+        agg[n] = (agg[n]||0) + (parseFloat(r.Sales)||0);
+      });
+      if (Object.keys(agg).length > 0) {
+        DATA.mckinley = Object.entries(agg)
+          .map(([n,s]) => ({ rep:n, code:FULLNAME_MAP[n]||null, ytd:s }))
+          .filter(x => x.ytd > 0).sort((a,b) => b.ytd - a.ytd);
+      }
+    }
+
+    // ── Supporting Dealers ────────────────────────────────────────────
+    if (d.dealerCustomers?.length) {
+      const bestRow = {};
+      d.dealerCustomers.forEach(r => {
+        if ((r.BusinessAccountClass||'').trim() !== 'DEALER') return;
+        const cid = (r.CustomerID||'').trim();
+        if (!cid || !r.DisplaysPlaced || !r.DisplaysPlaced.trim()) return;
+        const sp = (r.DefaultSalesperson||'').trim();
+        const spValid = !!REPS.find(x => x.code === sp);
+        const total = parseFloat(r.Total6Mo) || 0;
+        const ex = bestRow[cid];
+        const exSpValid = ex && !!REPS.find(x => x.code === (ex.DefaultSalesperson||'').trim());
+        if (!ex || (!exSpValid && spValid) || (spValid && total > (parseFloat(ex.Total6Mo)||0))) {
+          bestRow[cid] = r;
+        }
+      });
+      const dealers = {};
+      Object.entries(bestRow).forEach(([cid, r]) => {
+        if ((parseFloat(r.Total6Mo)||0) / 6 < 2000) return;
+        const repCode = (r.DefaultSalesperson||'').trim();
+        const rep = REPS.find(x => x.code === repCode);
+        if (!rep) return;
+        if (!dealers[repCode]) dealers[repCode] = { name:rep.name, count:0, customers:[] };
+        dealers[repCode].count++;
+        dealers[repCode].customers.push({
+          id: cid,
+          name: (r.CustomerName||'').trim(),
+          displays: (r.DisplaysPlaced||'').trim(),
+          avgMo6: (parseFloat(r.Total6Mo)||0) / 6
+        });
+      });
+      DATA.dealers = dealers;
+    }
+
   } catch(e) {
-    alert('Error saving. Please try again.');
-  } finally {
-    btn.textContent = 'Save';
-    btn.disabled = false;
+    console.warn('loadLiveData error', e);
   }
 }
 
-async function deleteHotListItem(id) {
-  if (!confirm('Remove this item from the hot list?')) return;
-  try {
-    await fetch(PROXY + '/hotlist', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-    hotList = hotList.filter(i => i.id !== id);
-    renderHotList();
-  } catch(e) {
-    alert('Error deleting. Please try again.');
-  }
-}
+// ════════════════════════════════════════════
+// FORMAT HELPERS
+// ════════════════════════════════════════════
+const fmtK=n=>{if(n==null)return'—';if(Math.abs(n)>=1e6)return'$'+(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e3)return'$'+(n/1e3).toFixed(0)+'K';return'$'+Math.round(n);};
+const pctFmt=n=>(n*100).toFixed(0)+'%';
+const pctColor=p=>p>=1?'#1a7a4a':p>=0.75?'#a05a00':'#b83232';
+const barBg=p=>p>=1?'var(--green)':p>=0.75?'#e08000':'var(--red)';
+const MEDALS=['🥇','🥈','🥉'];
 
-function fmtDate(val) {
-  if (!val) return '—';
-  try { return new Date(val).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}); } catch { return val; }
-}
-
-function isLate(val) {
-  if (!val) return false;
-  const { todayObj } = getDateRange();
-  const t = new Date(todayObj);
-  t.setMonth(t.getMonth() + 3);
-  return new Date(val) > t;
-}
-
-function getKpiFiltered() {
-  if (!activeKpiFilter || activeKpiFilter === 'total') return allData;
-  const { todayObj } = getDateRange();
-  const threeMonths = new Date(todayObj);
-  threeMonths.setMonth(threeMonths.getMonth() + 3);
-  if (activeKpiFilter === 'hold') return allData.filter(r => (r.Status||'').trim() === 'On Hold');
-  if (activeKpiFilter === 'nooa') return allData.filter(r => !r.VendorRef || r.VendorRef.toString().trim() === '');
-  if (activeKpiFilter === 'late') return allData.filter(r => r.PromisedOn && new Date(r.PromisedOn) > threeMonths);
-  return allData;
-}
-
-function populateSalesRepFilter() {
-  const reps = [...new Set(allData.map(r => (r.Description_2||'').trim()).filter(Boolean))].sort();
-  const sel = document.getElementById('salesrep-filter');
-  const current = sel.value;
-  sel.innerHTML = '<option value="">All sales reps</option>' +
-    reps.map(r => `<option value="${r}"${r === current ? ' selected' : ''}>${r}</option>`).join('');
-}
-
-function getFiltered() {
-  const search = (document.getElementById('search')?.value || '').toLowerCase();
-  const status = document.getElementById('status-filter')?.value || '';
-  const salesRep = document.getElementById('salesrep-filter')?.value || '';
-  return getKpiFiltered().filter(r => {
-    const matchStatus = !status || (r.Status||'').trim() === status;
-    const matchSalesRep = !salesRep || (r.Description_2||'').trim() === salesRep;
-    const matchSearch = !search || [r.OrderNbr, r.AccountName, r.InventoryID, r.SalesOrderNbr, r.VendorRef, r.Description, r.Description_3].some(v => v && v.toString().toLowerCase().includes(search));
-    return matchStatus && matchSalesRep && matchSearch;
+// ════════════════════════════════════════════
+// RENDER LEADERBOARD  (sorted by WTD % of weekly budget desc, team badge on each row)
+// ════════════════════════════════════════════
+function renderLeaderboard() {
+  // Sort all reps by WTD sales as % of weekly budget descending
+  const sorted = [...REPS].sort((a,b)=>{
+    const wPctA = weekBudget(a)>0 ? (DATA.weekSales[a.code]||0)/weekBudget(a) : 0;
+    const wPctB = weekBudget(b)>0 ? (DATA.weekSales[b.code]||0)/weekBudget(b) : 0;
+    return wPctB - wPctA;
   });
-}
+  const rows = sorted.map((rep,i)=>{
+    const w    = DATA.weekSales[rep.code]||0;
+    const mtd  = (DATA.repMonthly[rep.code]||{})[CUR_PERIOD]||0;
+    const ytd  = YTD_PERIODS.reduce((s,p)=>s+((DATA.repMonthly[rep.code]||{})[p]||0),0);
+    const wbgt = weekBudget(rep);
+    const mbgt = monthBudget(rep);
+    const mbhg = monthBhag(rep);
+    const ybgt = ytdBudget(rep);
+    const ybhg = ytdBhag(rep);
+    const wPct  = wbgt>0?w/wbgt:0;
+    const mbPct = mbgt>0?mtd/mbgt:0;
+    const mhPct = mbhg>0?mtd/mbhg:0;
+    const ybPct = ybgt>0?ytd/ybgt:0;
+    const yhPct = ybhg>0?ytd/ybhg:0;
+    const tc    = TEAM_COLORS[rep.team];
 
-function toggleOrder(orderNbr) {
-  if (expandedOrders.has(orderNbr)) expandedOrders.delete(orderNbr);
-  else expandedOrders.add(orderNbr);
-  renderTable();
-}
+    const stackedCell = (pct1, label1, pct2, label2) => `
+      <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+        <div class="pct-wrap" style="align-items:flex-end">
+          <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)">${label1}</span>
+            <span class="pct-val" style="color:${pctColor(pct1)}">${pctFmt(pct1)}</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.min(pct1*100,100)}%;background:${barBg(pct1)}"></div></div>
+        </div>
+        <div class="pct-wrap" style="align-items:flex-end">
+          <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)">${label2}</span>
+            <span class="pct-val" style="color:${pctColor(pct2)}">${pctFmt(pct2)}</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.min(pct2*100,100)}%;background:${barBg(pct2)}"></div></div>
+        </div>
+      </div>`;
 
-function groupByOrder(lines) {
-  const groups = {};
-  const order = [];
-  lines.forEach(r => {
-    if (!groups[r.OrderNbr]) { groups[r.OrderNbr] = []; order.push(r.OrderNbr); }
-    groups[r.OrderNbr].push(r);
-  });
-  return order.map(nbr => ({ orderNbr: nbr, lines: groups[nbr] }))
-    .sort((a, b) => {
-      const dateA = a.lines[0]?.Date ? new Date(a.lines[0].Date) : new Date(0);
-      const dateB = b.lines[0]?.Date ? new Date(b.lines[0].Date) : new Date(0);
-      return dateB - dateA;
-    });
-}
-
-function renderTable() {
-  const filtered = getFiltered();
-  const groups = groupByOrder(filtered);
-  document.getElementById('row-count').textContent = `Showing ${groups.length.toLocaleString()} orders · ${filtered.length.toLocaleString()} lines`;
-  const container = document.getElementById('table-container');
-  if (!groups.length) { container.innerHTML = '<div class="loading">No results match your filters.</div>'; return; }
-
-  const rows = groups.map(({ orderNbr, lines }) => {
-    const expanded = expandedOrders.has(orderNbr);
-    const first = lines[0];
-    const totalQty = lines.reduce((s, r) => s + (parseFloat(r.POLine_baseOpenQty) || 0), 0);
-    const hasNoOA = lines.some(r => !r.VendorRef || r.VendorRef.toString().trim() === '');
-    const statuses = [...new Set(lines.map(r => (r.Status||'').trim()))];
-    const vendorRefs = [...new Set(lines.map(r => (r.VendorRef||'').trim()).filter(Boolean))];
-    const latestPromise = lines.reduce((latest, r) => {
-      if (!r.PromisedOn) return latest;
-      return (!latest || new Date(r.PromisedOn) > new Date(latest)) ? r.PromisedOn : latest;
-    }, null);
-    const promisedLate = latestPromise && isLate(latestPromise);
-    const desc2vals = [...new Set(lines.map(r => (r.Description_2||'').trim()).filter(Boolean))];
-    const desc3vals = [...new Set(lines.map(r => (r.Description_3||'').trim()).filter(Boolean))];
-    const statusBadges = statuses.map(s =>
-      s === 'On Hold' ? '<span class="badge badge-hold">On Hold</span>' :
-      s === 'Open' ? '<span class="badge badge-open">Open</span>' : s
-    ).join(' ');
-    const vendorRefDisplay = hasNoOA
-      ? (vendorRefs.length ? vendorRefs.join(', ') + ' <span class="badge badge-nooa">+ No OA</span>' : '<span class="badge badge-nooa">No OA</span>')
-      : vendorRefs.join(', ') || '—';
-
-    const groupRow = `<tr class="group-row${expanded?' expanded':''}" onclick="toggleOrder('${orderNbr}')">
-      <td><span class="expand-icon">▶</span><span style="font-family:monospace;font-size:12px;font-weight:500;">${orderNbr||'—'}</span></td>
-      <td title="${first.AccountName||''}">${first.AccountName||'—'}</td>
-      <td style="font-family:monospace;font-size:12px;">${first.SalesOrderNbr||'—'}</td>
-      <td>${vendorRefDisplay}</td>
-      <td>${statusBadges}</td>
-      <td>${fmtDate(first.Date)}</td>
-      <td style="${promisedLate?'color:#a32d2d;font-weight:500;':''}">${latestPromise ? fmtDate(latestPromise) : '—'}</td>
-      <td title="${desc2vals.join(', ')}">${desc2vals.join(', ')||'—'}</td>
-      <td title="${desc3vals.join(', ')}">${desc3vals.join(', ')||'—'}</td>
-      <td style="text-align:right;">${lines.length} line${lines.length!==1?'s':''} · ${Math.round(totalQty).toLocaleString()} qty</td>
-    </tr>`;
-
-    const lineRows = expanded ? `
-      <tr class="line-header-row">
-        <th style="padding-left:32px;">Line #</th>
-        <th>Inventory ID</th>
-        <th>Description</th>
-        <th>Vendor ref</th>
-        <th>Status</th>
-        <th>Promised</th>
-        <th style="text-align:right;">Open qty</th>
-      </tr>
-      ${lines.map(r => {
-        const noOA = !r.VendorRef || r.VendorRef.toString().trim() === '';
-        const late = isLate(r.PromisedOn);
-        return `<tr class="line-row">
-          <td style="padding-left:32px;font-family:monospace;">${r.LineNbr||'—'}</td>
-          <td>${r.InventoryID||'—'}</td>
-          <td title="${r.Description||''}">${r.Description||'—'}</td>
-          <td>${noOA?'<span class="badge badge-nooa">No OA</span>':(r.VendorRef||'—')}</td>
-          <td>${(r.Status||'').trim()==='On Hold'?'<span class="badge badge-hold">On Hold</span>':(r.Status||'').trim()==='Open'?'<span class="badge badge-open">Open</span>':(r.Status||'—')}</td>
-          <td>${late?`<span class="badge badge-late">${fmtDate(r.PromisedOn)}</span>`:fmtDate(r.PromisedOn)}</td>
-          <td style="text-align:right;">${r.POLine_baseOpenQty!=null?Math.round(parseFloat(r.POLine_baseOpenQty)).toLocaleString():'—'}</td>
-        </tr>`;
-      }).join('')}` : '';
-
-    return groupRow + lineRows;
-  }).join('');
-
-  container.innerHTML = `<div style="overflow-x:auto;"><table class="data-table">
-    <thead><tr>
-      <th style="width:110px;">Order #</th>
-      <th style="width:130px;">Account</th>
-      <th style="width:95px;">SO #</th>
-      <th style="width:140px;">Vendor ref</th>
-      <th style="width:95px;">Status</th>
-      <th style="width:90px;">Date</th>
-      <th style="width:90px;">Promised</th>
-      <th style="width:130px;">Description 2</th>
-      <th style="width:130px;">Description 3</th>
-      <th style="width:110px;text-align:right;">Lines / Qty</th>
-    </tr></thead>
-    <tbody>${rows}</tbody>
-  </table></div>`;
-}
-
-// ── Projects ───────────────────────────────────────────────────
-async function loadProjects() {
-  try {
-    const resp = await fetch(PROXY + '/projects');
-    projects = await resp.json();
-    renderProjects();
-  } catch(e) {
-    document.getElementById('projects-container').innerHTML = '<div class="loading">Unable to load projects.</div>';
-  }
-}
-
-function toggleProject(id) {
-  if (expandedProjects.has(id)) expandedProjects.delete(id);
-  else expandedProjects.add(id);
-  renderProjects();
-}
-
-function renderProjects() {
-  const search = (document.getElementById('project-search')?.value || '').toLowerCase();
-  const filtered = projects.filter(p =>
-    !search || [p.name, p.account, p.notes, p.status, ...(p.items||[]).map(i => i.inventoryId)].some(v => v && v.toLowerCase().includes(search))
-  ).sort((a, b) => {
-    const aPlaced = a.status === 'Order Placed' ? 1 : 0;
-    const bPlaced = b.status === 'Order Placed' ? 1 : 0;
-    return aPlaced - bPlaced;
-  });
-  document.getElementById('project-count').textContent = `(${filtered.length} of ${projects.length})`;
-  const container = document.getElementById('projects-container');
-  if (!filtered.length) {
-    container.innerHTML = projects.length === 0
-      ? '<div class="empty-state">No upcoming projects yet. Click "+ Add project" to get started.</div>'
-      : '<div class="empty-state">No projects match your search.</div>';
-    return;
-  }
-  const statusClass = s => {
-    if (!s) return '';
-    if (s === 'Pending Approval') return 'status-pending';
-    if (s === 'Awaiting Customer Order') return 'status-awaiting';
-    if (s === 'Order Placed') return 'status-placed';
-    return '';
-  };
-
-  const rows = filtered.map(p => {
-    const expanded = expandedProjects.has(p.id);
-    const items = p.items || [];
-    const totalQty = items.reduce((s, i) => s + (parseFloat(i.qty) || 0), 0);
-    const itemSummary = items.length
-      ? items.map(i => `<span>${i.inventoryId||'?'} × ${i.qty||0}${i.uom?' '+i.uom:''}</span>`).join('')
-      : '<span style="color:#aaa;">No items</span>';
-
-    const isPlaced = p.status === 'Order Placed';
-    const groupRow = `<tr class="proj-group-row${expanded?' expanded':''}" onclick="toggleProject('${p.id}')" style="${isPlaced?'background:#edf7ed;':''}">
-      <td style="${isPlaced?'background:#edf7ed;':''}"><span class="expand-icon">▶</span><span style="font-weight:500;">${p.name||'—'}</span></td>
-      <td style="${isPlaced?'background:#edf7ed;':''}">${p.account||'—'}</td>
-      <td style="${isPlaced?'background:#edf7ed;':''}">${p.needByDate ? fmtDate(p.needByDate) : '—'}</td>
-      <td style="${isPlaced?'background:#edf7ed;':''}"><div class="items-summary">${itemSummary}</div></td>
-      <td style="text-align:right;${isPlaced?'background:#edf7ed;':''}">${totalQty ? totalQty.toLocaleString() : '—'}</td>
-      <td style="${isPlaced?'background:#edf7ed;':''}">${p.status ? `<span class="status-badge ${statusClass(p.status)}">${p.status}</span>` : '—'}</td>
-      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${isPlaced?'background:#edf7ed;':''}" title="${p.notes||''}">${p.notes||'—'}</td>
-      <td style="white-space:nowrap;${isPlaced?'background:#edf7ed;':''}">
-        <button class="btn-edit" onclick="event.stopPropagation();editProject('${p.id}')">Edit</button>
-        <button class="btn-delete" onclick="event.stopPropagation();deleteProject('${p.id}')">Delete</button>
-      </td>
-    </tr>`;
-
-    const detailRow = expanded ? `<tr class="proj-lines-row">
-      <td colspan="8">
-        <div class="proj-lines-inner">
-          ${items.length ? `<table class="proj-lines-table">
-            <thead><tr><th>#</th><th>Inventory ID</th><th>UOM</th><th style="text-align:right;">Qty</th></tr></thead>
-            <tbody>${items.map((item, idx) => `<tr>
-              <td style="color:#aaa;">${idx+1}</td>
-              <td style="font-weight:500;">${item.inventoryId||'—'}</td>
-              <td>${item.uom||'—'}</td>
-              <td style="text-align:right;">${item.qty ? parseFloat(item.qty).toLocaleString() : '—'}</td>
-            </tr>`).join('')}</tbody>
-          </table>` : ''}
-          ${p.notes ? `<div style="margin-top:${items.length?'10px':'0'};padding-top:${items.length?'10px':'0'};${items.length?'border-top:1px solid #eee;':''}font-size:12px;color:#444;white-space:pre-wrap;line-height:1.6;"><span style="font-size:11px;color:#888;font-weight:500;display:block;margin-bottom:4px;">Notes</span>${p.notes}</div>` : ''}
+    return `
+    <tr class="fade-in">
+      <td style="padding-left:10px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--rule);min-width:18px;">${i+1}</span>
+          <div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="rep-name">${rep.name}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:1px 5px;border-radius:2px;border:1px solid ${tc};color:${tc};white-space:nowrap;">${rep.team.split(' ')[0]}</span>
+            </div>
+            <div class="rep-sub">${fmtK(wbgt)}/wk · ${fmtK(mbgt)}/mo budget · MTD ${fmtK(mtd)}</div>
+          </div>
         </div>
       </td>
-    </tr>` : '';
-
-    return groupRow + detailRow;
+      <td>
+        <div class="pct-wrap" style="align-items:flex-end">
+          <span class="mono" style="font-size:12px">${fmtK(w)}</span>
+          <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)">Bgt</span>
+            <span class="pct-val" style="color:${pctColor(wPct)}">${pctFmt(wPct)}</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.min(wPct*100,100)}%;background:${barBg(wPct)}"></div></div>
+        </div>
+      </td>
+      <td>${stackedCell(mbPct,'Bgt',mhPct,'BHAG')}</td>
+      <td>${stackedCell(ybPct,'Bgt',yhPct,'BHAG')}</td>
+    </tr>`;
   }).join('');
 
-  container.innerHTML = `<div style="overflow-x:auto;"><table class="projects-table">
+  return `
+  <table class="lb-tbl">
     <thead><tr>
-      <th>Project name</th>
-      <th style="width:140px;">Account</th>
-      <th style="width:110px;">Need by date</th>
-      <th>Items</th>
-      <th style="width:80px;text-align:right;">Total qty</th>
-      <th style="width:130px;">Status</th>
-      <th style="width:180px;">Notes</th>
-      <th style="width:90px;"></th>
+      <th style="width:34%">Rep</th>
+      <th style="width:22%">WTD Sales &amp; % of Wk Budget</th>
+      <th style="width:22%">Cumul. % of MTD Budget &amp; BHAG</th>
+      <th style="width:22%">Cumul. % of YTD Budget &amp; BHAG</th>
     </tr></thead>
     <tbody>${rows}</tbody>
-  </table></div>`;
+  </table>`;
 }
 
-// ── Line item form helpers ─────────────────────────────────────
-function addLineItem(inventoryId='', uom='', qty='') {
-  const container = document.getElementById('line-items-container');
-  const div = document.createElement('div');
-  div.className = 'line-item-row';
-  div.innerHTML = `
-    <input type="text" placeholder="Inventory ID" value="${inventoryId}" class="li-inventory" />
-    <input type="text" placeholder="EA, SY, SF..." value="${uom}" class="li-uom" />
-    <input type="number" placeholder="0" value="${qty}" min="0" class="li-qty" />
-    <button class="btn-remove-line" onclick="this.parentElement.remove()" title="Remove">×</button>
-  `;
-  container.appendChild(div);
+// ════════════════════════════════════════════
+// RENDER INITIATIVES
+// ════════════════════════════════════════════
+function topRepsTable(rows,limit=3){
+  // Only show reps that are active (exist in REPS array)
+  const activeRows = rows.filter(r=>r.ytd>0 && REPS.find(x=>x.code===r.code));
+  const top=activeRows.sort((a,b)=>b.ytd-a.ytd).slice(0,limit);
+  const tot=activeRows.reduce((s,r)=>s+r.ytd,0);
+  if(!top.length) return '<div style="padding:8px 13px;font-size:11px;color:var(--muted)">No data yet</div>';
+  return `<table class="init-reps-tbl">
+    <thead><tr><th>Rep</th><th>YTD Sales</th><th>Share</th></tr></thead>
+    <tbody>${top.map((r,i)=>`<tr>
+      <td><span class="medal">${MEDALS[i]||''}</span>${r.rep}</td>
+      <td class="mono">${fmtK(r.ytd)}</td>
+      <td class="mono">${tot>0?((r.ytd/tot)*100).toFixed(0)+'%':'—'}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
 }
 
-function getLineItems() {
-  return Array.from(document.querySelectorAll('.line-item-row')).map(row => ({
-    inventoryId: row.querySelector('.li-inventory').value.trim(),
-    uom: row.querySelector('.li-uom').value.trim(),
-    qty: row.querySelector('.li-qty').value,
-  })).filter(i => i.inventoryId || i.qty);
+function renderInitiatives(){
+  const inviusTot = DATA.invius.reduce((s,r)=>s+r.ytd,0);
+  const maxxonTot = DATA.maxxon.filter(r=>r.rep!=='Default').reduce((s,r)=>s+r.ytd,0);
+  const mckinleyTot = DATA.mckinley.reduce((s,r)=>s+r.ytd,0);
+
+  return `
+    <!-- INVIUS -->
+    <div class="init fade-in s1">
+      <div class="init-hdr">
+        <span class="init-title">INVIUS Sales</span>
+        <span class="init-total">${fmtK(inviusTot)} YTD</span>
+      </div>
+      <div class="init-sub">Item Classes: NOX LVT + NOX EVT &nbsp;·&nbsp; Top 3 Reps</div>
+      ${topRepsTable(DATA.invius)}
+    </div>
+
+    <!-- MAXXON SKIMFILL -->
+    <div class="init fade-in s2">
+      <div class="init-hdr">
+        <span class="init-title">Maxxon SkimFill</span>
+        <span class="init-total">${fmtK(maxxonTot)} YTD</span>
+      </div>
+      <div class="init-sub">Inventory ID 12622 &nbsp;·&nbsp; Top 3 Reps</div>
+      ${topRepsTable(DATA.maxxon.filter(r=>r.rep!=='Default'))}
+    </div>
+
+    <!-- MCKINLEY -->
+    <div class="init fade-in s3">
+      <div class="init-hdr">
+        <span class="init-title">McKinley Sales</span>
+        <span class="init-total">${fmtK(mckinleyTot)} YTD</span>
+      </div>
+      <div class="init-sub">Descriptions containing "McKinley LVT" &nbsp;·&nbsp; Top 3 Reps</div>
+      ${topRepsTable(DATA.mckinley)}
+    </div>
+
+    <!-- SUPPORTING DEALERS -->
+    <div class="init fade-in s4">
+      <div class="init-hdr">
+        <span class="init-title">Supporting Dealers</span>
+        <span class="init-total" style="font-size:11px;color:var(--muted)">Displays placed · Avg ≥$2K/mo (last 6 mo)</span>
+      </div>
+      <div class="init-sub">GC-TargetCustomers · DEALER class · DisplaysPlaced set · avg monthly sales ≥ $2,000 over last 6 months</div>
+      <div class="dealers-wrap">
+        ${(()=>{
+          // Build rows sorted by count desc, grouped by team
+          const teamDefs = [
+            {team:'Bob Brown',   color:TEAM_COLORS['Bob Brown'],  codes:['AD','AJ','BB','BT','DA','MJ','TOM G']},
+            {team:'Phil Branon', color:TEAM_COLORS['Phil Branon'], codes:['JB','DL','MM','NP','SM']},
+          ];
+          return teamDefs.map(t=>{
+            // Sort reps within team by dealer count descending
+            const sortedCodes = [...t.codes].sort((a,b)=>{
+              const ca = DATA.dealers[a]?.count ?? -1;
+              const cb = DATA.dealers[b]?.count ?? -1;
+              return cb - ca;
+            });
+            return `
+            <div class="dealers-team-label" style="color:${t.color}">&nbsp;Team ${t.team}</div>
+            <div class="dealers-row">
+              ${sortedCodes.map(code=>{
+                const rep  = REPS.find(r=>r.code===code);
+                if(!rep) return '';
+                const d    = DATA.dealers[code];
+                const cnt  = d ? d.count : '—';
+                const fname= rep.name.split(' ')[0];
+                const hasData = d && d.count >= 0;
+                return `<div class="dealer-cell">
+                  <div class="d-name">${fname}</div>
+                  <div class="d-count" style="${!hasData?'color:var(--muted);font-size:16px':''}">${cnt}</div>
+                  <div class="d-lbl">dealers</div>
+                </div>`;
+              }).join('')}
+            </div>`;
+          }).join('');
+        })()}
+      </div>
+    </div>`;
 }
 
-function showAddForm() {
-  editingProjectId = null;
-  document.getElementById('form-title').textContent = 'Add upcoming project';
-  document.getElementById('f-name').value = '';
-  document.getElementById('f-account').value = '';
-  document.getElementById('f-needbydate').value = '';
-  document.getElementById('f-status').value = 'Planning';
-  document.getElementById('f-notes').value = '';
-  document.getElementById('line-items-container').innerHTML = '';
-  addLineItem();
-  document.getElementById('project-form').style.display = 'block';
-  document.getElementById('f-name').focus();
+// ════════════════════════════════════════════
+// MAIN RENDER
+// ════════════════════════════════════════════
+function render(){
+  document.getElementById('body').innerHTML=`
+  <div class="layout">
+    <div>
+      <div class="section fade-in">
+        <div class="sec-head">
+          <h2>Weekly Leaderboard</h2>
+          <span class="sec-tag">Ranked by % of Wk Budget · MTD ${periodLabel(CUR_PERIOD)} · wk of ${weekStart()}</span>
+        </div>
+        ${renderLeaderboard()}
+      </div>
+    </div>
+    <div>
+      <div class="section fade-in s1">
+        <div class="sec-head">
+          <h2>Sales Initiatives</h2>
+          <span class="sec-tag">YTD 2026 · Live Acumatica</span>
+        </div>
+        ${renderInitiatives()}
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 }
 
-function editProject(id) {
-  const p = projects.find(p => p.id === id);
-  if (!p) return;
-  editingProjectId = id;
-  document.getElementById('form-title').textContent = 'Edit project';
-  document.getElementById('f-name').value = p.name || '';
-  document.getElementById('f-account').value = p.account || '';
-  document.getElementById('f-needbydate').value = p.needByDate || '';
-  document.getElementById('f-status').value = p.status || 'Pending Approval';
-  document.getElementById('f-notes').value = p.notes || '';
-  document.getElementById('line-items-container').innerHTML = '';
-  (p.items || []).forEach(i => addLineItem(i.inventoryId, i.uom, i.qty));
-  if (!p.items || !p.items.length) addLineItem();
-  document.getElementById('project-form').style.display = 'block';
-  document.getElementById('f-name').focus();
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+async function init(){
+  render(); // show snapshot immediately
+  await loadLiveData().catch(()=>{});
+  render(); // re-render with live data
 }
 
-function cancelForm() {
-  editingProjectId = null;
-  document.getElementById('project-form').style.display = 'none';
-}
-
-async function saveProject() {
-  const payload = {
-    name: document.getElementById('f-name').value.trim(),
-    account: document.getElementById('f-account').value.trim(),
-    needByDate: document.getElementById('f-needbydate').value,
-    status: document.getElementById('f-status').value,
-    notes: document.getElementById('f-notes').value.trim(),
-    items: getLineItems(),
-  };
-  if (!payload.name) { alert('Project name is required.'); return; }
-  const btn = document.getElementById('save-btn');
-  btn.textContent = 'Saving...';
-  btn.disabled = true;
-  try {
-    if (editingProjectId) {
-      payload.id = editingProjectId;
-      await fetch(PROXY + '/projects', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const idx = projects.findIndex(p => p.id === editingProjectId);
-      if (idx !== -1) projects[idx] = { ...projects[idx], ...payload };
-    } else {
-      const resp = await fetch(PROXY + '/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const newP = await resp.json();
-      projects.push(newP);
-    }
-    cancelForm();
-    renderProjects();
-  } catch(e) {
-    alert('Error saving project. Please try again.');
-  } finally {
-    btn.textContent = 'Save project';
-    btn.disabled = false;
-  }
-}
-
-async function deleteProject(id) {
-  if (!confirm('Delete this project?')) return;
-  try {
-    await fetch(PROXY + '/projects', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-    projects = projects.filter(p => p.id !== id);
-    renderProjects();
-  } catch(e) {
-    alert('Error deleting project. Please try again.');
-  }
-}
+init();
 </script>
 </body>
 </html>
