@@ -264,6 +264,59 @@
   .section-hdr:first-child { border-top: none; }
 
   .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 12px; }
+
+  /* ── E.A.T.E.R. Tab ────────────────────────────────────────────────────── */
+  .eater-score-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+  .eater-score-col { padding: 14px 16px; border-right: 1px solid var(--border2); }
+  .eater-score-col:last-child { border-right: none; }
+  .eater-col-hdr { font-size: 10px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid var(--border); }
+  .eater-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .eater-cat-lbl { width: 90px; font-size: 11px; font-weight: 600; color: var(--dim); flex-shrink: 0; }
+  .eater-cat-icon { font-size: 13px; margin-right: 2px; }
+  .eater-input { width: 64px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 700; font-family: inherit; background: var(--surface); color: var(--text); text-align: center; outline: none; }
+  .eater-input:focus { border-color: var(--asf-blue); outline: 2px solid rgba(91,143,204,0.2); }
+  .eater-input:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+  .eater-total-row { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 10px; border-top: 2px solid var(--border); }
+  .eater-total-lbl { font-size: 11px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.06em; }
+  .eater-total-val { font-size: 22px; font-weight: 800; color: var(--asf-navy); }
+  .eater-rating-badge { margin-top: 6px; text-align: right; }
+  /* Rating colors */
+  .r-dnm  { background: rgba(184,50,40,0.12);  color: #b83228; border: 1px solid rgba(184,50,40,0.3); }
+  .r-ni   { background: rgba(196,137,10,0.12); color: #7a5500; border: 1px solid rgba(196,137,10,0.3); }
+  .r-me   { background: rgba(91,143,204,0.12); color: var(--asf-navy); border: 1px solid rgba(91,143,204,0.3); }
+  .r-exc  { background: rgba(90,158,69,0.12);  color: #3a7a28; border: 1px solid rgba(90,158,69,0.3); }
+  .r-out  { background: rgba(131,90,204,0.12); color: #5a2aa0; border: 1px solid rgba(131,90,204,0.3); }
+  /* History table highlight */
+  .eater-hist-calbr { font-weight: 700; color: var(--asf-navy); }
+  /* Quarter KPI mini cards */
+  .eater-qtr-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 0; }
+  .eater-qtr-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .eater-qtr-lbl { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+  .eater-qtr-val { font-size: 20px; font-weight: 800; color: var(--asf-navy); }
+  .eater-qtr-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  /* Entry form meta row */
+  .eater-meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border2); background: var(--surface2); }
+  .eater-meta label { font-size: 10px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.07em; display: block; margin-bottom: 4px; }
+  .eater-meta select, .eater-meta input { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; background: var(--surface); color: var(--text); outline: none; }
+  .eater-meta select:focus, .eater-meta input:focus { border-color: var(--asf-blue); }
+  .eater-save-bar { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border2); background: var(--surface2); }
+  .eater-save-btn { padding: 8px 22px; background: var(--asf-navy); color: #fff; border: none; border-radius: 6px; font-size: 12px; font-family: inherit; font-weight: 700; cursor: pointer; letter-spacing: 0.05em; transition: background 0.15s; }
+  .eater-save-btn:hover { background: var(--asf-blue); }
+  .eater-save-msg { font-size: 11px; font-weight: 600; color: var(--asf-green); }
+  /* Expand row */
+  .eater-expand-btn { background: none; border: none; cursor: pointer; color: var(--asf-blue); font-size: 11px; font-weight: 600; padding: 0; }
+  .eater-detail-row { display: none; }
+  .eater-detail-row.open { display: table-row; }
+  .eater-detail-inner { padding: 10px 16px; background: #f0f5fb; font-size: 11px; }
+  .eater-detail-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; }
+  .eater-detail-cat { text-align: center; }
+  .eater-detail-cat-lbl { font-size: 9px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+  .eater-detail-scores { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .eater-score-pill { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+  .s-self { background: rgba(91,143,204,0.12); color: var(--asf-navy); }
+  .s-mgr  { background: rgba(196,137,10,0.10); color: #7a5500; }
+  .s-cal  { background: rgba(90,158,69,0.15); color: #3a7a28; }
+  .eater-mgr-only { font-size: 10px; color: var(--muted); font-style: italic; padding: 8px 16px; }
 </style>
 </head>
 <body>
@@ -341,6 +394,7 @@
     <button class="tab active" data-tab="overview" onclick="showTab(this)">Sales Overview</button>
     <button class="tab" data-tab="customers" onclick="showTab(this)">Customer Summary</button>
     <button class="tab" data-tab="opportunities" onclick="showTab(this)">Activities &amp; Opportunities</button>
+    <button class="tab" data-tab="eater" onclick="showTab(this);initEaterTab()">E.A.T.E.R.</button>
   </div>
 
   <!-- ═══════════════════════════════════ TAB: SALES OVERVIEW -->
@@ -682,6 +736,155 @@
     </div>
   </div>
 
+
+  <!-- ══════════════════════════════════════ TAB: E.A.T.E.R. -->
+  <div id="pane-eater" class="tab-pane">
+    <div class="page">
+
+      <!-- KPI row: avg calibrated + per-quarter mini cards -->
+      <div class="row cols-2">
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">YTD Average — Calibrated Score</span></div>
+          <div class="card-body" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+            <div>
+              <div class="kpi-val" id="eater-kpi-avg" style="color:var(--asf-navy)">—</div>
+              <div class="kpi-sub" id="eater-kpi-sub">no data</div>
+            </div>
+            <div id="eater-kpi-badge"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Calibrated Score by Quarter</span></div>
+          <div class="card-body">
+            <div class="eater-qtr-grid" id="eater-qtr-grid">
+              <div class="eater-qtr-card"><div class="eater-qtr-lbl">Q1</div><div class="eater-qtr-val" id="eq-q1">—</div><div class="eater-qtr-sub" id="eq-q1-r"></div></div>
+              <div class="eater-qtr-card"><div class="eater-qtr-lbl">Q2</div><div class="eater-qtr-val" id="eq-q2">—</div><div class="eater-qtr-sub" id="eq-q2-r"></div></div>
+              <div class="eater-qtr-card"><div class="eater-qtr-lbl">Q3</div><div class="eater-qtr-val" id="eq-q3">—</div><div class="eater-qtr-sub" id="eq-q3-r"></div></div>
+              <div class="eater-qtr-card"><div class="eater-qtr-lbl">Q4</div><div class="eater-qtr-val" id="eq-q4">—</div><div class="eater-qtr-sub" id="eq-q4-r"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry form (managers only) -->
+      <div class="card" id="eater-entry-card">
+        <div class="card-hdr">
+          <span class="card-title" id="eater-entry-title">Enter / Edit Review</span>
+          <span id="eater-entry-access-note" class="eater-mgr-only"></span>
+        </div>
+
+        <!-- Meta: quarter / employee / dept -->
+        <div class="eater-meta">
+          <div>
+            <label>Quarter</label>
+            <select id="eater-quarter">
+              <option value="Q1-2026">Q1 2026 (Nov–Jan)</option>
+              <option value="Q2-2026">Q2 2026 (Feb–Apr)</option>
+              <option value="Q3-2026">Q3 2026 (May–Jul)</option>
+              <option value="Q4-2026">Q4 2026 (Aug–Oct)</option>
+            </select>
+          </div>
+          <div>
+            <label>Employee Name</label>
+            <select id="eater-employee"></select>
+          </div>
+          <div>
+            <label>Department</label>
+            <input type="text" id="eater-dept" placeholder="e.g. Residential Sales" readonly style="background:var(--surface2);color:var(--muted)">
+          </div>
+        </div>
+
+        <!-- Score columns: Self / Manager / Calibrated -->
+        <div class="eater-score-grid">
+          <!-- SELF -->
+          <div class="eater-score-col">
+            <div class="eater-col-hdr">Self Assessment</div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">💪</span>Effort</span>      <input class="eater-input" id="s-E" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">😊</span>Attitude</span>    <input class="eater-input" id="s-A" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">🤝</span>Teamwork</span>    <input class="eater-input" id="s-T" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">⚡</span>Engagement</span>  <input class="eater-input" id="s-En" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">🏆</span>Results</span>     <input class="eater-input" id="s-R" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+            <div class="eater-total-row">
+              <span class="eater-total-lbl">Total</span>
+              <span class="eater-total-val" id="s-total">0</span>
+            </div>
+            <div class="eater-rating-badge"><span class="badge" id="s-badge">—</span></div>
+          </div>
+          <!-- MANAGER -->
+          <div class="eater-score-col">
+            <div class="eater-col-hdr">Manager Rating</div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">💪</span>Effort</span>      <input class="eater-input" id="m-E" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">😊</span>Attitude</span>    <input class="eater-input" id="m-A" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">🤝</span>Teamwork</span>    <input class="eater-input" id="m-T" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">⚡</span>Engagement</span>  <input class="eater-input" id="m-En" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">🏆</span>Results</span>     <input class="eater-input" id="m-R" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()"></div>
+            <div class="eater-total-row">
+              <span class="eater-total-lbl">Total</span>
+              <span class="eater-total-val" id="m-total">0</span>
+            </div>
+            <div class="eater-rating-badge"><span class="badge" id="m-badge">—</span></div>
+          </div>
+          <!-- CALIBRATED -->
+          <div class="eater-score-col">
+            <div class="eater-col-hdr" style="color:var(--asf-green)">Calibrated ✓</div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">💪</span>Effort</span>      <input class="eater-input" id="c-E" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()" style="border-color:rgba(90,158,69,0.5)"></div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">😊</span>Attitude</span>    <input class="eater-input" id="c-A" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()" style="border-color:rgba(90,158,69,0.5)"></div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">🤝</span>Teamwork</span>    <input class="eater-input" id="c-T" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()" style="border-color:rgba(90,158,69,0.5)"></div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">⚡</span>Engagement</span>  <input class="eater-input" id="c-En" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()" style="border-color:rgba(90,158,69,0.5)"></div>
+            <div class="eater-row"><span class="eater-cat-lbl"><span class="eater-cat-icon">🏆</span>Results</span>     <input class="eater-input" id="c-R" type="number" min="1" max="10" step="0.5" placeholder="1–10" oninput="eaterCalcTotals()" style="border-color:rgba(90,158,69,0.5)"></div>
+            <div class="eater-total-row">
+              <span class="eater-total-lbl">Total</span>
+              <span class="eater-total-val" id="c-total" style="color:var(--asf-green)">0</span>
+            </div>
+            <div class="eater-rating-badge"><span class="badge" id="c-badge">—</span></div>
+          </div>
+        </div>
+
+        <div class="eater-save-bar">
+          <button class="eater-save-btn" onclick="eaterSaveReview()">Save Review</button>
+          <button class="eater-save-btn" style="background:var(--muted)" onclick="eaterClearForm()">Clear</button>
+          <span id="eater-save-msg" class="eater-save-msg"></span>
+        </div>
+      </div>
+
+      <!-- History table -->
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Review History</span>
+          <span class="card-badge" id="eater-hist-badge"></span>
+        </div>
+        <div class="ctrl-bar">
+          <input class="ctrl-input" id="eater-hist-search" placeholder="Search employee…" oninput="eaterRenderHistory()">
+          <select class="ctrl-select" id="eater-hist-qtr" onchange="eaterRenderHistory()">
+            <option value="">All Quarters</option>
+            <option value="Q1-2026">Q1 2026</option>
+            <option value="Q2-2026">Q2 2026</option>
+            <option value="Q3-2026">Q3 2026</option>
+            <option value="Q4-2026">Q4 2026</option>
+          </select>
+          <div class="row-count" id="eater-hist-count"></div>
+        </div>
+        <div class="card-scroll">
+          <table id="eater-hist-table">
+            <thead><tr>
+              <th style="width:24px"></th>
+              <th>Employee</th>
+              <th>Quarter</th>
+              <th>Department</th>
+              <th style="text-align:center">Self</th>
+              <th style="text-align:center">Manager</th>
+              <th style="text-align:center">Calibrated</th>
+              <th>Rating</th>
+              <th style="width:60px"></th>
+            </tr></thead>
+            <tbody id="eater-hist-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div><!-- /#dashboard -->
 
 <script>
@@ -714,7 +917,6 @@ const REP_TARGETS = {
   'Damon Lockhart':  { sub:'000-36', annualBudget:750000,   annualBhag:1178808.71, budgetCum:[55000.0,110000.0,165000.0,224075.0,283150.0,342225.0,413450.0,484675.0,555900.0,620600.0,685300.0,750000.0], bhagCum:[86445.97,172891.94,259337.91,352188.74,445039.57,537890.4,649837.93,761785.46,873732.99,975424.89,1077116.79,1178808.69] },
   'Derrick Almond':  { sub:'000-33', annualBudget:1075000,  annualBhag:1192564.81, budgetCum:[78833.33,157666.66,236499.99,321174.16,405848.33,490522.5,592611.67,694700.84,796790.01,889526.68,982263.35,1075000.02], bhagCum:[87454.75,174909.5,262364.25,356298.6,450232.95,544167.3,657421.2,770675.1,883929.0,986807.59,1089686.18,1192564.77] },
   'Jennifer Paredes':{ sub:'000-41', annualBudget:750000,   annualBhag:832021.96,  budgetCum:[55000.0,110000.0,165000.0,224075.0,283150.0,342225.0,413450.0,484675.0,555900.0,620600.0,685300.0,750000.0], bhagCum:[61014.94,122029.88,183044.82,248580.42,314116.02,379651.62,458665.97,537680.32,616694.67,688470.43,760246.19,832021.95] },
-  'Jeremy Diggs':    { sub:'000-34', annualBudget:2000000,  annualBhag:2161149.3,  budgetCum:[146666.67,293333.34,440000.01,597533.34,755066.67,912600.0,1102533.33,1292466.66,1482399.99,1654933.32,1827466.65,1999999.98], bhagCum:[158484.28,316968.56,475452.84,645679.37,815905.9,986132.43,1191369.58,1396606.73,1601843.88,1788279.03,1974714.18,2161149.33] },
   'Mitchell Jones':  { sub:'000-35', annualBudget:930000,   annualBhag:982340.59,  budgetCum:[68200.0,136400.0,204600.0,277853.0,351106.0,424359.0,512678.0,600997.0,689316.0,769544.0,849772.0,930000.0], bhagCum:[72038.31,144076.62,216114.93,293490.62,370866.31,448242.0,541531.61,634821.22,728110.83,812854.08,897597.33,982340.58] },
   'Nikki Petriello': { sub:'000-23', annualBudget:1500000,  annualBhag:1664043.92, budgetCum:[110000.0,220000.0,330000.0,448150.0,566300.0,684450.0,826900.0,969350.0,1111800.0,1241200.0,1370600.0,1500000.0], bhagCum:[122029.89,244059.78,366089.67,497160.86,628232.05,759303.24,917331.94,1075360.64,1233389.34,1376940.86,1520492.38,1664043.9] },
   'Sean Mitchell':   { sub:'000-22', annualBudget:5200000,  annualBhag:5402873.25, budgetCum:[381333.33,762666.66,1143999.99,1553586.66,1963173.33,2372760.0,2866586.67,3360413.34,3854240.01,4302826.68,4751413.35,5200000.02], bhagCum:[396210.71,792421.42,1188632.13,1614198.45,2039764.77,2465331.09,2978423.95,3491516.81,4004609.67,4470697.54,4936785.41,5402873.28] },
@@ -731,8 +933,8 @@ function getTargets(repName) {
 
 // Reps excluded from the global filter dropdown
 const EXCLUDED_REPS = new Set([
-  'Jeremy Diggs', 'Mike Garvey', 'Emily Johnson',
-  'Katie Haynes', 'Jennifer Paredes', 'Chris Galinetti', 'Zanna Kelly'
+  'Mike Garvey', 'Emily Johnson',
+  'Katie Haynes', 'Jennifer Paredes', 'Zanna Kelly'
 ]);
 
 const TRAILING_AGO = (() => { const d=new Date(); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); })();
@@ -2133,6 +2335,397 @@ function showDashboard() {
 }
 function setLoadTxt(t) { document.getElementById('load-txt').textContent=t; }
 function hideOverlay() { document.getElementById('loading-overlay').style.display='none'; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// E.A.T.E.R. TAB — DATA, STORAGE & RENDERING
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Pre-seeded historical data (Q1 & Q2 FY2026 from uploaded worksheets) ──
+const EATER_SEED = [
+  // Q1 2026 — Residential Sales (Bob Brown)
+  { qtr:'Q1-2026', name:'Austin Jones',   dept:'Residential Sales',
+    self:{E:7,A:8,T:7,En:8,R:7}, mgr:{E:6,A:6,T:7,En:8,R:6}, cal:{E:5,A:6,T:6,En:6,R:5} },
+  { qtr:'Q1-2026', name:'Derrick Almond', dept:'Residential Sales',
+    self:{E:6,A:6,T:8,En:7,R:6}, mgr:{E:8,A:8,T:8,En:8,R:7}, cal:{E:7,A:7,T:7,En:7,R:6} },
+  { qtr:'Q1-2026', name:'Mitchell Jones', dept:'Residential Sales',
+    self:{E:8,A:8,T:8,En:8,R:8}, mgr:{E:7,A:6.5,T:6.5,En:8,R:6}, cal:{E:7,A:6,T:5,En:6,R:6} },
+  { qtr:'Q1-2026', name:'Tom Goldston',   dept:'Residential Sales',
+    self:{E:7,A:7,T:6,En:5,R:6}, mgr:{E:9,A:8,T:8,En:7,R:6}, cal:{E:7,A:6,T:6,En:5,R:5} },
+  { qtr:'Q1-2026', name:'Bobby Townsend', dept:'Residential Sales',
+    self:{E:7,A:10,T:9,En:6,R:6}, mgr:{E:8,A:8,T:8,En:8,R:6}, cal:{E:7,A:7,T:7,En:6,R:6} },
+  { qtr:'Q1-2026', name:'Anthony Deel',   dept:'Residential Sales',
+    self:{E:7,A:7,T:6,En:6.5,R:6.5}, mgr:{E:6,A:7,T:8,En:7,R:7}, cal:{E:5,A:6,T:6,En:6,R:6} },
+  // Q1 2026 — Commercial Sales (Phil Branon)
+  { qtr:'Q1-2026', name:'Sean Mitchell',    dept:'Commercial Sales',
+    self:{E:9,A:9,T:9,En:8,R:9}, mgr:{E:8,A:9,T:9,En:8,R:9}, cal:{E:8,A:9,T:7,En:7,R:9} },
+  { qtr:'Q1-2026', name:'Nikki Petriello',  dept:'Commercial Sales',
+    self:{E:8,A:8,T:8,En:9,R:7}, mgr:{E:7,A:9,T:9,En:8,R:7}, cal:{E:6,A:7,T:8,En:6,R:7} },
+  { qtr:'Q1-2026', name:'Damon Lockhart',   dept:'Commercial Sales',
+    self:{E:6,A:5,T:7,En:5,R:3}, mgr:{E:4,A:5,T:8,En:4,R:2}, cal:{E:4,A:5,T:7,En:4,R:3} },
+  { qtr:'Q1-2026', name:'Jennifer Paredes', dept:'Commercial Sales',
+    self:{E:7,A:9,T:7,En:7,R:5}, mgr:{E:7,A:8,T:8,En:7,R:7}, cal:{E:7,A:7,T:7,En:6,R:5} },
+  { qtr:'Q1-2026', name:'Michael McLeod',   dept:'Commercial Sales',
+    self:{E:8,A:8.5,T:9,En:8.5,R:8}, mgr:{E:4,A:7,T:7,En:5,R:4}, cal:{E:6,A:7,T:6,En:5,R:4} },
+  // Q1 2026 — Sales Management
+  { qtr:'Q1-2026', name:'Phil Branon', dept:'Sales Management',
+    self:{E:7,A:8,T:7,En:7,R:7}, mgr:{E:7,A:7,T:7,En:7,R:6}, cal:{E:7,A:7,T:7,En:7,R:6} },
+  { qtr:'Q1-2026', name:'Bob Brown',   dept:'Sales Management',
+    self:{E:8,A:8,T:8,En:8,R:7}, mgr:{E:7,A:7,T:7,En:6,R:6}, cal:{E:7,A:7,T:7,En:6,R:6} },
+  // Q2 2026 — Residential Sales (Bob Brown)
+  { qtr:'Q2-2026', name:'Austin Jones',   dept:'Residential Sales',
+    self:{E:7,A:7,T:6,En:7,R:7}, mgr:{E:6,A:6,T:7,En:6,R:6}, cal:{E:6,A:7,T:7,En:6,R:6} },
+  { qtr:'Q2-2026', name:'Derrick Almond', dept:'Residential Sales',
+    self:{E:8,A:7,T:7,En:8,R:6}, mgr:{E:8,A:8,T:7,En:7,R:7}, cal:{E:8,A:8,T:7,En:7,R:6} },
+  { qtr:'Q2-2026', name:'Mitchell Jones', dept:'Residential Sales',
+    self:{E:8,A:8,T:7,En:7,R:6}, mgr:{E:7,A:7,T:6,En:6,R:5}, cal:{E:7,A:6,T:6,En:6,R:5} },
+  { qtr:'Q2-2026', name:'Tom Goldston',   dept:'Residential Sales',
+    self:{E:8,A:8,T:8,En:8,R:8}, mgr:{E:7,A:7,T:7,En:7,R:6}, cal:{E:7,A:8,T:7,En:7,R:6} },
+  { qtr:'Q2-2026', name:'Bobby Townsend', dept:'Residential Sales',
+    self:{E:7,A:8,T:7,En:6,R:7}, mgr:{E:7,A:7,T:7,En:7,R:7}, cal:{E:null,A:null,T:null,En:null,R:null} },
+  { qtr:'Q2-2026', name:'Anthony Deel',   dept:'Residential Sales',
+    self:{E:7,A:7,T:6,En:7,R:6.5}, mgr:{E:7,A:7,T:6,En:6,R:6}, cal:{E:7,A:7,T:6,En:6.5,R:6.5} },
+  // Q2 2026 — Commercial Sales (Phil Branon)
+  { qtr:'Q2-2026', name:'Sean Mitchell',    dept:'Commercial Sales',
+    self:{E:8,A:8,T:8,En:8,R:7}, mgr:{E:8,A:9,T:9,En:7,R:7}, cal:{E:8,A:9,T:9,En:7,R:7} },
+  { qtr:'Q2-2026', name:'Nikki Petriello',  dept:'Commercial Sales',
+    self:{E:8,A:8,T:8,En:7,R:7}, mgr:{E:8,A:9,T:8,En:7,R:7}, cal:{E:8,A:9,T:8,En:7,R:8} },
+  { qtr:'Q2-2026', name:'Damon Lockhart',   dept:'Commercial Sales',
+    self:{E:6,A:6,T:6,En:5,R:3}, mgr:{E:6,A:6,T:7,En:5,R:3}, cal:{E:6,A:6,T:6,En:5,R:3} },
+  { qtr:'Q2-2026', name:'Jennifer Paredes', dept:'Commercial Sales',
+    self:{E:7,A:9,T:7,En:7,R:5}, mgr:{E:7,A:8,T:8,En:7,R:7}, cal:{E:7,A:7,T:7,En:6,R:5} },
+  { qtr:'Q2-2026', name:'Michael McLeod',   dept:'Commercial Sales',
+    self:{E:7,A:8,T:8,En:7,R:7.5}, mgr:{E:6,A:9,T:9,En:5,R:6.5}, cal:{E:6,A:9,T:8,En:6,R:6} },
+  { qtr:'Q2-2026', name:'Bob Brown', dept:'Sales Management',
+    self:{E:7,A:7,T:7,En:7,R:6}, mgr:{E:null,A:null,T:null,En:null,R:null}, cal:{E:null,A:null,T:null,En:null,R:null} },
+];
+
+// Employee roster with departments (for dropdown)
+const EATER_EMPLOYEES = [
+  { name:'Anthony Deel',    dept:'Residential Sales' },
+  { name:'Austin Jones',    dept:'Residential Sales' },
+  { name:'Bobby Townsend',  dept:'Residential Sales' },
+  { name:'Derrick Almond',  dept:'Residential Sales' },
+  { name:'Mitchell Jones',  dept:'Residential Sales' },
+  { name:'Tom Goldston',    dept:'Residential Sales' },
+  { name:'Damon Lockhart',   dept:'Commercial Sales'  },
+  { name:'Jason Beamer',    dept:'Commercial Sales'  },
+  { name:'Michael McLeod',  dept:'Commercial Sales'  },
+  { name:'Nikki Petriello', dept:'Commercial Sales'  },
+  { name:'Sean Mitchell',   dept:'Commercial Sales'  },
+  { name:'Bob Brown',       dept:'Sales Management'  },
+  { name:'Phil Branon',     dept:'Sales Management'  },
+];
+
+// ── Rating thresholds ──────────────────────────────────────────────────────
+function eaterRating(total) {
+  if (total === null || total === undefined || isNaN(total)) return { label:'—', cls:'' };
+  if (total <= 10) return { label:'Does Not Meet Expectation', cls:'r-dnm' };
+  if (total <= 24) return { label:'Needs Improvement',          cls:'r-ni'  };
+  if (total <= 39) return { label:'Meets Expectation',          cls:'r-me'  };
+  if (total <= 47) return { label:'Exceeds Expectation',        cls:'r-exc' };
+  return              { label:'Outstanding',                     cls:'r-out' };
+}
+
+function eaterSum(scores) {
+  if (!scores) return null;
+  const vals = [scores.E, scores.A, scores.T, scores.En, scores.R];
+  if (vals.some(v => v === null || v === undefined)) return null;
+  const s = vals.reduce((a,b) => a + parseFloat(b||0), 0);
+  return Math.round(s * 10) / 10;
+}
+
+// ── In-memory store (seeded from EATER_SEED, additive) ────────────────────
+let EATER_RECORDS = null;
+
+function eaterGetRecords() {
+  if (EATER_RECORDS !== null) return EATER_RECORDS;
+  EATER_RECORDS = EATER_SEED.map((r,i) => Object.assign({ id:'seed-'+i }, r));
+  try {
+    const saved = JSON.parse(localStorage.getItem('asf-eater-records') || '[]');
+    const seedKeys = new Set(EATER_RECORDS.map(r => r.qtr+'|'+r.name));
+    for (const r of saved) {
+      const k = r.qtr+'|'+r.name;
+      if (seedKeys.has(k)) {
+        const idx = EATER_RECORDS.findIndex(x => x.qtr===r.qtr && x.name===r.name);
+        if (idx >= 0) { EATER_RECORDS[idx] = r; }
+        else { EATER_RECORDS.push(r); }
+      } else {
+        EATER_RECORDS.push(r);
+        seedKeys.add(k);
+      }
+    }
+  } catch(e) {}
+  return EATER_RECORDS;
+}
+
+function eaterPersist() {
+  try {
+    const editable = EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited);
+    localStorage.setItem('asf-eater-records', JSON.stringify(editable));
+  } catch(e) {}
+}
+
+// ── Determine which names the current user may see ────────────────────────
+function eaterVisibleNames() {
+  if (USER.isManager) return null; // null = all
+  return new Set([USER.salespersonName]);
+}
+
+// ── Tab init ──────────────────────────────────────────────────────────────
+let eaterTabInitialized = false;
+function initEaterTab() {
+  if (eaterTabInitialized) { eaterRenderAll(); return; }
+  eaterTabInitialized = true;
+
+  // Populate employee dropdown (managers see all; reps see only themselves)
+  const sel = document.getElementById('eater-employee');
+  sel.innerHTML = '';
+  const visible = eaterVisibleNames();
+  const empList = visible
+    ? EATER_EMPLOYEES.filter(e => visible.has(e.name))
+    : EATER_EMPLOYEES;
+  empList.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.name; opt.textContent = e.name; sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => {
+    const emp = EATER_EMPLOYEES.find(e => e.name === sel.value);
+    document.getElementById('eater-dept').value = emp ? emp.dept : '';
+    eaterLoadExisting();
+  });
+  if (empList.length) sel.dispatchEvent(new Event('change'));
+
+  document.getElementById('eater-quarter').addEventListener('change', eaterLoadExisting);
+
+  // Access control: reps can enter self-assessment only; mgr/cal cols are read-only for them
+  if (!USER.isManager) {
+    // Lock manager and calibrated inputs
+    ['m-E','m-A','m-T','m-En','m-R',
+     'c-E','c-A','c-T','c-En','c-R'].forEach(id => {
+      const el = document.getElementById(id);
+      el.disabled = true;
+      el.placeholder = '—';
+      el.style.background = 'var(--surface2)';
+    });
+    // Grey out the column headers
+    document.querySelector('#eater-entry-card .eater-score-col:nth-child(2) .eater-col-hdr').style.color = 'var(--muted)';
+    document.querySelector('#eater-entry-card .eater-score-col:nth-child(3) .eater-col-hdr').style.color = 'var(--muted)';
+    // Update card title and note
+    document.getElementById('eater-entry-title').textContent = 'Self Assessment';
+    document.getElementById('eater-entry-access-note').textContent = 'You can edit your self-assessment scores. Manager and Calibrated ratings are set by your manager.';
+  }
+
+  eaterRenderAll();
+}
+
+function eaterLoadExisting() {
+  const qtr  = document.getElementById('eater-quarter').value;
+  const name = document.getElementById('eater-employee').value;
+  const rec  = eaterGetRecords().find(r => r.qtr === qtr && r.name === name);
+  const cats = ['E','A','T','En','R'];
+  if (rec) {
+    cats.forEach(c => {
+      document.getElementById('s-'+c).value  = rec.self?.[c] ?? '';
+      document.getElementById('m-'+c).value  = rec.mgr?.[c]  ?? '';
+      document.getElementById('c-'+c).value  = rec.cal?.[c]  ?? '';
+    });
+  } else {
+    cats.forEach(c => {
+      ['s-','m-','c-'].forEach(p => { document.getElementById(p+c).value = ''; });
+    });
+  }
+  eaterCalcTotals();
+}
+
+function eaterClearForm() {
+  const selfIds = ['s-E','s-A','s-T','s-En','s-R'];
+  const allIds  = [...selfIds,'m-E','m-A','m-T','m-En','m-R','c-E','c-A','c-T','c-En','c-R'];
+  // Reps can only clear their own self inputs; managers clear all
+  (USER.isManager ? allIds : selfIds).forEach(id => { document.getElementById(id).value = ''; });
+  eaterCalcTotals();
+  document.getElementById('eater-save-msg').textContent = '';
+}
+
+function eaterCalcTotals() {
+  ['s','m','c'].forEach(pfx => {
+    const vals = ['E','A','T','En','R'].map(c => {
+      const v = parseFloat(document.getElementById(pfx+'-'+c).value);
+      return isNaN(v) ? null : v;
+    });
+    const allFilled = vals.every(v => v !== null);
+    const total = allFilled ? Math.round(vals.reduce((a,b)=>a+b,0)*10)/10 : null;
+    document.getElementById(pfx+'-total').textContent = total !== null ? total : '—';
+    const r = eaterRating(total);
+    const badge = document.getElementById(pfx+'-badge');
+    badge.textContent = total !== null ? r.label : '—';
+    badge.className = 'badge ' + (r.cls || 'b-dim');
+  });
+}
+
+function eaterSaveReview() {
+  const qtr  = document.getElementById('eater-quarter').value;
+  const name = document.getElementById('eater-employee').value;
+  const dept = document.getElementById('eater-dept').value;
+  const cats = ['E','A','T','En','R'];
+  function readScores(pfx) {
+    const out = {};
+    cats.forEach(c => { const v=parseFloat(document.getElementById(pfx+'-'+c).value); out[c]=isNaN(v)?null:v; });
+    return out;
+  }
+
+  const recs   = eaterGetRecords();
+  const exists = recs.find(r => r.qtr===qtr && r.name===name);
+
+  let rec;
+  if (!USER.isManager) {
+    // Reps only update their self-assessment; preserve existing mgr/cal
+    rec = Object.assign({}, exists || { id:qtr+'|'+name, qtr, name, dept,
+      mgr:{E:null,A:null,T:null,En:null,R:null},
+      cal:{E:null,A:null,T:null,En:null,R:null} });
+    rec.self = readScores('s');
+    rec._edited = true;
+    rec.savedAt = new Date().toISOString();
+  } else {
+    // Managers write all three columns
+    rec = { id:qtr+'|'+name, qtr, name, dept,
+      self:readScores('s'), mgr:readScores('m'), cal:readScores('c'),
+      _edited:true, savedAt:new Date().toISOString() };
+  }
+
+  const idx = recs.findIndex(r => r.qtr===qtr && r.name===name);
+  if (idx >= 0) { recs[idx] = rec; } else { recs.push(rec); }
+  eaterPersist();
+  const msg = document.getElementById('eater-save-msg');
+  msg.textContent = '✓ Saved — ' + name + ' ' + qtr;
+  setTimeout(() => { msg.textContent = ''; }, 3500);
+  eaterRenderAll();
+}
+
+// ── KPI rendering ─────────────────────────────────────────────────────────
+function eaterRenderKPIs() {
+  const visible = eaterVisibleNames();
+  const recs = eaterGetRecords().filter(r => !visible || visible.has(r.name));
+  const qtrs = ['Q1-2026','Q2-2026','Q3-2026','Q4-2026'];
+  const qtrScores = {};
+  qtrs.forEach(q => {
+    const totals = recs.filter(r=>r.qtr===q).map(r=>eaterSum(r.cal)).filter(v=>v!==null);
+    qtrScores[q] = totals.length ? Math.round(totals.reduce((a,b)=>a+b,0)/totals.length*10)/10 : null;
+  });
+  qtrs.forEach((q,i) => {
+    const label = ['q1','q2','q3','q4'][i];
+    const val   = qtrScores[q];
+    const r     = eaterRating(val);
+    const colorMap = {'r-out':'#5a2aa0','r-exc':'#3a7a28','r-me':'var(--asf-navy)','r-ni':'#7a5500','r-dnm':'#b83228'};
+    document.getElementById('eq-'+label).textContent = val !== null ? val : '—';
+    const subEl = document.getElementById('eq-'+label+'-r');
+    subEl.textContent = val !== null ? r.label : 'No data';
+    subEl.style.color = val !== null ? (colorMap[r.cls]||'var(--muted)') : 'var(--muted)';
+  });
+  const ytdVals = qtrs.map(q=>qtrScores[q]).filter(v=>v!==null);
+  const ytdAvg  = ytdVals.length ? Math.round(ytdVals.reduce((a,b)=>a+b,0)/ytdVals.length*10)/10 : null;
+  document.getElementById('eater-kpi-avg').textContent = ytdAvg !== null ? ytdAvg : '—';
+  document.getElementById('eater-kpi-sub').textContent = ytdVals.length
+    ? ytdVals.length+' quarter'+(ytdVals.length>1?'s':'')+' with calibrated data'
+    : 'no calibrated data yet';
+  const kr = eaterRating(ytdAvg);
+  document.getElementById('eater-kpi-badge').innerHTML = ytdAvg !== null
+    ? `<span class="badge ${kr.cls}" style="font-size:13px;padding:5px 14px">${kr.label}</span>` : '';
+}
+
+// ── History table rendering ───────────────────────────────────────────────
+function eaterRenderHistory() {
+  const visible = eaterVisibleNames();
+  const search  = (document.getElementById('eater-hist-search').value||'').toLowerCase();
+  const qtrFilt = document.getElementById('eater-hist-qtr').value;
+  const qOrder  = {'Q1-2026':1,'Q2-2026':2,'Q3-2026':3,'Q4-2026':4};
+
+  let recs = eaterGetRecords().filter(r => {
+    if (visible && !visible.has(r.name)) return false;
+    if (qtrFilt && r.qtr !== qtrFilt) return false;
+    if (search && !r.name.toLowerCase().includes(search)) return false;
+    // Skip records with no data at all
+    if (eaterSum(r.self)===null && eaterSum(r.mgr)===null && eaterSum(r.cal)===null) return false;
+    return true;
+  });
+  recs.sort((a,b) => (qOrder[b.qtr]||0)-(qOrder[a.qtr]||0) || a.name.localeCompare(b.name));
+
+  document.getElementById('eater-hist-count').textContent = recs.length + ' records';
+  document.getElementById('eater-hist-badge').textContent = recs.length;
+
+  const tbody = document.getElementById('eater-hist-tbody');
+  tbody.innerHTML = '';
+  const cats      = ['E','A','T','En','R'];
+  const catLabels = ['Effort','Attitude','Teamwork','Engagement','Results'];
+
+  recs.forEach((r, idx) => {
+    const selfT = eaterSum(r.self);
+    const mgrT  = eaterSum(r.mgr);
+    const calT  = eaterSum(r.cal);
+    const cr    = eaterRating(calT);
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><button class="eater-expand-btn" onclick="eaterToggleDetail('edet-${idx}',this)">▶</button></td>
+      <td style="font-weight:600">${r.name}</td>
+      <td><span class="badge b-dim">${r.qtr}</span></td>
+      <td style="color:var(--muted);font-size:11px">${r.dept||''}</td>
+      <td style="text-align:center;color:var(--muted)">${selfT!==null?selfT:'—'}</td>
+      <td style="text-align:center;color:var(--muted)">${mgrT!==null?mgrT:'—'}</td>
+      <td style="text-align:center" class="eater-hist-calbr">${calT!==null?calT:'—'}</td>
+      <td>${calT!==null?`<span class="badge ${cr.cls}">${cr.label}</span>`:'<span style="color:var(--muted);font-size:11px">Pending</span>'}</td>
+      <td>${USER.isManager?`<button class="eater-expand-btn" style="color:var(--asf-navy)" onclick="eaterEditRecord('${r.qtr}','${r.name.replace(/'/g,"\\'")}')" >Edit</button>`:''}
+      </td>`;
+    tbody.appendChild(tr);
+
+    // Detail breakdown row
+    const detTr = document.createElement('tr');
+    detTr.className = 'eater-detail-row';
+    detTr.id = 'edet-'+idx;
+    const detHtml = cats.map((c,i) => `
+      <div class="eater-detail-cat">
+        <div class="eater-detail-cat-lbl">${catLabels[i]}</div>
+        <div class="eater-detail-scores">
+          <span class="eater-score-pill s-self" title="Self">${r.self?.[c]??'—'}</span>
+          <span class="eater-score-pill s-mgr"  title="Mgr">${r.mgr?.[c]??'—'}</span>
+          <span class="eater-score-pill s-cal"  title="Cal">${r.cal?.[c]??'—'}</span>
+        </div>
+      </div>`).join('');
+    detTr.innerHTML = `<td colspan="9"><div class="eater-detail-inner">
+      <div style="margin-bottom:8px;font-size:10px;color:var(--muted)">
+        <span class="eater-score-pill s-self">Self</span>&nbsp;
+        <span class="eater-score-pill s-mgr">Manager</span>&nbsp;
+        <span class="eater-score-pill s-cal">Calibrated</span>
+      </div>
+      <div class="eater-detail-grid">${detHtml}</div>
+    </div></td>`;
+    tbody.appendChild(detTr);
+  });
+
+  if (!recs.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">No reviews found for this filter</td></tr>`;
+  }
+}
+
+function eaterToggleDetail(id, btn) {
+  const row = document.getElementById(id);
+  if (!row) return;
+  const open = row.classList.toggle('open');
+  btn.textContent = open ? '▼' : '▶';
+}
+
+function eaterEditRecord(qtr, name) {
+  document.getElementById('eater-quarter').value  = qtr;
+  document.getElementById('eater-employee').value = name;
+  const emp = EATER_EMPLOYEES.find(e => e.name === name);
+  document.getElementById('eater-dept').value = emp ? emp.dept : '';
+  eaterLoadExisting();
+  document.getElementById('eater-entry-card').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function eaterRenderAll() {
+  eaterRenderKPIs();
+  eaterRenderHistory();
+}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 (async function init() {
