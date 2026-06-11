@@ -325,28 +325,39 @@
   .eater-rep-kpi-val  { font-size: 20px; font-weight: 800; color: var(--asf-navy); line-height: 1.2; }
   .eater-rep-kpi-sub  { font-size: 10px; color: var(--muted); margin-top: 2px; }
 
-  /* Goals section */
-  .eater-goals-section { border-top: 1px solid var(--border2); padding: 14px 16px; background: var(--surface2); }
-  .eater-goals-hdr { font-size: 10px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
-  .eater-goal-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
-  .eater-goal-num { width: 20px; height: 20px; border-radius: 50%; background: var(--asf-navy); color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 6px; }
-  .eater-goal-input { flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; background: var(--surface); color: var(--text); outline: none; resize: vertical; min-height: 34px; }
-  .eater-goal-input:focus { border-color: var(--asf-blue); outline: 2px solid rgba(91,143,204,0.2); }
-  .eater-goal-input:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
-  .eater-goal-status { display: flex; gap: 6px; flex-shrink: 0; margin-top: 5px; }
-  .eater-goal-status-btn { padding: 4px 10px; border-radius: 5px; font-size: 10px; font-weight: 700; font-family: inherit; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); transition: all 0.15s; white-space: nowrap; }
-  .eater-goal-status-btn.active-complete   { background: rgba(90,158,69,0.15); border-color: rgba(90,158,69,0.5); color: #3a7a28; }
-  .eater-goal-status-btn.active-incomplete { background: rgba(184,50,40,0.10); border-color: rgba(184,50,40,0.3); color: #b83228; }
+  /* Coaching notes panel */
+  .coaching-section-lbl { font-size: 10px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .coaching-textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; font-family: inherit; background: var(--surface); color: var(--text); resize: vertical; min-height: 64px; outline: none; }
+  .coaching-textarea:focus { border-color: var(--asf-blue); outline: 2px solid rgba(91,143,204,0.2); }
+  .coaching-textarea:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
 
-  /* Goals in history detail */
-  .eater-goal-detail { margin-top: 12px; border-top: 1px solid var(--border2); padding-top: 10px; }
-  .eater-goal-detail-hdr { font-size: 10px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
-  .eater-goal-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; font-size: 11px; color: var(--dim); }
-  .eater-goal-item-num { width: 18px; height: 18px; border-radius: 50%; background: var(--asf-navy); color: #fff; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-  .eater-goal-item-text { flex: 1; line-height: 1.5; }
-  .eater-goal-badge-complete   { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 9px; font-weight: 700; background: rgba(90,158,69,0.15); border: 1px solid rgba(90,158,69,0.4); color: #3a7a28; white-space: nowrap; }
-  .eater-goal-badge-incomplete { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 9px; font-weight: 700; background: rgba(184,50,40,0.10); border: 1px solid rgba(184,50,40,0.3); color: #b83228; white-space: nowrap; }
-  .eater-goal-badge-pending    { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 9px; font-weight: 700; background: rgba(30,80,128,0.07); border: 1px solid rgba(30,80,128,0.2); color: var(--muted); white-space: nowrap; }
+  /* Goal items in entry form */
+  .goal-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border2); }
+  .goal-item:last-child { border-bottom: none; }
+  .goal-num { font-size: 10px; font-weight: 800; color: var(--muted); min-width: 18px; padding-top: 8px; text-align: right; flex-shrink: 0; }
+  .goal-input-wrap { flex: 1; }
+  .goal-text-input { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; background: var(--surface); color: var(--text); outline: none; }
+  .goal-text-input:focus { border-color: var(--asf-blue); outline: 2px solid rgba(91,143,204,0.2); }
+  .goal-text-input:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+  .goal-status-select { margin-top: 5px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 10px; font-family: inherit; font-weight: 700; background: var(--surface); color: var(--text); cursor: pointer; outline: none; }
+  .goal-status-select:disabled { cursor: not-allowed; opacity: 0.6; }
+  .goal-status-select.gs-pending    { border-color: rgba(30,80,128,0.3);  color: var(--asf-navy); background: rgba(91,143,204,0.08); }
+  .goal-status-select.gs-complete   { border-color: rgba(90,158,69,0.4);  color: #3a7a28;         background: rgba(90,158,69,0.10); }
+  .goal-status-select.gs-incomplete { border-color: rgba(184,50,40,0.3);  color: #b83228;         background: rgba(184,50,40,0.08); }
+
+  /* Goal pills in history detail */
+  .goal-pill { display: flex; align-items: flex-start; gap: 6px; padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 500; color: var(--dim); background: var(--surface); border: 1px solid var(--border); margin-bottom: 5px; }
+  .goal-pill.gp-complete   { background: rgba(90,158,69,0.08);  border-color: rgba(90,158,69,0.3);  color: #3a7a28; }
+  .goal-pill.gp-incomplete { background: rgba(184,50,40,0.07); border-color: rgba(184,50,40,0.25); color: #b83228; }
+  .goal-pill.gp-pending    { background: rgba(91,143,204,0.07); border-color: rgba(91,143,204,0.2); color: var(--asf-navy); }
+  .goal-pill-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+  .goal-pill-body { flex: 1; line-height: 1.5; }
+  .goal-pill-text { display: block; }
+  .goal-pill-status-btn { display: inline-block; margin-top: 3px; font-size: 9px; font-weight: 700; padding: 1px 7px; border-radius: 4px; border: none; cursor: pointer; letter-spacing: 0.05em; text-transform: uppercase; }
+  .goal-pill-status-btn.gsb-complete   { background: rgba(90,158,69,0.15);  color: #3a7a28; }
+  .goal-pill-status-btn.gsb-incomplete { background: rgba(184,50,40,0.12); color: #b83228; }
+  .goal-pill-status-btn.gsb-pending    { background: rgba(91,143,204,0.12); color: var(--asf-navy); }
+  .goal-pill-status-btn:hover { filter: brightness(0.9); }
 </style>
 </head>
 <body>
@@ -995,36 +1006,62 @@
           <span id="eater-save-msg" class="eater-save-msg"></span>
         </div>
 
-        <!-- Goals — manager-set, shown to all but only editable by manager -->
-        <div class="eater-goals-section" id="eater-goals-section">
-          <div class="eater-goals-hdr">Goals for Next Quarter <span id="eater-goals-note" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10px;font-style:italic"></span></div>
-          <div class="eater-goal-row">
-            <div class="eater-goal-num">1</div>
-            <textarea class="eater-goal-input" id="goal-1" rows="1" placeholder="Enter goal #1…"></textarea>
-            <div class="eater-goal-status" id="goal-1-status" style="display:none">
-              <button class="eater-goal-status-btn" data-goal="1" data-val="complete"   onclick="eaterToggleGoalStatus(1,'complete')"  >✓ Complete</button>
-              <button class="eater-goal-status-btn" data-goal="1" data-val="incomplete" onclick="eaterToggleGoalStatus(1,'incomplete')">✗ Incomplete</button>
+        <!-- Coaching Notes + Goals — manager only -->
+        <div id="coaching-notes-section">
+          <div style="padding:10px 16px;background:var(--surface2);border-top:1px solid var(--border2)">
+            <span style="font-size:10px;font-weight:700;color:var(--asf-navy);text-transform:uppercase;letter-spacing:0.08em">Coaching Notes</span>
+            <span style="font-size:10px;color:var(--muted);margin-left:8px">(visible to managers only)</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-top:1px solid var(--border2)">
+            <div style="padding:12px 16px;border-right:1px solid var(--border2)">
+              <div class="coaching-section-lbl">Areas of Concern</div>
+              <textarea class="coaching-textarea" id="note-concerns" placeholder="Enter areas of concern…"></textarea>
+            </div>
+            <div style="padding:12px 16px;border-right:1px solid var(--border2)">
+              <div class="coaching-section-lbl">Opportunities for Improvement</div>
+              <textarea class="coaching-textarea" id="note-opportunities" placeholder="Enter improvement opportunities…"></textarea>
+            </div>
+            <div style="padding:12px 16px">
+              <div class="coaching-section-lbl">Goals for Next Period</div>
+              <div id="goals-form-list">
+                <div class="goal-item">
+                  <span class="goal-num">1</span>
+                  <div class="goal-input-wrap">
+                    <input type="text" class="goal-text-input" id="goal-text-0" placeholder="Enter goal #1…">
+                    <select class="goal-status-select gs-pending" id="goal-status-0" onchange="updateGoalSelectStyle(this)">
+                      <option value="pending">⏳ Pending</option>
+                      <option value="complete">✅ Complete</option>
+                      <option value="incomplete">❌ Incomplete</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="goal-item">
+                  <span class="goal-num">2</span>
+                  <div class="goal-input-wrap">
+                    <input type="text" class="goal-text-input" id="goal-text-1" placeholder="Enter goal #2…">
+                    <select class="goal-status-select gs-pending" id="goal-status-1" onchange="updateGoalSelectStyle(this)">
+                      <option value="pending">⏳ Pending</option>
+                      <option value="complete">✅ Complete</option>
+                      <option value="incomplete">❌ Incomplete</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="goal-item">
+                  <span class="goal-num">3</span>
+                  <div class="goal-input-wrap">
+                    <input type="text" class="goal-text-input" id="goal-text-2" placeholder="Enter goal #3…">
+                    <select class="goal-status-select gs-pending" id="goal-status-2" onchange="updateGoalSelectStyle(this)">
+                      <option value="pending">⏳ Pending</option>
+                      <option value="complete">✅ Complete</option>
+                      <option value="incomplete">❌ Incomplete</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="eater-goal-row">
-            <div class="eater-goal-num">2</div>
-            <textarea class="eater-goal-input" id="goal-2" rows="1" placeholder="Enter goal #2…"></textarea>
-            <div class="eater-goal-status" id="goal-2-status" style="display:none">
-              <button class="eater-goal-status-btn" data-goal="2" data-val="complete"   onclick="eaterToggleGoalStatus(2,'complete')"  >✓ Complete</button>
-              <button class="eater-goal-status-btn" data-goal="2" data-val="incomplete" onclick="eaterToggleGoalStatus(2,'incomplete')">✗ Incomplete</button>
-            </div>
-          </div>
-          <div class="eater-goal-row">
-            <div class="eater-goal-num">3</div>
-            <textarea class="eater-goal-input" id="goal-3" rows="1" placeholder="Enter goal #3…"></textarea>
-            <div class="eater-goal-status" id="goal-3-status" style="display:none">
-              <button class="eater-goal-status-btn" data-goal="3" data-val="complete"   onclick="eaterToggleGoalStatus(3,'complete')"  >✓ Complete</button>
-              <button class="eater-goal-status-btn" data-goal="3" data-val="incomplete" onclick="eaterToggleGoalStatus(3,'incomplete')">✗ Incomplete</button>
-            </div>
-          </div>
-        </div>
+        </div><!-- /coaching-notes-section -->
 
-        </div><!-- /eater-goals-section -->
       </div><!-- /eater-entry-card -->
 
       <!-- History table -->
@@ -2698,7 +2735,7 @@ function initEaterTab() {
 
   document.getElementById('eater-quarter').addEventListener('change', eaterLoadExisting);
 
-  // Access control: reps can enter self-assessment only; mgr/cal cols are read-only for them
+  // Access control: reps can enter self-assessment only; mgr/cal cols and coaching are manager-only
   if (!USER.isManager) {
     // Lock manager and calibrated inputs
     ['m-E','m-A','m-T','m-En','m-R',
@@ -2714,6 +2751,8 @@ function initEaterTab() {
     // Update card title and note
     document.getElementById('eater-entry-title').textContent = 'Self Assessment';
     document.getElementById('eater-entry-access-note').textContent = 'You can edit your self-assessment scores. Manager and Calibrated ratings are set by your manager.';
+    // Hide coaching notes + goals entirely from reps
+    document.getElementById('coaching-notes-section').style.display = 'none';
   }
 
   eaterRenderAll();
@@ -2730,78 +2769,33 @@ function eaterLoadExisting() {
       document.getElementById('m-'+c).value  = rec.mgr?.[c]  ?? '';
       document.getElementById('c-'+c).value  = rec.cal?.[c]  ?? '';
     });
+    if (USER.isManager) {
+      document.getElementById('note-concerns').value      = rec.notes?.concerns      || '';
+      document.getElementById('note-opportunities').value = rec.notes?.opportunities || '';
+      const goals = rec.goals || [{text:'',status:'pending'},{text:'',status:'pending'},{text:'',status:'pending'}];
+      [0,1,2].forEach(i => {
+        const g = goals[i] || {text:'',status:'pending'};
+        document.getElementById('goal-text-'+i).value = g.text || '';
+        const sel = document.getElementById('goal-status-'+i);
+        sel.value = g.status || 'pending';
+        updateGoalSelectStyle(sel);
+      });
+    }
   } else {
     cats.forEach(c => {
       ['s-','m-','c-'].forEach(p => { document.getElementById(p+c).value = ''; });
     });
+    if (USER.isManager) {
+      ['note-concerns','note-opportunities'].forEach(id => { document.getElementById(id).value = ''; });
+      [0,1,2].forEach(i => {
+        document.getElementById('goal-text-'+i).value = '';
+        const sel = document.getElementById('goal-status-'+i);
+        sel.value = 'pending';
+        updateGoalSelectStyle(sel);
+      });
+    }
   }
   eaterCalcTotals();
-
-  // Load goals
-  const goals = rec?.goals || [{text:'',status:null},{text:'',status:null},{text:'',status:null}];
-  _goalStatuses = {1:null,2:null,3:null};
-  if (rec?.goalStatuses) { rec.goalStatuses.forEach((s,i) => { _goalStatuses[i+1]=s; }); }
-  [1,2,3].forEach(i => {
-    const g = goals[i-1] || {text:'',status:null};
-    const inp = document.getElementById('goal-'+i);
-    const statusWrap = document.getElementById('goal-'+i+'-status');
-    if (inp) inp.value = g.text || '';
-    // Show status buttons only if there are prior-quarter goals to check off
-    // (i.e. the current quarter is NOT the first one and a previous record has goals)
-    const priorGoals = eaterGetPriorGoals(qtr, name);
-    if (statusWrap) {
-      if (priorGoals && priorGoals[i-1]?.text) {
-        statusWrap.style.display = 'flex';
-        eaterApplyGoalStatusUI(i, rec?.goalStatuses?.[i-1] || null);
-      } else {
-        statusWrap.style.display = 'none';
-      }
-    }
-  });
-
-  // Update goals section visibility and note
-  const goalsSection = document.getElementById('eater-goals-section');
-  const goalsNote    = document.getElementById('eater-goals-note');
-  const priorGoals   = eaterGetPriorGoals(qtr, name);
-  if (!USER.isManager) {
-    // Reps see goals read-only
-    [1,2,3].forEach(i => { const el = document.getElementById('goal-'+i); if(el) { el.disabled=true; el.style.background='var(--surface2)'; } });
-    if (goalsNote) goalsNote.textContent = '(set by your manager)';
-  } else {
-    [1,2,3].forEach(i => { const el = document.getElementById('goal-'+i); if(el) { el.disabled=false; el.style.background=''; } });
-    if (goalsNote) goalsNote.textContent = priorGoals ? '— also mark completion of prior quarter goals below' : '';
-  }
-  if (goalsSection) goalsSection.style.display = '';
-}
-
-// Get goals set in the immediately preceding quarter for this employee
-function eaterGetPriorGoals(qtr, name) {
-  const qOrder = ['Q1-2026','Q2-2026','Q3-2026','Q4-2026'];
-  const idx = qOrder.indexOf(qtr);
-  if (idx <= 0) return null;
-  const priorQtr = qOrder[idx - 1];
-  const priorRec = eaterGetRecords().find(r => r.qtr === priorQtr && r.name === name);
-  return priorRec?.goals || null;
-}
-
-// Apply visual state to goal status buttons
-function eaterApplyGoalStatusUI(goalNum, status) {
-  const wrap = document.getElementById('goal-'+goalNum+'-status');
-  if (!wrap) return;
-  wrap.querySelectorAll('.eater-goal-status-btn').forEach(btn => {
-    btn.classList.remove('active-complete','active-incomplete');
-    if (btn.dataset.val === status) {
-      btn.classList.add(status === 'complete' ? 'active-complete' : 'active-incomplete');
-    }
-  });
-}
-
-// Toggle goal status button
-let _goalStatuses = {1:null,2:null,3:null};
-function eaterToggleGoalStatus(goalNum, val) {
-  // Toggle off if already selected
-  _goalStatuses[goalNum] = _goalStatuses[goalNum] === val ? null : val;
-  eaterApplyGoalStatusUI(goalNum, _goalStatuses[goalNum]);
 }
 
 function eaterClearForm() {
@@ -2809,11 +2803,12 @@ function eaterClearForm() {
   const allIds  = [...selfIds,'m-E','m-A','m-T','m-En','m-R','c-E','c-A','c-T','c-En','c-R'];
   (USER.isManager ? allIds : selfIds).forEach(id => { document.getElementById(id).value = ''; });
   if (USER.isManager) {
-    [1,2,3].forEach(i => {
-      const el = document.getElementById('goal-'+i);
-      if (el) el.value = '';
-      _goalStatuses[i] = null;
-      eaterApplyGoalStatusUI(i, null);
+    ['note-concerns','note-opportunities'].forEach(id => { document.getElementById(id).value = ''; });
+    [0,1,2].forEach(i => {
+      document.getElementById('goal-text-'+i).value = '';
+      const sel = document.getElementById('goal-status-'+i);
+      sel.value = 'pending';
+      updateGoalSelectStyle(sel);
     });
   }
   eaterCalcTotals();
@@ -2852,26 +2847,31 @@ function eaterSaveReview() {
 
   let rec;
   if (!USER.isManager) {
-    rec = Object.assign({}, exists || { id:qtr+'|'+name, qtr, name, dept,
+    // Reps only update self-assessment; preserve existing mgr/cal/notes/goals
+    rec = Object.assign({}, exists || {
+      id: qtr+'|'+name, qtr, name, dept,
       mgr:{E:null,A:null,T:null,En:null,R:null},
-      cal:{E:null,A:null,T:null,En:null,R:null} });
-    rec.self = readScores('s');
+      cal:{E:null,A:null,T:null,En:null,R:null},
+      notes:{},
+      goals:[{text:'',status:'pending'},{text:'',status:'pending'},{text:'',status:'pending'}]
+    });
+    rec.self    = readScores('s');
     rec._edited = true;
     rec.savedAt = new Date().toISOString();
   } else {
-    // Read goals
-    const goals = [1,2,3].map(i => ({
-      text: (document.getElementById('goal-'+i)?.value || '').trim(),
-      status: null  // goals on THIS record have no status yet; status is set in next quarter
+    const notes = {
+      concerns:      document.getElementById('note-concerns').value.trim(),
+      opportunities: document.getElementById('note-opportunities').value.trim(),
+    };
+    const goals = [0,1,2].map(i => ({
+      text:   document.getElementById('goal-text-'+i).value.trim(),
+      status: document.getElementById('goal-status-'+i).value || 'pending',
     }));
-    // Goal statuses refer to PRIOR quarter's goals being checked off in THIS quarter
-    const priorGoals = eaterGetPriorGoals(qtr, name);
-    const goalStatuses = priorGoals ? [1,2,3].map(i => _goalStatuses[i] || null) : null;
-
-    rec = { id:qtr+'|'+name, qtr, name, dept,
+    rec = {
+      id: qtr+'|'+name, qtr, name, dept,
       self:readScores('s'), mgr:readScores('m'), cal:readScores('c'),
-      goals, goalStatuses,
-      _edited:true, savedAt:new Date().toISOString() };
+      notes, goals, _edited:true, savedAt:new Date().toISOString()
+    };
   }
 
   const idx = recs.findIndex(r => r.qtr===qtr && r.name===name);
@@ -3011,7 +3011,7 @@ function eaterRenderHistory() {
         <span class="eater-score-pill s-cal">Calibrated</span>
       </div>
       <div class="eater-detail-grid">${detHtml}</div>
-      ${eaterGoalsDetailHtml(r)}
+      ${USER.isManager ? eaterCoachingDetailHtml(r) : ''}
     </div></td>`;
     tbody.appendChild(detTr);
   });
@@ -3037,62 +3037,76 @@ function eaterEditRecord(qtr, name) {
   document.getElementById('eater-entry-card').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
-// Build goals HTML for expanded history detail row
-function eaterGoalsDetailHtml(rec) {
-  // Show this quarter's goals
-  const goals = rec?.goals;
-  // Show prior quarter's goals with THIS quarter's completion status
-  const qOrder = ['Q1-2026','Q2-2026','Q3-2026','Q4-2026'];
-  const qIdx   = qOrder.indexOf(rec.qtr);
-  const nextQtr = qOrder[qIdx + 1];
-  const nextRec = nextQtr ? eaterGetRecords().find(r => r.qtr===nextQtr && r.name===rec.name) : null;
-  const priorGoals = eaterGetPriorGoals(rec.qtr, rec.name);
+// Build coaching notes + goals HTML for expanded history detail (managers only)
+function eaterCoachingDetailHtml(r) {
+  const statusIcon  = { pending:'⏳', complete:'✅', incomplete:'❌' };
+  const statusClass = { pending:'gp-pending', complete:'gp-complete', incomplete:'gp-incomplete' };
+  const statusBtnClass = { pending:'gsb-pending', complete:'gsb-complete', incomplete:'gsb-incomplete' };
+  const nextStatus  = { pending:'complete', complete:'incomplete', incomplete:'pending' };
+  const nextLabel   = { pending:'Mark Complete', complete:'Mark Incomplete', incomplete:'Mark Pending' };
 
-  let html = '';
+  const goals = r.goals || [];
+  const hasGoals = goals.some(g => g && g.text);
+  const qtrSafe  = r.qtr.replace(/'/g,"\\'");
+  const nameSafe = r.name.replace(/'/g,"\\'");
 
-  // Goals SET in this quarter (for next quarter)
-  if (goals && goals.some(g => g?.text)) {
-    html += `<div class="eater-goal-detail">
-      <div class="eater-goal-detail-hdr">Goals Set This Quarter</div>`;
-    goals.forEach((g, i) => {
-      if (!g?.text) return;
-      // Look up completion status from the NEXT quarter's record
-      const statusVal = nextRec?.goalStatuses?.[i] || null;
-      const statusBadge = statusVal === 'complete'
-        ? `<span class="eater-goal-badge-complete">✓ Complete</span>`
-        : statusVal === 'incomplete'
-          ? `<span class="eater-goal-badge-incomplete">✗ Incomplete</span>`
-          : nextRec ? `<span class="eater-goal-badge-pending">Pending Review</span>`
-                    : `<span class="eater-goal-badge-pending">Not Yet Reviewed</span>`;
-      html += `<div class="eater-goal-item">
-        <div class="eater-goal-item-num">${i+1}</div>
-        <div class="eater-goal-item-text">${g.text} &nbsp;${statusBadge}</div>
-      </div>`;
-    });
-    html += '</div>';
+  const goalsHtml = hasGoals
+    ? goals.map((g, gi) => {
+        if (!g || !g.text) return '';
+        const st   = g.status || 'pending';
+        const next = nextStatus[st];
+        return `<div class="goal-pill ${statusClass[st]}">
+          <span class="goal-pill-icon">${statusIcon[st]}</span>
+          <div class="goal-pill-body">
+            <span class="goal-pill-text">${g.text}</span>
+            <button class="goal-pill-status-btn ${statusBtnClass[next]}"
+              onclick="toggleGoalStatus('${qtrSafe}','${nameSafe}',${gi},'${next}')">${nextLabel[st]}</button>
+          </div>
+        </div>`;
+      }).filter(Boolean).join('')
+    : '<div style="font-size:11px;color:var(--muted);font-style:italic">No goals set for this period</div>';
+
+  return `
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border2);display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+      <div>
+        <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px">Areas of Concern</div>
+        <div style="font-size:11px;color:var(--dim);white-space:pre-wrap;line-height:1.6">${r.notes?.concerns || '—'}</div>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px">Opportunities for Improvement</div>
+        <div style="font-size:11px;color:var(--dim);white-space:pre-wrap;line-height:1.6">${r.notes?.opportunities || '—'}</div>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px">Goals for Next Period</div>
+        ${goalsHtml}
+      </div>
+    </div>`;
+}
+
+function updateGoalSelectStyle(sel) {
+  sel.classList.remove('gs-pending','gs-complete','gs-incomplete');
+  sel.classList.add('gs-' + (sel.value || 'pending'));
+}
+
+// Cycle goal status from the history panel — no form re-open needed
+function toggleGoalStatus(qtr, name, goalIdx, nextStatus) {
+  const recs = eaterGetRecords();
+  const rec  = recs.find(r => r.qtr === qtr && r.name === name);
+  if (!rec) return;
+  if (!rec.goals) rec.goals = [{text:'',status:'pending'},{text:'',status:'pending'},{text:'',status:'pending'}];
+  if (!rec.goals[goalIdx]) rec.goals[goalIdx] = {text:'',status:'pending'};
+  rec.goals[goalIdx].status = nextStatus;
+  rec._edited = true;
+  rec.savedAt = new Date().toISOString();
+  eaterPersist();
+  eaterRenderHistory();
+  // Sync form dropdown if this record is currently loaded
+  const formQtr  = document.getElementById('eater-quarter').value;
+  const formName = document.getElementById('eater-employee').value;
+  if (formQtr === qtr && formName === name && USER.isManager) {
+    const sel = document.getElementById('goal-status-'+goalIdx);
+    if (sel) { sel.value = nextStatus; updateGoalSelectStyle(sel); }
   }
-
-  // Prior quarter's goals and how they were marked in this quarter
-  if (priorGoals && priorGoals.some(g => g?.text)) {
-    html += `<div class="eater-goal-detail">
-      <div class="eater-goal-detail-hdr">Prior Quarter Goals — Status Marked This Review</div>`;
-    priorGoals.forEach((g, i) => {
-      if (!g?.text) return;
-      const statusVal = rec?.goalStatuses?.[i] || null;
-      const statusBadge = statusVal === 'complete'
-        ? `<span class="eater-goal-badge-complete">✓ Complete</span>`
-        : statusVal === 'incomplete'
-          ? `<span class="eater-goal-badge-incomplete">✗ Incomplete</span>`
-          : `<span class="eater-goal-badge-pending">Not Marked</span>`;
-      html += `<div class="eater-goal-item">
-        <div class="eater-goal-item-num">${i+1}</div>
-        <div class="eater-goal-item-text">${g.text} &nbsp;${statusBadge}</div>
-      </div>`;
-    });
-    html += '</div>';
-  }
-
-  return html;
 }
 
 function eaterRenderAll() {
