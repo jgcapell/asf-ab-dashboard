@@ -275,6 +275,8 @@
       </div>
     </div>
     <div class="header-right">
+      <span id="sync-indicator" style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:600;letter-spacing:0.06em;margin-right:4px">● Live</span>
+      <button class="hbtn" id="refresh-btn" onclick="manualRefresh()">↻ Refresh</button>
       <div class="user-badge" id="user-badge">
         <div>
           <div class="user-badge-name" id="user-badge-name">—</div>
@@ -794,7 +796,7 @@ function showAccessDenied(msg) {
   document.getElementById('denied-msg').textContent = msg;
 }
 
-function launchApp() {
+async function launchApp() {
   hideOverlay();
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
@@ -816,11 +818,30 @@ function launchApp() {
     document.getElementById('role-banner-text').textContent = '🔒 ' + scope;
   }
 
+  // Show loading indicator in the page while KV data loads
+  const page = document.querySelector('.page');
+  const loadingEl = document.createElement('div');
+  loadingEl.id = 'kv-loading';
+  loadingEl.style.cssText = 'text-align:center;padding:40px;color:var(--muted);font-size:12px;letter-spacing:0.06em;grid-column:1/-1';
+  loadingEl.innerHTML = '<div style="margin-bottom:8px;font-size:20px">⏳</div>Loading review data…';
+  page.prepend(loadingEl);
+
+  // Load from KV before rendering anything
+  await eaterLoadFromKV();
+  // Store initial fingerprint so background sync can detect changes
+  lastKVFingerprint = JSON.stringify(
+    EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited)
+  );
+  loadingEl.remove();
+
   initEaterForm();
   eaterRenderAll();
+  startBackgroundSync();
 }
 
 function logout() {
+  stopBackgroundSync();
+  lastKVFingerprint = null;
   auth = { accessToken: null, refreshToken: null };
   USER = { username: null, displayName: null, rosterEntry: null, access: null };
   document.getElementById('app').style.display = 'none';
@@ -851,37 +872,85 @@ function isManager() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// DATA STORE
+// DATA STORE — KV-backed, localStorage fallback
+// Reads from / writes to Cloudflare KV via the Worker proxy.
+// Falls back to localStorage cache if the Worker is unreachable.
 // ═══════════════════════════════════════════════════════════════════════
-let EATER_RECORDS = null;
-const STORAGE_KEY = 'asf-ops-eater-records';
+const EATER_KV_URL   = CONFIG.workerUrl + '/eater-records';
+const EATER_LS_CACHE = 'asf-ops-eater-records-cache'; // local mirror for offline use
+const EATER_LS_KEY   = 'asf-ops-eater-records';       // legacy localStorage key
 
-function eaterGetRecords() {
-  if (EATER_RECORDS !== null) return EATER_RECORDS;
-  EATER_RECORDS = EATER_SEED.map((r,i) => Object.assign({ id:'seed-'+i }, r));
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const seedKeys = new Set(EATER_RECORDS.map(r => r.qtr+'|'+r.name));
-    for (const r of saved) {
-      const k = r.qtr+'|'+r.name;
-      if (seedKeys.has(k)) {
-        const idx = EATER_RECORDS.findIndex(x => x.qtr===r.qtr && x.name===r.name);
-        if (idx >= 0) { EATER_RECORDS[idx] = r; }
-        else { EATER_RECORDS.push(r); }
-      } else {
-        EATER_RECORDS.push(r);
-        seedKeys.add(k);
-      }
+let EATER_RECORDS = null; // in-memory cache; null = not yet loaded
+
+// Merge saved records over the seed (saved overrides seed for same qtr|name)
+function eaterMergeRecords(saved) {
+  const merged   = EATER_SEED.map((r,i) => Object.assign({ id:'seed-'+i }, r));
+  const seedKeys = new Set(merged.map(r => r.qtr+'|'+r.name));
+  for (const r of saved) {
+    const k = r.qtr+'|'+r.name;
+    if (seedKeys.has(k)) {
+      const idx = merged.findIndex(x => x.qtr===r.qtr && x.name===r.name);
+      if (idx >= 0) { merged[idx] = r; } else { merged.push(r); }
+    } else {
+      merged.push(r);
+      seedKeys.add(k);
     }
-  } catch(e) {}
+  }
+  return merged;
+}
+
+// Load records from KV (with localStorage fallback)
+async function eaterLoadFromKV() {
+  try {
+    const resp = await fetch(EATER_KV_URL, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` }
+    });
+    if (!resp.ok) throw new Error('KV fetch failed: ' + resp.status);
+    const saved = await resp.json();
+    // Mirror to localStorage for offline fallback
+    try { localStorage.setItem(EATER_LS_CACHE, JSON.stringify(saved)); } catch(e) {}
+    EATER_RECORDS = eaterMergeRecords(Array.isArray(saved) ? saved : []);
+  } catch(e) {
+    console.warn('EATER KV load failed, using localStorage cache:', e.message);
+    try {
+      const cached = JSON.parse(
+        localStorage.getItem(EATER_LS_CACHE) ||
+        localStorage.getItem(EATER_LS_KEY)   || '[]'
+      );
+      EATER_RECORDS = eaterMergeRecords(cached);
+    } catch(e2) {
+      EATER_RECORDS = eaterMergeRecords([]);
+    }
+  }
   return EATER_RECORDS;
 }
 
-function eaterPersist() {
+// Synchronous accessor — returns current in-memory records (must call eaterLoadFromKV first)
+function eaterGetRecords() {
+  if (EATER_RECORDS !== null) return EATER_RECORDS;
+  // Emergency fallback: seed only until async load completes
+  return EATER_SEED.map((r,i) => Object.assign({ id:'seed-'+i }, r));
+}
+
+// Save records to KV (and mirror to localStorage)
+async function eaterPersist() {
+  const toSave = EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited);
+  // Always mirror locally first
+  try { localStorage.setItem(EATER_LS_CACHE, JSON.stringify(toSave)); } catch(e) {}
+  // Push to KV
   try {
-    const editable = EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(editable));
-  } catch(e) {}
+    const resp = await fetch(EATER_KV_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.accessToken}`
+      },
+      body: JSON.stringify(toSave)
+    });
+    if (!resp.ok) throw new Error('KV save failed: ' + resp.status);
+  } catch(e) {
+    console.warn('EATER KV save failed, data preserved in localStorage cache:', e.message);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -1029,7 +1098,7 @@ function eaterCalcTotals() {
   });
 }
 
-function eaterSaveReview() {
+async function eaterSaveReview() {
   const qtr  = document.getElementById('eater-quarter').value;
   const name = document.getElementById('eater-employee').value;
   const dept = document.getElementById('eater-dept').value;
@@ -1073,9 +1142,19 @@ function eaterSaveReview() {
 
   const idx = recs.findIndex(r => r.qtr===qtr && r.name===name);
   if (idx >= 0) { recs[idx] = rec; } else { recs.push(rec); }
-  eaterPersist();
 
   const msg = document.getElementById('eater-save-msg');
+  msg.style.color = 'var(--muted)';
+  msg.textContent = '⏳ Saving…';
+
+  await eaterPersist();
+
+  // Update fingerprint so background sync doesn't re-render immediately after our own save
+  lastKVFingerprint = JSON.stringify(
+    EATER_RECORDS.filter(r => !r.id || !r.id.startsWith('seed-') || r._edited)
+  );
+
+  msg.style.color = 'var(--asf-green)';
   msg.textContent = '✓ Saved — ' + name + ' ' + qtr;
   setTimeout(() => { msg.textContent = ''; }, 3500);
   eaterRenderAll();
@@ -1265,7 +1344,7 @@ function updateGoalSelectStyle(sel) {
 }
 
 // Called from goal status buttons in the history panel (managers only)
-function toggleGoalStatus(qtr, name, goalIdx, nextStatus) {
+async function toggleGoalStatus(qtr, name, goalIdx, nextStatus) {
   const recs = eaterGetRecords();
   const rec  = recs.find(r => r.qtr === qtr && r.name === name);
   if (!rec) return;
@@ -1274,7 +1353,7 @@ function toggleGoalStatus(qtr, name, goalIdx, nextStatus) {
   rec.goals[goalIdx].status = nextStatus;
   rec._edited = true;
   rec.savedAt = new Date().toISOString();
-  eaterPersist();
+  await eaterPersist();
   eaterRenderHistory();
   // If this record is currently loaded in the form, refresh goal status dropdowns
   const formQtr  = document.getElementById('eater-quarter').value;
@@ -1343,6 +1422,70 @@ function eaterRenderRepKPIs() {
       <div style="margin-top:8px">${qtrDots}</div>
     </div>`;
   }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// BACKGROUND SYNC — silently re-fetches KV every 60s while logged in
+// Updates display only if data has changed (compares JSON fingerprint).
+// Skips refresh if the user is actively typing in a form field.
+// ═══════════════════════════════════════════════════════════════════════
+let bgSyncInterval = null;
+let lastKVFingerprint = null;
+
+function startBackgroundSync() {
+  stopBackgroundSync(); // clear any existing interval first
+  bgSyncInterval = setInterval(async () => {
+    // Don't refresh if user is actively focused on an input or textarea
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
+    if (!auth.accessToken) return;
+    try {
+      const resp = await fetch(EATER_KV_URL, {
+        headers: { Authorization: `Bearer ${auth.accessToken}` }
+      });
+      if (!resp.ok) return;
+      const text = await resp.text();
+      // Only re-render if data actually changed
+      if (text === lastKVFingerprint) return;
+      lastKVFingerprint = text;
+      const saved = JSON.parse(text);
+      EATER_RECORDS = eaterMergeRecords(Array.isArray(saved) ? saved : []);
+      try { localStorage.setItem(EATER_LS_CACHE, text); } catch(e) {}
+      eaterRenderAll();
+      // Refresh the currently loaded form record silently
+      eaterLoadExisting();
+      showSyncPulse();
+    } catch(e) { /* silent — network blip, try again next interval */ }
+  }, 60000); // every 60 seconds
+}
+
+function stopBackgroundSync() {
+  if (bgSyncInterval) { clearInterval(bgSyncInterval); bgSyncInterval = null; }
+}
+
+// Brief visual pulse on the sync indicator when a background refresh occurs
+function showSyncPulse() {
+  const el = document.getElementById('sync-indicator');
+  if (!el) return;
+  el.style.color = 'var(--asf-green)';
+  el.textContent = '● Synced';
+  setTimeout(() => {
+    el.style.color = 'rgba(255,255,255,0.3)';
+    el.textContent = '● Live';
+  }, 2000);
+}
+
+// Manual refresh — re-fetches KV immediately, same as background sync
+async function manualRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '↻ Syncing…'; }
+  try {
+    await eaterLoadFromKV();
+    eaterRenderAll();
+    eaterLoadExisting();
+    showSyncPulse();
+  } catch(e) {}
+  if (btn) { btn.disabled = false; btn.textContent = '↻ Refresh'; }
 }
 
 function eaterRenderAll() {
