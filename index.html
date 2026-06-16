@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Drop-Ship PO Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9f9f8; color: #1a1a1a; }
+  .dash { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
+  .header h1 { font-size: 20px; font-weight: 500; }
+  .header-sub { font-size: 13px; color: #666; margin-top: 2px; }
+  .login-overlay { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f9f9f8; }
+  .login-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 2rem; width: 100%; max-width: 380px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .login-card h2 { font-size: 18px; font-weight: 500; margin-bottom: 0.5rem; }
+  .login-card p { font-size: 13px; color: #666; margin-bottom: 1.5rem; }
+  .field { margin-bottom: 1rem; }
+  .field label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; }
+  .field input { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+  .field input:focus { border-color: #888; }
+  .btn-primary { background: #1a1a1a; color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; cursor: pointer; width: 100%; }
+  .btn-primary:hover { background: #333; }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .error-msg { font-size: 13px; color: #c0392b; margin-top: 0.75rem; text-align: center; display: none; }
+  .tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 1px solid #e5e5e5; }
+  .tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #888; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; user-select: none; }
+  .tab:hover { color: #1a1a1a; }
+  .tab.active { color: #1a1a1a; font-weight: 500; border-bottom-color: #1a1a1a; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .kpi-card { background: #f1efe8; border-radius: 8px; padding: 1rem; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s, background 0.15s; user-select: none; }
+  .kpi-card:hover { border-color: #bbb; }
+  .kpi-card.active { border-color: #1a1a1a; background: #e2e0d9; }
+  .kpi-hint { font-size: 11px; color: #aaa; margin-top: 6px; }
+  .kpi-label { font-size: 12px; color: #666; margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 500; color: #1a1a1a; }
+  .kpi-sub { font-size: 12px; color: #888; margin-top: 4px; }
+  .kpi-warning .kpi-value { color: #b8860b; }
+  .kpi-danger .kpi-value { color: #c0392b; }
+  .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  @media (max-width: 600px) { .bottom-grid { grid-template-columns: 1fr; } }
+  .panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1rem 1.25rem; }
+  .section-title { font-size: 14px; font-weight: 500; margin-bottom: 0.75rem; }
+  .table-wrap { border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+  .data-table th { background: #f9f9f8; padding: 10px 12px; text-align: left; font-weight: 500; font-size: 12px; color: #666; border-bottom: 1px solid #e5e5e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .data-table td { padding: 9px 12px; border-bottom: 1px solid #e5e5e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr.group-row { cursor: pointer; background: #fff; }
+  .data-table tr.group-row:hover td { background: #f5f5f3; }
+  .data-table tr.group-row.expanded td { background: #f5f5f3; }
+  .data-table tr.line-header-row th { background: #eeecea; padding: 6px 12px; font-size: 11px; color: #555; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0; }
+  .data-table tr.line-row td { background: #fafaf9; padding: 7px 12px; font-size: 12px; border-bottom: 1px solid #eeeeee; }
+  .data-table tr.line-row:last-child td { border-bottom: 1px solid #e5e5e5; }
+  .data-table tr.line-row:hover td { background: #f0f0ee; }
+  .expand-icon { display: inline-block; font-size: 10px; margin-right: 6px; transition: transform 0.15s; color: #999; }
+  .expanded .expand-icon { transform: rotate(90deg); }
+  .loading { text-align: center; padding: 3rem; color: #888; font-size: 14px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .badge-hold { background: #faeeda; color: #854f0b; }
+  .badge-open { background: #eaf3de; color: #3b6d11; }
+  .badge-late { background: #fcebeb; color: #a32d2d; }
+  .badge-nooa { background: #fcebeb; color: #a32d2d; font-size: 10px; }
+  .qty-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .qty-table th { font-size: 12px; font-weight: 500; color: #666; padding: 6px 8px; text-align: left; border-bottom: 1px solid #e5e5e5; }
+  .qty-table td { padding: 6px 8px; border-bottom: 1px solid #e5e5e5; }
+  .qty-table tr:last-child td { border-bottom: none; }
+  .bar-wrap { background: #e5e5e5; border-radius: 99px; height: 6px; flex: 1; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; background: #378add; }
+  .refresh-btn { font-size: 13px; padding: 6px 14px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
+  .refresh-btn:hover { background: #f1efe8; }
+  .clear-filter-btn { font-size: 12px; padding: 4px 10px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #666; display: none; }
+  .clear-filter-btn:hover { background: #f1efe8; }
+  .active-filter-label { font-size: 12px; color: #666; background: #f1efe8; border: 1px solid #ddd; border-radius: 99px; padding: 3px 10px; display: none; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; background: #e6f1fb; color: #185fa5; margin-left: 8px; }
+  .no-oa-tag { background: #fcebeb; color: #a32d2d; }
+  input[type=text], input[type=password], input[type=date], input[type=number], select, textarea { border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 13px; outline: none; background: #fff; }
+  input:focus, select:focus, textarea:focus { border-color: #888; }
+
+  /* Project form */
+  .project-form { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
+  .project-form h3 { font-size: 14px; font-weight: 500; margin-bottom: 1rem; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 1rem; }
+  .form-field label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+  .form-field input, .form-field select, .form-field textarea { width: 100%; }
+  .form-field textarea { resize: vertical; min-height: 60px; }
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1rem; }
+  .btn-save { background: #1a1a1a; color: #fff; border: none; border-radius: 6px; padding: 8px 18px; font-size: 13px; cursor: pointer; }
+  .btn-save:hover { background: #333; }
+  .btn-cancel { background: #fff; color: #666; border: 1px solid #ddd; border-radius: 6px; padding: 8px 18px; font-size: 13px; cursor: pointer; }
+  .btn-cancel:hover { background: #f1efe8; }
+  .btn-add { background: #1a1a1a; color: #fff; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; cursor: pointer; }
+  .btn-add:hover { background: #333; }
+  .btn-edit { background: none; border: none; color: #378add; font-size: 12px; cursor: pointer; padding: 2px 6px; }
+  .btn-edit:hover { text-decoration: underline; }
+  .btn-delete { background: none; border: none; color: #c0392b; font-size: 12px; cursor: pointer; padding: 2px 6px; }
+  .btn-delete:hover { text-decoration: underline; }
+
+  /* Line items in form */
+  .line-items-section { margin-top: 1rem; }
+  .line-items-section label { display: block; font-size: 12px; color: #666; margin-bottom: 8px; font-weight: 500; }
+  .line-item-row { display: grid; grid-template-columns: 1fr 120px 80px 32px; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .line-item-row input { width: 100%; }
+  .btn-remove-line { background: none; border: none; color: #c0392b; font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .btn-remove-line:hover { color: #a32d2d; }
+  .btn-add-line { background: none; border: 1px dashed #bbb; border-radius: 6px; color: #666; font-size: 12px; cursor: pointer; padding: 6px 12px; width: 100%; margin-top: 4px; }
+  .btn-add-line:hover { background: #f9f9f8; border-color: #888; }
+
+  /* Projects table */
+  .projects-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .projects-table th { background: #f9f9f8; padding: 10px 12px; text-align: left; font-weight: 500; font-size: 12px; color: #666; border-bottom: 1px solid #e5e5e5; white-space: nowrap; }
+  .projects-table td { padding: 10px 12px; border-bottom: 1px solid #e5e5e5; vertical-align: top; }
+  .projects-table tr:last-child td { border-bottom: none; }
+  .projects-table tr.proj-group-row { cursor: pointer; }
+  .projects-table tr.proj-group-row:hover td { background: #f9f9f8; }
+  .projects-table tr.proj-group-row.expanded td { background: #f5f5f3; }
+  .proj-lines-row td { background: #fafaf9; padding: 0; }
+  .proj-lines-inner { padding: 8px 16px 12px 32px; }
+  .proj-lines-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .proj-lines-table th { font-size: 11px; color: #888; font-weight: 500; padding: 4px 8px; border-bottom: 1px solid #eee; text-align: left; }
+  .proj-lines-table td { padding: 5px 8px; border-bottom: 1px solid #f0f0f0; color: #1a1a1a; }
+  .proj-lines-table tr:last-child td { border-bottom: none; }
+  .status-badge { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .status-pending { background: #faeeda; color: #854f0b; }
+  .status-awaiting { background: #f1efe8; color: #555; }
+  .status-placed { background: #eaf3de; color: #3b6d11; }
+  .empty-state { text-align: center; padding: 3rem; color: #888; font-size: 14px; }
+  .items-summary { font-size: 12px; color: #666; }
+  .items-summary span { display: inline-block; background: #f1efe8; border-radius: 4px; padding: 1px 6px; margin: 1px 2px; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="login-screen" class="login-overlay">
+    <div class="login-card">
+      <h2>Drop-Ship PO Dashboard</h2>
+      <p>Sign in with your Acumatica credentials to view the dashboard.</p>
+      <div class="field"><label>Username</label><input type="text" id="username" placeholder="Enter username" /></div>
+      <div class="field"><label>Password</label><input type="password" id="password" placeholder="Enter password" /></div>
+      <button class="btn-primary" id="login-btn" onclick="loadDashboard()">Sign in & load dashboard</button>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+  </div>
+
+  <div id="dashboard-screen" style="display:none;">
+    <div class="dash">
+      <div class="header">
+        <div>
+          <h1>Drop-Ship PO Dashboard</h1>
+          <div class="header-sub" id="date-range-label"></div>
+        </div>
+        <button class="refresh-btn" onclick="refreshData()">Refresh data</button>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('po')">PO Line Detail</div>
+        <div class="tab" onclick="switchTab('projects')">Upcoming Projects</div>
+      </div>
+
+      <!-- PO TAB -->
+      <div id="tab-po" class="tab-content active">
+        <div class="kpi-grid">
+          <div class="kpi-card" id="kpi-card-hold" onclick="toggleKpiFilter('hold')">
+            <div class="kpi-label">Total on hold orders</div>
+            <div class="kpi-value" id="kpi-hold">—</div>
+            <div class="kpi-sub">Unique order numbers</div>
+            <div class="kpi-hint">Click to filter</div>
+          </div>
+          <div class="kpi-card kpi-danger" id="kpi-card-nooa" onclick="toggleKpiFilter('nooa')">
+            <div class="kpi-label">Orders without OAs</div>
+            <div class="kpi-value" id="kpi-no-oa">—</div>
+            <div class="kpi-sub">Unique POs with no vendor ref</div>
+            <div class="kpi-hint">Click to filter</div>
+          </div>
+          <div class="kpi-card kpi-warning" id="kpi-card-late" onclick="toggleKpiFilter('late')">
+            <div class="kpi-label">Promised &gt; 3 months out</div>
+            <div class="kpi-value" id="kpi-late">—</div>
+            <div class="kpi-sub">Unique orders with late promise dates</div>
+            <div class="kpi-hint">Click to filter</div>
+          </div>
+          <div class="kpi-card" id="kpi-card-total" onclick="toggleKpiFilter('total')">
+            <div class="kpi-label">Total lines on order</div>
+            <div class="kpi-value" id="kpi-total">—</div>
+            <div class="kpi-sub">All loaded PO lines</div>
+            <div class="kpi-hint">Click to show all</div>
+          </div>
+        </div>
+        <div class="bottom-grid">
+          <div class="panel">
+            <div class="section-title">Qty on order by inventory ID</div>
+            <div id="qty-table-wrap"><div class="loading">Loading...</div></div>
+          </div>
+          <div class="panel">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+              <div class="section-title" style="margin:0;">Hot list</div>
+              <button class="btn-add" onclick="showHotListForm()" style="font-size:12px;padding:4px 12px;">+ Add</button>
+            </div>
+            <div id="hotlist-form" style="display:none;background:#f9f9f8;border:1px solid #e5e5e5;border-radius:8px;padding:10px;margin-bottom:10px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">ASF PO #</label><input type="text" id="hl-po" placeholder="PO number" style="width:100%;font-size:12px;" /></div>
+                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Status</label>
+                  <select id="hl-status" style="width:100%;font-size:12px;">
+                    <option value="Requested">Requested</option>
+                    <option value="Accepted by Customer">Accepted by Customer</option>
+                    <option value="Canceled">Canceled</option>
+                  </select>
+                </div>
+                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Promised on date</label><input type="date" id="hl-promised" style="width:100%;font-size:12px;" /></div>
+                <div><label style="font-size:11px;color:#666;display:block;margin-bottom:3px;">Need by date</label><input type="date" id="hl-needby" style="width:100%;font-size:12px;" /></div>
+              </div>
+              <div style="display:flex;gap:6px;justify-content:flex-end;">
+                <button class="btn-cancel" onclick="cancelHotListForm()" style="font-size:12px;padding:5px 12px;">Cancel</button>
+                <button class="btn-save" id="hl-save-btn" onclick="saveHotListItem()" style="font-size:12px;padding:5px 12px;">Save</button>
+              </div>
+            </div>
+            <div id="hotlist-wrap"><div class="loading">Loading...</div></div>
+          </div>
+        </div>
+        <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div class="section-title" style="margin:0;">Orders</div>
+          <span class="active-filter-label" id="active-filter-label"></span>
+          <button class="clear-filter-btn" id="clear-filter-btn" onclick="clearKpiFilter()">Clear filter</button>
+          <input type="text" id="search" placeholder="Search order, account, inventory, vendor ref..." style="flex:1;min-width:180px;" oninput="renderTable()" />
+          <select id="status-filter" onchange="renderTable()">
+            <option value="">All statuses</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Open">Open</option>
+          </select>
+          <select id="salesrep-filter" onchange="renderTable()" style="min-width:140px;">
+            <option value="">All sales reps</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <div id="table-container"><div class="loading">Loading...</div></div>
+        </div>
+        <div style="font-size:12px;color:#888;margin-top:8px;" id="row-count"></div>
+      </div>
+
+      <!-- PROJECTS TAB -->
+      <div id="tab-projects" class="tab-content">
+
+        <div class="project-form" id="project-form" style="display:none;">
+          <h3 id="form-title">Add upcoming project</h3>
+          <div class="form-grid">
+            <div class="form-field"><label>Project name *</label><input type="text" id="f-name" placeholder="e.g. Main St Renovation" /></div>
+            <div class="form-field"><label>Customer / Account</label><input type="text" id="f-account" placeholder="Account name" /></div>
+            <div class="form-field"><label>Need by date</label><input type="date" id="f-needbydate" /></div>
+            <div class="form-field"><label>Status</label>
+              <select id="f-status">
+                <option value="Pending Approval">Pending Approval</option>
+                <option value="Awaiting Customer Order">Awaiting Customer Order</option>
+                <option value="Order Placed">Order Placed</option>
+              </select>
+            </div>
+            <div class="form-field" style="grid-column: 1 / -1;"><label>Notes</label><textarea id="f-notes" placeholder="Additional notes..."></textarea></div>
+          </div>
+
+          <div class="line-items-section">
+            <label>Items needed</label>
+            <div style="display:grid;grid-template-columns:1fr 120px 80px 32px;gap:8px;margin-bottom:6px;">
+              <span style="font-size:11px;color:#888;padding:0 2px;">Inventory ID</span>
+              <span style="font-size:11px;color:#888;padding:0 2px;">UOM</span>
+              <span style="font-size:11px;color:#888;padding:0 2px;">Qty</span>
+              <span></span>
+            </div>
+            <div id="line-items-container"></div>
+            <button class="btn-add-line" onclick="addLineItem()">+ Add item</button>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-cancel" onclick="cancelForm()">Cancel</button>
+            <button class="btn-save" id="save-btn" onclick="saveProject()">Save project</button>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:12px;">
+          <div class="section-title" style="margin:0;">Upcoming projects <span id="project-count" style="font-size:12px;color:#888;font-weight:400;"></span></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" id="project-search" placeholder="Search projects..." style="font-size:13px;padding:5px 10px;" oninput="renderProjects()" />
+            <button class="btn-add" onclick="showAddForm()">+ Add project</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div id="projects-container"><div class="loading">Loading projects...</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const PROXY = "https://abpoquery.greg-capell.workers.dev";
+let allData = [];
+let credentials = '';
+let expandedOrders = new Set();
+let expandedProjects = new Set();
+let activeKpiFilter = null;
+let projects = [];
+let editingProjectId = null;
+
+// ── Tabs ───────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ['po','projects'][i] === tab));
+  document.getElementById('tab-po').classList.toggle('active', tab === 'po');
+  document.getElementById('tab-projects').classList.toggle('active', tab === 'projects');
+}
+
+// ── Auth & Init ────────────────────────────────────────────────
+function getDateRange() {
+  const today = new Date();
+  const start = new Date(today);
+  start.setMonth(start.getMonth() - 12);
+  const fmt = d => d.toISOString().split('T')[0];
+  return { today: fmt(today), start: fmt(start), todayObj: today };
+}
+
+async function loadDashboard() {
+  const user = document.getElementById('username').value.trim();
+  const pass = document.getElementById('password').value.trim();
+  if (!user || !pass) { showError('Please enter username and password.'); return; }
+  credentials = btoa(user + ':' + pass);
+  const btn = document.getElementById('login-btn');
+  btn.textContent = 'Connecting...';
+  btn.disabled = true;
+  document.getElementById('error-msg').style.display = 'none';
+  try {
+    await fetchData();
+    await loadProjects();
+    await loadHotList();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard-screen').style.display = 'block';
+  } catch(e) {
+    showError('Unable to connect. Check your credentials and try again. (' + e.message + ')');
+    btn.textContent = 'Sign in & load dashboard';
+    btn.disabled = false;
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ── PO Data ────────────────────────────────────────────────────
+async function fetchData() {
+  const { today, start } = getDateRange();
+  const path = `/odata/ASF/DB-DS%20PO%20Line%20Detail?StartDate=${start}&EndDate=${today}`;
+  const resp = await fetch(PROXY + path, {
+    headers: { 'Authorization': 'Basic ' + credentials, 'Accept': 'application/json' }
+  });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  const json = await resp.json();
+  const raw = json.value || json;
+  allData = raw.filter(r => {
+    const status = (r.Status || '').trim();
+    return status === 'On Hold' || status === 'Open';
+  }).filter(r => (r.ItemClass || '').trim() === 'AMERICANBILTRITESVT');
+  renderKPIs();
+  renderQtyTable();
+  populateSalesRepFilter();
+  renderTable();
+  const { start: s, today: t } = getDateRange();
+  document.getElementById('date-range-label').textContent = `${s} → ${t} · ${allData.length.toLocaleString()} lines loaded`;
+}
+
+async function refreshData() {
+  activeKpiFilter = null;
+  expandedOrders = new Set();
+  updateKpiCardStates();
+  document.getElementById('table-container').innerHTML = '<div class="loading">Refreshing...</div>';
+  document.getElementById('qty-table-wrap').innerHTML = '<div class="loading">Loading...</div>';
+  await fetchData();
+  await loadProjects();
+  await loadHotList();
+}
+
+function toggleKpiFilter(filter) {
+  activeKpiFilter = activeKpiFilter === filter ? null : filter;
+  updateKpiCardStates();
+  renderTable();
+}
+
+function clearKpiFilter() {
+  activeKpiFilter = null;
+  updateKpiCardStates();
+  renderTable();
+}
+
+function updateKpiCardStates() {
+  ['hold','nooa','late','total'].forEach(f => {
+    const card = document.getElementById('kpi-card-' + f);
+    if (card) card.classList.toggle('active', activeKpiFilter === f);
+  });
+  const label = document.getElementById('active-filter-label');
+  const clearBtn = document.getElementById('clear-filter-btn');
+  const labels = { hold: 'On Hold orders', nooa: 'Orders without OAs', late: 'Promised > 3 months', total: 'All lines' };
+  if (activeKpiFilter) {
+    label.textContent = 'Filtered: ' + labels[activeKpiFilter];
+    label.style.display = 'inline-block';
+    clearBtn.style.display = 'inline-block';
+  } else {
+    label.style.display = 'none';
+    clearBtn.style.display = 'none';
+  }
+}
+
+function renderKPIs() {
+  const { todayObj } = getDateRange();
+  const threeMonths = new Date(todayObj);
+  threeMonths.setMonth(threeMonths.getMonth() + 3);
+  const holdOrders = new Set(allData.filter(r => (r.Status||'').trim() === 'On Hold').map(r => r.OrderNbr));
+  const noOAOrders = new Set(allData.filter(r => !r.VendorRef || r.VendorRef.toString().trim() === '').map(r => r.OrderNbr));
+  const lateOrders = new Set(allData.filter(r => r.PromisedOn && new Date(r.PromisedOn) > threeMonths).map(r => r.OrderNbr));
+  document.getElementById('kpi-hold').textContent = holdOrders.size.toLocaleString();
+  document.getElementById('kpi-no-oa').textContent = noOAOrders.size.toLocaleString();
+  document.getElementById('kpi-late').textContent = lateOrders.size.toLocaleString();
+  document.getElementById('kpi-total').textContent = allData.length.toLocaleString();
+}
+
+function renderQtyTable() {
+  const qtyMap = {};
+  allData.forEach(r => {
+    const id = r.InventoryID || '(none)';
+    qtyMap[id] = (qtyMap[id] || 0) + (parseFloat(r.POLine_baseOpenQty) || 0);
+  });
+  const sorted = Object.entries(qtyMap).sort((a,b) => b[1]-a[1]);
+  const max = sorted[0] ? sorted[0][1] : 1;
+  const wrap = document.getElementById('qty-table-wrap');
+  if (!sorted.length) { wrap.innerHTML = '<div style="font-size:13px;color:#888;padding:1rem 0;">No data</div>'; return; }
+  wrap.innerHTML = `<div style="max-height:240px;overflow-y:auto;"><table class="qty-table">
+    <thead><tr><th>Inventory ID</th><th>Open qty</th><th style="width:80px;"></th></tr></thead>
+    <tbody>${sorted.map(([id,qty]) => `<tr>
+      <td>${id}</td><td>${Math.round(qty).toLocaleString()}</td>
+      <td><div style="display:flex;align-items:center;gap:6px;"><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round((qty/max)*100)}%"></div></div></div></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ── Hot List ───────────────────────────────────────────────────
+let hotList = [];
+let editingHotListId = null;
+
+const HL_STATUS_ORDER = { 'Requested': 0, 'Canceled': 1, 'Accepted by Customer': 2 };
+const HL_STATUS_STYLE = {
+  'Requested':            { bg: '#fff8e1', color: '#856404', border: '#f0c842' },
+  'Accepted by Customer': { bg: '#eaf3de', color: '#3b6d11', border: '#8bc34a' },
+  'Canceled':             { bg: '#fcebeb', color: '#a32d2d', border: '#e57373' },
+};
+
+async function loadHotList() {
+  try {
+    const resp = await fetch(PROXY + '/hotlist');
+    hotList = await resp.json();
+  } catch(e) {
+    hotList = [];
+  }
+  renderHotList();
+}
+
+function renderHotList() {
+  const sorted = [...hotList].sort((a, b) =>
+    (HL_STATUS_ORDER[a.status] ?? 99) - (HL_STATUS_ORDER[b.status] ?? 99)
+  );
+  const wrap = document.getElementById('hotlist-wrap');
+  if (!sorted.length) {
+    wrap.innerHTML = '<div style="font-size:13px;color:#888;padding:0.75rem 0;">No items yet. Click + Add to get started.</div>';
+    return;
+  }
+  wrap.innerHTML = `<div style="max-height:220px;overflow-y:auto;">
+    <table class="qty-table" style="font-size:12px;">
+      <thead><tr>
+        <th>ASF PO #</th>
+        <th>Promised on</th>
+        <th>Need by</th>
+        <th>Status</th>
+        <th style="width:60px;"></th>
+      </tr></thead>
+      <tbody>${sorted.map(item => {
+        const s = HL_STATUS_STYLE[item.status] || {};
+        return `<tr style="background:${s.bg||''};">
+          <td style="font-family:monospace;font-weight:500;">${item.po||'—'}</td>
+          <td>${fmtDate(item.promisedOn)}</td>
+          <td>${fmtDate(item.needBy)}</td>
+          <td><span style="display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;background:${s.bg||'#eee'};color:${s.color||'#333'};border:1px solid ${s.border||'#ccc'};">${item.status||'—'}</span></td>
+          <td style="white-space:nowrap;">
+            <button class="btn-edit" onclick="editHotListItem('${item.id}')">Edit</button>
+            <button class="btn-delete" onclick="deleteHotListItem('${item.id}')">Del</button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function showHotListForm() {
+  editingHotListId = null;
+  document.getElementById('hl-po').value = '';
+  document.getElementById('hl-promised').value = '';
+  document.getElementById('hl-needby').value = '';
+  document.getElementById('hl-status').value = 'Requested';
+  document.getElementById('hotlist-form').style.display = 'block';
+  document.getElementById('hl-po').focus();
+}
+
+function editHotListItem(id) {
+  const item = hotList.find(i => i.id === id);
+  if (!item) return;
+  editingHotListId = id;
+  document.getElementById('hl-po').value = item.po || '';
+  document.getElementById('hl-promised').value = item.promisedOn || '';
+  document.getElementById('hl-needby').value = item.needBy || '';
+  document.getElementById('hl-status').value = item.status || 'Requested';
+  document.getElementById('hotlist-form').style.display = 'block';
+  document.getElementById('hl-po').focus();
+}
+
+function cancelHotListForm() {
+  editingHotListId = null;
+  document.getElementById('hotlist-form').style.display = 'none';
+}
+
+async function saveHotListItem() {
+  const payload = {
+    po: document.getElementById('hl-po').value.trim(),
+    promisedOn: document.getElementById('hl-promised').value,
+    needBy: document.getElementById('hl-needby').value,
+    status: document.getElementById('hl-status').value,
+  };
+  if (!payload.po) { alert('ASF PO # is required.'); return; }
+  const btn = document.getElementById('hl-save-btn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  try {
+    if (editingHotListId) {
+      payload.id = editingHotListId;
+      await fetch(PROXY + '/hotlist', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const idx = hotList.findIndex(i => i.id === editingHotListId);
+      if (idx !== -1) hotList[idx] = { ...hotList[idx], ...payload };
+    } else {
+      const resp = await fetch(PROXY + '/hotlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const newItem = await resp.json();
+      hotList.push(newItem);
+    }
+    cancelHotListForm();
+    renderHotList();
+  } catch(e) {
+    alert('Error saving. Please try again.');
+  } finally {
+    btn.textContent = 'Save';
+    btn.disabled = false;
+  }
+}
+
+async function deleteHotListItem(id) {
+  if (!confirm('Remove this item from the hot list?')) return;
+  try {
+    await fetch(PROXY + '/hotlist', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    hotList = hotList.filter(i => i.id !== id);
+    renderHotList();
+  } catch(e) {
+    alert('Error deleting. Please try again.');
+  }
+}
+
+function fmtDate(val) {
+  if (!val) return '—';
+  try { return new Date(val).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}); } catch { return val; }
+}
+
+function isLate(val) {
+  if (!val) return false;
+  const { todayObj } = getDateRange();
+  const t = new Date(todayObj);
+  t.setMonth(t.getMonth() + 3);
+  return new Date(val) > t;
+}
+
+function getKpiFiltered() {
+  if (!activeKpiFilter || activeKpiFilter === 'total') return allData;
+  const { todayObj } = getDateRange();
+  const threeMonths = new Date(todayObj);
+  threeMonths.setMonth(threeMonths.getMonth() + 3);
+  if (activeKpiFilter === 'hold') return allData.filter(r => (r.Status||'').trim() === 'On Hold');
+  if (activeKpiFilter === 'nooa') return allData.filter(r => !r.VendorRef || r.VendorRef.toString().trim() === '');
+  if (activeKpiFilter === 'late') return allData.filter(r => r.PromisedOn && new Date(r.PromisedOn) > threeMonths);
+  return allData;
+}
+
+function populateSalesRepFilter() {
+  const reps = [...new Set(allData.map(r => (r.Description_2||'').trim()).filter(Boolean))].sort();
+  const sel = document.getElementById('salesrep-filter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All sales reps</option>' +
+    reps.map(r => `<option value="${r}"${r === current ? ' selected' : ''}>${r}</option>`).join('');
+}
+
+function getFiltered() {
+  const search = (document.getElementById('search')?.value || '').toLowerCase();
+  const status = document.getElementById('status-filter')?.value || '';
+  const salesRep = document.getElementById('salesrep-filter')?.value || '';
+  return getKpiFiltered().filter(r => {
+    const matchStatus = !status || (r.Status||'').trim() === status;
+    const matchSalesRep = !salesRep || (r.Description_2||'').trim() === salesRep;
+    const matchSearch = !search || [r.OrderNbr, r.AccountName, r.InventoryID, r.SalesOrderNbr, r.VendorRef, r.Description, r.Description_3].some(v => v && v.toString().toLowerCase().includes(search));
+    return matchStatus && matchSalesRep && matchSearch;
+  });
+}
+
+function toggleOrder(orderNbr) {
+  if (expandedOrders.has(orderNbr)) expandedOrders.delete(orderNbr);
+  else expandedOrders.add(orderNbr);
+  renderTable();
+}
+
+function groupByOrder(lines) {
+  const groups = {};
+  const order = [];
+  lines.forEach(r => {
+    if (!groups[r.OrderNbr]) { groups[r.OrderNbr] = []; order.push(r.OrderNbr); }
+    groups[r.OrderNbr].push(r);
+  });
+  return order.map(nbr => ({ orderNbr: nbr, lines: groups[nbr] }));
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  const groups = groupByOrder(filtered);
+  document.getElementById('row-count').textContent = `Showing ${groups.length.toLocaleString()} orders · ${filtered.length.toLocaleString()} lines`;
+  const container = document.getElementById('table-container');
+  if (!groups.length) { container.innerHTML = '<div class="loading">No results match your filters.</div>'; return; }
+
+  const rows = groups.map(({ orderNbr, lines }) => {
+    const expanded = expandedOrders.has(orderNbr);
+    const first = lines[0];
+    const totalQty = lines.reduce((s, r) => s + (parseFloat(r.POLine_baseOpenQty) || 0), 0);
+    const hasNoOA = lines.some(r => !r.VendorRef || r.VendorRef.toString().trim() === '');
+    const statuses = [...new Set(lines.map(r => (r.Status||'').trim()))];
+    const vendorRefs = [...new Set(lines.map(r => (r.VendorRef||'').trim()).filter(Boolean))];
+    const latestPromise = lines.reduce((latest, r) => {
+      if (!r.PromisedOn) return latest;
+      return (!latest || new Date(r.PromisedOn) > new Date(latest)) ? r.PromisedOn : latest;
+    }, null);
+    const promisedLate = latestPromise && isLate(latestPromise);
+    const desc2vals = [...new Set(lines.map(r => (r.Description_2||'').trim()).filter(Boolean))];
+    const desc3vals = [...new Set(lines.map(r => (r.Description_3||'').trim()).filter(Boolean))];
+    const statusBadges = statuses.map(s =>
+      s === 'On Hold' ? '<span class="badge badge-hold">On Hold</span>' :
+      s === 'Open' ? '<span class="badge badge-open">Open</span>' : s
+    ).join(' ');
+    const vendorRefDisplay = hasNoOA
+      ? (vendorRefs.length ? vendorRefs.join(', ') + ' <span class="badge badge-nooa">+ No OA</span>' : '<span class="badge badge-nooa">No OA</span>')
+      : vendorRefs.join(', ') || '—';
+
+    const groupRow = `<tr class="group-row${expanded?' expanded':''}" onclick="toggleOrder('${orderNbr}')">
+      <td><span class="expand-icon">▶</span><span style="font-family:monospace;font-size:12px;font-weight:500;">${orderNbr||'—'}</span></td>
+      <td title="${first.AccountName||''}">${first.AccountName||'—'}</td>
+      <td style="font-family:monospace;font-size:12px;">${first.SalesOrderNbr||'—'}</td>
+      <td>${vendorRefDisplay}</td>
+      <td>${statusBadges}</td>
+      <td>${fmtDate(first.Date)}</td>
+      <td style="${promisedLate?'color:#a32d2d;font-weight:500;':''}">${latestPromise ? fmtDate(latestPromise) : '—'}</td>
+      <td title="${desc2vals.join(', ')}">${desc2vals.join(', ')||'—'}</td>
+      <td title="${desc3vals.join(', ')}">${desc3vals.join(', ')||'—'}</td>
+      <td style="text-align:right;">${lines.length} line${lines.length!==1?'s':''} · ${Math.round(totalQty).toLocaleString()} qty</td>
+    </tr>`;
+
+    const lineRows = expanded ? `
+      <tr class="line-header-row">
+        <th style="padding-left:32px;">Line #</th>
+        <th>Inventory ID</th>
+        <th>Description</th>
+        <th>Vendor ref</th>
+        <th>Status</th>
+        <th>Promised</th>
+        <th style="text-align:right;">Open qty</th>
+      </tr>
+      ${lines.map(r => {
+        const noOA = !r.VendorRef || r.VendorRef.toString().trim() === '';
+        const late = isLate(r.PromisedOn);
+        return `<tr class="line-row">
+          <td style="padding-left:32px;font-family:monospace;">${r.LineNbr||'—'}</td>
+          <td>${r.InventoryID||'—'}</td>
+          <td title="${r.Description||''}">${r.Description||'—'}</td>
+          <td>${noOA?'<span class="badge badge-nooa">No OA</span>':(r.VendorRef||'—')}</td>
+          <td>${(r.Status||'').trim()==='On Hold'?'<span class="badge badge-hold">On Hold</span>':(r.Status||'').trim()==='Open'?'<span class="badge badge-open">Open</span>':(r.Status||'—')}</td>
+          <td>${late?`<span class="badge badge-late">${fmtDate(r.PromisedOn)}</span>`:fmtDate(r.PromisedOn)}</td>
+          <td style="text-align:right;">${r.POLine_baseOpenQty!=null?Math.round(parseFloat(r.POLine_baseOpenQty)).toLocaleString():'—'}</td>
+        </tr>`;
+      }).join('')}` : '';
+
+    return groupRow + lineRows;
+  }).join('');
+
+  container.innerHTML = `<div style="overflow-x:auto;"><table class="data-table">
+    <thead><tr>
+      <th style="width:110px;">Order #</th>
+      <th style="width:130px;">Account</th>
+      <th style="width:95px;">SO #</th>
+      <th style="width:140px;">Vendor ref</th>
+      <th style="width:95px;">Status</th>
+      <th style="width:90px;">Date</th>
+      <th style="width:90px;">Promised</th>
+      <th style="width:130px;">Description 2</th>
+      <th style="width:130px;">Description 3</th>
+      <th style="width:110px;text-align:right;">Lines / Qty</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// ── Projects ───────────────────────────────────────────────────
+async function loadProjects() {
+  try {
+    const resp = await fetch(PROXY + '/projects');
+    projects = await resp.json();
+    renderProjects();
+  } catch(e) {
+    document.getElementById('projects-container').innerHTML = '<div class="loading">Unable to load projects.</div>';
+  }
+}
+
+function toggleProject(id) {
+  if (expandedProjects.has(id)) expandedProjects.delete(id);
+  else expandedProjects.add(id);
+  renderProjects();
+}
+
+function renderProjects() {
+  const search = (document.getElementById('project-search')?.value || '').toLowerCase();
+  const filtered = projects.filter(p =>
+    !search || [p.name, p.account, p.notes, p.status, ...(p.items||[]).map(i => i.inventoryId)].some(v => v && v.toLowerCase().includes(search))
+  ).sort((a, b) => {
+    const aPlaced = a.status === 'Order Placed' ? 1 : 0;
+    const bPlaced = b.status === 'Order Placed' ? 1 : 0;
+    return aPlaced - bPlaced;
+  });
+  document.getElementById('project-count').textContent = `(${filtered.length} of ${projects.length})`;
+  const container = document.getElementById('projects-container');
+  if (!filtered.length) {
+    container.innerHTML = projects.length === 0
+      ? '<div class="empty-state">No upcoming projects yet. Click "+ Add project" to get started.</div>'
+      : '<div class="empty-state">No projects match your search.</div>';
+    return;
+  }
+  const statusClass = s => {
+    if (!s) return '';
+    if (s === 'Pending Approval') return 'status-pending';
+    if (s === 'Awaiting Customer Order') return 'status-awaiting';
+    if (s === 'Order Placed') return 'status-placed';
+    return '';
+  };
+
+  const rows = filtered.map(p => {
+    const expanded = expandedProjects.has(p.id);
+    const items = p.items || [];
+    const totalQty = items.reduce((s, i) => s + (parseFloat(i.qty) || 0), 0);
+    const itemSummary = items.length
+      ? items.map(i => `<span>${i.inventoryId||'?'} × ${i.qty||0}${i.uom?' '+i.uom:''}</span>`).join('')
+      : '<span style="color:#aaa;">No items</span>';
+
+    const isPlaced = p.status === 'Order Placed';
+    const groupRow = `<tr class="proj-group-row${expanded?' expanded':''}" onclick="toggleProject('${p.id}')" style="${isPlaced?'background:#edf7ed;':''}">
+      <td style="${isPlaced?'background:#edf7ed;':''}"><span class="expand-icon">▶</span><span style="font-weight:500;">${p.name||'—'}</span></td>
+      <td style="${isPlaced?'background:#edf7ed;':''}">${p.account||'—'}</td>
+      <td style="${isPlaced?'background:#edf7ed;':''}">${p.needByDate ? fmtDate(p.needByDate) : '—'}</td>
+      <td style="${isPlaced?'background:#edf7ed;':''}"><div class="items-summary">${itemSummary}</div></td>
+      <td style="text-align:right;${isPlaced?'background:#edf7ed;':''}">${totalQty ? totalQty.toLocaleString() : '—'}</td>
+      <td style="${isPlaced?'background:#edf7ed;':''}">${p.status ? `<span class="status-badge ${statusClass(p.status)}">${p.status}</span>` : '—'}</td>
+      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${isPlaced?'background:#edf7ed;':''}" title="${p.notes||''}">${p.notes||'—'}</td>
+      <td style="white-space:nowrap;${isPlaced?'background:#edf7ed;':''}">
+        <button class="btn-edit" onclick="event.stopPropagation();editProject('${p.id}')">Edit</button>
+        <button class="btn-delete" onclick="event.stopPropagation();deleteProject('${p.id}')">Delete</button>
+      </td>
+    </tr>`;
+
+    const detailRow = expanded ? `<tr class="proj-lines-row">
+      <td colspan="8">
+        <div class="proj-lines-inner">
+          ${items.length ? `<table class="proj-lines-table">
+            <thead><tr><th>#</th><th>Inventory ID</th><th>UOM</th><th style="text-align:right;">Qty</th></tr></thead>
+            <tbody>${items.map((item, idx) => `<tr>
+              <td style="color:#aaa;">${idx+1}</td>
+              <td style="font-weight:500;">${item.inventoryId||'—'}</td>
+              <td>${item.uom||'—'}</td>
+              <td style="text-align:right;">${item.qty ? parseFloat(item.qty).toLocaleString() : '—'}</td>
+            </tr>`).join('')}</tbody>
+          </table>` : ''}
+          ${p.notes ? `<div style="margin-top:${items.length?'10px':'0'};padding-top:${items.length?'10px':'0'};${items.length?'border-top:1px solid #eee;':''}font-size:12px;color:#444;white-space:pre-wrap;line-height:1.6;"><span style="font-size:11px;color:#888;font-weight:500;display:block;margin-bottom:4px;">Notes</span>${p.notes}</div>` : ''}
+        </div>
+      </td>
+    </tr>` : '';
+
+    return groupRow + detailRow;
+  }).join('');
+
+  container.innerHTML = `<div style="overflow-x:auto;"><table class="projects-table">
+    <thead><tr>
+      <th>Project name</th>
+      <th style="width:140px;">Account</th>
+      <th style="width:110px;">Need by date</th>
+      <th>Items</th>
+      <th style="width:80px;text-align:right;">Total qty</th>
+      <th style="width:130px;">Status</th>
+      <th style="width:180px;">Notes</th>
+      <th style="width:90px;"></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// ── Line item form helpers ─────────────────────────────────────
+function addLineItem(inventoryId='', uom='', qty='') {
+  const container = document.getElementById('line-items-container');
+  const div = document.createElement('div');
+  div.className = 'line-item-row';
+  div.innerHTML = `
+    <input type="text" placeholder="Inventory ID" value="${inventoryId}" class="li-inventory" />
+    <input type="text" placeholder="EA, SY, SF..." value="${uom}" class="li-uom" />
+    <input type="number" placeholder="0" value="${qty}" min="0" class="li-qty" />
+    <button class="btn-remove-line" onclick="this.parentElement.remove()" title="Remove">×</button>
+  `;
+  container.appendChild(div);
+}
+
+function getLineItems() {
+  return Array.from(document.querySelectorAll('.line-item-row')).map(row => ({
+    inventoryId: row.querySelector('.li-inventory').value.trim(),
+    uom: row.querySelector('.li-uom').value.trim(),
+    qty: row.querySelector('.li-qty').value,
+  })).filter(i => i.inventoryId || i.qty);
+}
+
+function showAddForm() {
+  editingProjectId = null;
+  document.getElementById('form-title').textContent = 'Add upcoming project';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-account').value = '';
+  document.getElementById('f-needbydate').value = '';
+  document.getElementById('f-status').value = 'Planning';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('line-items-container').innerHTML = '';
+  addLineItem();
+  document.getElementById('project-form').style.display = 'block';
+  document.getElementById('f-name').focus();
+}
+
+function editProject(id) {
+  const p = projects.find(p => p.id === id);
+  if (!p) return;
+  editingProjectId = id;
+  document.getElementById('form-title').textContent = 'Edit project';
+  document.getElementById('f-name').value = p.name || '';
+  document.getElementById('f-account').value = p.account || '';
+  document.getElementById('f-needbydate').value = p.needByDate || '';
+  document.getElementById('f-status').value = p.status || 'Pending Approval';
+  document.getElementById('f-notes').value = p.notes || '';
+  document.getElementById('line-items-container').innerHTML = '';
+  (p.items || []).forEach(i => addLineItem(i.inventoryId, i.uom, i.qty));
+  if (!p.items || !p.items.length) addLineItem();
+  document.getElementById('project-form').style.display = 'block';
+  document.getElementById('f-name').focus();
+}
+
+function cancelForm() {
+  editingProjectId = null;
+  document.getElementById('project-form').style.display = 'none';
+}
+
+async function saveProject() {
+  const payload = {
+    name: document.getElementById('f-name').value.trim(),
+    account: document.getElementById('f-account').value.trim(),
+    needByDate: document.getElementById('f-needbydate').value,
+    status: document.getElementById('f-status').value,
+    notes: document.getElementById('f-notes').value.trim(),
+    items: getLineItems(),
+  };
+  if (!payload.name) { alert('Project name is required.'); return; }
+  const btn = document.getElementById('save-btn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  try {
+    if (editingProjectId) {
+      payload.id = editingProjectId;
+      await fetch(PROXY + '/projects', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const idx = projects.findIndex(p => p.id === editingProjectId);
+      if (idx !== -1) projects[idx] = { ...projects[idx], ...payload };
+    } else {
+      const resp = await fetch(PROXY + '/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const newP = await resp.json();
+      projects.push(newP);
+    }
+    cancelForm();
+    renderProjects();
+  } catch(e) {
+    alert('Error saving project. Please try again.');
+  } finally {
+    btn.textContent = 'Save project';
+    btn.disabled = false;
+  }
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this project?')) return;
+  try {
+    await fetch(PROXY + '/projects', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    projects = projects.filter(p => p.id !== id);
+    renderProjects();
+  } catch(e) {
+    alert('Error deleting project. Please try again.');
+  }
+}
+</script>
+</body>
+</html>
