@@ -551,14 +551,16 @@
           <table id="combined-sb-tbl">
             <thead><tr>
               <th>Rep</th>
+              <th style="text-align:right">YoY %</th>
               <th style="text-align:right">% to Budget</th>
               <th>Progress</th>
               <th style="text-align:right">ROI (GP/Expense)</th>
               <th>Rating</th>
             </tr></thead>
-            <tbody id="combined-sb-tbody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Loading…</td></tr></tbody>
+            <tbody id="combined-sb-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Loading…</td></tr></tbody>
             <tfoot><tr>
               <td>TEAM TOTAL</td>
+              <td style="text-align:right" id="ytd-sb-tot-yoy">—</td>
               <td style="text-align:right" id="ytd-sb-tot-pct">—</td>
               <td></td>
               <td style="text-align:right" id="roe-tot-ratio">—</td>
@@ -1948,8 +1950,11 @@ function renderCombinedTable() {
     const roeStr   = r.roe != null ? r.roe.toFixed(2)+'x' : '—';
     const [rating, ratingColor] = roeRating(r.roe);
     const roeColor = r.roe != null ? (r.roe>=1.5?'var(--asf-green)':r.roe>=1.0?'var(--yellow)':'var(--red)') : 'var(--muted)';
+    const yoyDisp  = r.yoy != null ? (r.yoy >= 0 ? '+' : '') + r.yoy.toFixed(1) + '%' : '—';
+    const yoyColor = r.yoy != null ? (r.yoy >= 0 ? 'color:var(--asf-green)' : 'color:var(--red)') : 'color:var(--muted)';
     return `<tr style="${rowBg}">
       <td>${r.name}${isMe?' <span style="font-size:9px;color:var(--asf-blue)">(you)</span>':''}</td>
+      <td style="text-align:right;font-weight:700;${yoyColor}">${yoyDisp}</td>
       <td style="text-align:right;font-weight:700;${pctColor}">${pctDisp}</td>
       <td style="width:100px;padding-right:12px">
         <div style="height:8px;background:#e4ecf5;border-radius:4px;overflow:hidden;position:relative">
@@ -1962,10 +1967,15 @@ function renderCombinedTable() {
   }).join('');
 
   // Footer totals
+  const totPrior  = rows.reduce((s,r) => s+(r.prior||0), 0);
+  const totYoY    = totPrior > 0 ? ((totActual - totPrior) / totPrior) * 100 : null;
   const totPctColor = totPct!=null ? (totPct>=100?'color:var(--asf-green)':'color:var(--red)') : '';
+  const totYoYColor = totYoY!=null ? (totYoY>=0?'var(--asf-green)':'var(--red)') : 'var(--muted)';
   const totRoeColor = totROE!=null ? (totROE>=1.5?'var(--asf-green)':totROE>=1.0?'var(--yellow)':'var(--red)') : 'var(--muted)';
   document.getElementById('ytd-sb-tot-pct').innerHTML = totPct!=null
     ? `<span style="${totPctColor};font-weight:700">${totPct.toFixed(1)}%</span>` : '—';
+  document.getElementById('ytd-sb-tot-yoy').innerHTML = totYoY!=null
+    ? `<span style="font-weight:700;color:${totYoYColor}">${totYoY>=0?'+':''}${totYoY.toFixed(1)}%</span>` : '—';
   document.getElementById('roe-tot-ratio').innerHTML = totROE!=null
     ? `<span style="font-weight:700;color:${totRoeColor}">${totROE.toFixed(2)}x</span>` : '—';
 }
@@ -2001,17 +2011,29 @@ function renderYTDScoreboard() {
     repActuals[rep] = (repActuals[rep]||0) + (+r.ExtAmount||0);
   });
 
+  // Build prior year per-rep actuals (D.priorSales already date-capped to same elapsed period)
+  const priorRepActuals = {};
+  D.priorSales.forEach(r => {
+    const rep = (r.SalesRep||'').trim();
+    if (!rep || SCOREBOARD_EXCLUDED.has(rep)) return;
+    priorRepActuals[rep] = (priorRepActuals[rep]||0) + (+r.ExtAmount||0);
+  });
+
   // Populate sbRepData with YTD figures (ROE merged in later by mergeROEData)
   Object.entries(REP_TARGETS)
     .filter(([name]) => !SCOREBOARD_EXCLUDED.has(name))
     .forEach(([name, t]) => {
       const actual = repActuals[name] || 0;
+      const prior  = priorRepActuals[name] || 0;
       const budget = t.budgetCum[fpIdx] || 0;
       const pct    = budget > 0 ? (actual / budget) * 100 : null;
+      const yoy    = prior > 0 ? ((actual - prior) / prior) * 100 : null;
       if (!sbRepData[name]) sbRepData[name] = { name };
       sbRepData[name].actual = actual;
+      sbRepData[name].prior  = prior;
       sbRepData[name].budget = budget;
       sbRepData[name].pct    = pct;
+      sbRepData[name].yoy    = yoy;
     });
 
   renderCombinedTable();
