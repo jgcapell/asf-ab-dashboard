@@ -2030,18 +2030,27 @@ async function fetchROEData() {
   errEl.style.display  = 'none';
 
   try {
-    const today       = new Date();
-    const todayStr    = today.toISOString().slice(0,10);
-    const t12Start    = new Date(today);
-    t12Start.setFullYear(t12Start.getFullYear() - 1);
-    t12Start.setDate(t12Start.getDate() + 1);
-    const t12StartStr = t12Start.toISOString().slice(0,10);
+    addLog(`Fetching GL expense data: trailing 12 fiscal periods`);
 
-    addLog(`Fetching GL expense data: ${t12StartStr} → ${todayStr}`);
+    // Build list of trailing 12 FinPeriodID values to filter on
+    // FinPeriodID format: "PP-YYYY" where PP is fiscal period (01=Nov, 02=Dec, 03=Jan...)
+    // We need the 12 periods ending at the current fiscal period
+    const t12Periods = [];
+    const todayNow = new Date();
+    const calMo    = todayNow.getMonth(); // 0=Jan
+    const curFPNum = ((calMo + 2) % 12) + 1; // fiscal period 1-12
+    for (let i = 0; i < 12; i++) {
+      let fp = curFPNum - i;
+      let fy = CUR_YEAR;
+      if (fp <= 0) { fp += 12; fy -= 1; }
+      // FinPeriodID = "PP-YYYY" e.g. "07-2026"
+      t12Periods.push(`'${String(fp).padStart(2,'0')}-${fy}'`);
+    }
+    const periodFilter = t12Periods.map(p => `FinPeriodID eq ${p}`).join(' or ');
 
     const glRows = await tryFetch('GL Expenses (ROE)', 'GC-GLDetail', {
-      '$filter': `Account ge '6010' and Account le '9999' and Date ge datetime'${t12StartStr}T00:00:00' and Date le datetime'${todayStr}T23:59:59'`,
-      '$select': 'Account,Subaccount,Amount,TurnoverAmt,CuryTurnover,DebitAmt,CreditAmt,FinancialPeriod,Date',
+      '$filter': `AccountID ge '6010' and AccountID le '9999' and (${periodFilter})`,
+      '$select': 'AccountID,SubID,FinYear,FinPeriodID,TranPtdDebit,TranPtdCredit',
     });
 
     addLog(`GL expense rows: ${glRows.length}`);
@@ -2060,12 +2069,11 @@ async function fetchROEData() {
 function mergeROEData(glRows) {
   const expByRep = {};
   glRows.forEach(r => {
-    const sub = (r.Subaccount||'').trim();
+    const sub = (r.SubID||'').trim();
     const rep = SUB_TO_REP[sub];
     if (!rep || SCOREBOARD_EXCLUDED.has(rep)) return;
-    let amt = parseFloat(r.TurnoverAmt);
-    if (isNaN(amt)) amt = (parseFloat(r.DebitAmt)||0) - (parseFloat(r.CreditAmt)||0);
-    if (isNaN(amt)) amt = parseFloat(r.Amount)||0;
+    // Net expense = period debit minus period credit
+    const amt = (parseFloat(r.TranPtdDebit)||0) - (parseFloat(r.TranPtdCredit)||0);
     expByRep[rep] = (expByRep[rep]||0) + amt;
   });
 
