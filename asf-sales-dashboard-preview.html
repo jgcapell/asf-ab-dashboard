@@ -2033,7 +2033,7 @@ async function fetchROEData() {
     addLog(`Fetching GL expense data: trailing 12 fiscal periods`);
 
     const glRows = await tryFetch('GL Expenses (ROE)', 'GC-ExpenseBySubAccount', {
-      '$select': 'GLHistory_FinYear,FinPeriodID,SubCD,GLHistory_TranPtdDebit,GLHistory_TranPtdCredit',
+      '$select': 'GLHistory_finYear,FinancialPeriod,Subaccount,GLHistory_tranPtdDebit,GLHistory_tranPtdCredit',
     });
 
     addLog(`GL expense rows: ${glRows.length}`);
@@ -2050,30 +2050,44 @@ async function fetchROEData() {
 }
 
 function mergeROEData(glRows) {
-  // Build set of trailing 12 FinPeriodID strings for client-side filtering
-  // FinPeriodID format: "PP-YYYY" e.g. "07-2026"
-  const todayNow  = new Date();
-  const calMo     = todayNow.getMonth();
-  const curFPNum  = ((calMo + 2) % 12) + 1;
-  const t12Set    = new Set();
+  // FinancialPeriod format: "PPYYYY" e.g. "072026" (no hyphen)
+  const todayNow = new Date();
+  const calMo    = todayNow.getMonth();
+  const curFPNum = ((calMo + 2) % 12) + 1;
+  const t12Set   = new Set();
   for (let i = 0; i < 12; i++) {
     let fp = curFPNum - i;
     let fy = CUR_YEAR;
     if (fp <= 0) { fp += 12; fy -= 1; }
-    t12Set.add(`${String(fp).padStart(2,'0')}-${fy}`);
+    t12Set.add(`${String(fp).padStart(2,'0')}${fy}`); // e.g. "072026"
   }
+
+  // Subaccount format in OData: "00000" (5 digits, no hyphen)
+  // REP_TARGETS uses "000-##" format — convert for lookup
+  function subToOData(sub) {
+    if (!sub) return null;
+    const digits = sub.replace('-', '');
+    return digits.padStart(5, '0');
+  }
+  const subLookup = {};
+  Object.entries(REP_TARGETS).forEach(([name, t]) => {
+    if (t.sub) subLookup[subToOData(t.sub)] = name;
+  });
+
+  addLog('ROE subLookup: ' + JSON.stringify(subLookup));
 
   const expByRep = {};
   glRows.forEach(r => {
-    // Only include rows within trailing 12 periods
-    const period = (r.FinPeriodID||'').trim();
+    const period = (r.FinancialPeriod||'').trim();
     if (!t12Set.has(period)) return;
-    const sub = (r.SubCD||'').trim();
-    const rep = SUB_TO_REP[sub];
+    const sub = (r.Subaccount||'').trim();
+    const rep = subLookup[sub];
     if (!rep || SCOREBOARD_EXCLUDED.has(rep)) return;
-    const amt = (parseFloat(r.GLHistory_TranPtdDebit)||0) - (parseFloat(r.GLHistory_TranPtdCredit)||0);
+    const amt = (parseFloat(r.GLHistory_tranPtdDebit)||0) - (parseFloat(r.GLHistory_tranPtdCredit)||0);
     expByRep[rep] = (expByRep[rep]||0) + amt;
   });
+
+  addLog(`ROE expense totals: ${JSON.stringify(expByRep)}`);
 
   const gpByRep = {};
   (D.trailing12rows||[]).forEach(r => {
