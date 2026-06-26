@@ -2032,25 +2032,9 @@ async function fetchROEData() {
   try {
     addLog(`Fetching GL expense data: trailing 12 fiscal periods`);
 
-    // Build list of trailing 12 FinPeriodID values to filter on
-    // FinPeriodID format: "PP-YYYY" where PP is fiscal period (01=Nov, 02=Dec, 03=Jan...)
-    // We need the 12 periods ending at the current fiscal period
-    const t12Periods = [];
-    const todayNow = new Date();
-    const calMo    = todayNow.getMonth(); // 0=Jan
-    const curFPNum = ((calMo + 2) % 12) + 1; // fiscal period 1-12
-    for (let i = 0; i < 12; i++) {
-      let fp = curFPNum - i;
-      let fy = CUR_YEAR;
-      if (fp <= 0) { fp += 12; fy -= 1; }
-      // FinPeriodID = "PP-YYYY" e.g. "07-2026"
-      t12Periods.push(`'${String(fp).padStart(2,'0')}-${fy}'`);
-    }
-    const periodFilter = t12Periods.map(p => `FinPeriodID eq ${p}`).join(' or ');
-
-    const glRows = await tryFetch('GL Expenses (ROE)', 'GC-GLDetail', {
-      '$filter': `AccountClassID eq 'EXPENSE' and (${periodFilter})`,
-      '$select': 'AccountID,SubID,FinYear,FinPeriodID,TranPtdDebit,TranPtdCredit,AccountClassID',
+    const glRows = await tryFetch('GL Expenses (ROE)', 'GC-ExpenseBySubAccount', {
+      '$filter': `GLHistory_FinYear eq '${CUR_YEAR}' or GLHistory_FinYear eq '${CUR_YEAR - 1}'`,
+      '$select': 'GLHistory_FinYear,FinPeriodID,SubCD,GLHistory_TranPtdDebit,GLHistory_TranPtdCredit',
     });
 
     addLog(`GL expense rows: ${glRows.length}`);
@@ -2067,13 +2051,28 @@ async function fetchROEData() {
 }
 
 function mergeROEData(glRows) {
+  // Build set of trailing 12 FinPeriodID strings for client-side filtering
+  // FinPeriodID format: "PP-YYYY" e.g. "07-2026"
+  const todayNow  = new Date();
+  const calMo     = todayNow.getMonth();
+  const curFPNum  = ((calMo + 2) % 12) + 1;
+  const t12Set    = new Set();
+  for (let i = 0; i < 12; i++) {
+    let fp = curFPNum - i;
+    let fy = CUR_YEAR;
+    if (fp <= 0) { fp += 12; fy -= 1; }
+    t12Set.add(`${String(fp).padStart(2,'0')}-${fy}`);
+  }
+
   const expByRep = {};
   glRows.forEach(r => {
-    const sub = (r.SubID||'').trim();
+    // Only include rows within trailing 12 periods
+    const period = (r.FinPeriodID||'').trim();
+    if (!t12Set.has(period)) return;
+    const sub = (r.SubCD||'').trim();
     const rep = SUB_TO_REP[sub];
     if (!rep || SCOREBOARD_EXCLUDED.has(rep)) return;
-    // Net expense = period debit minus period credit
-    const amt = (parseFloat(r.TranPtdDebit)||0) - (parseFloat(r.TranPtdCredit)||0);
+    const amt = (parseFloat(r.GLHistory_TranPtdDebit)||0) - (parseFloat(r.GLHistory_TranPtdCredit)||0);
     expByRep[rep] = (expByRep[rep]||0) + amt;
   });
 
