@@ -2032,9 +2032,20 @@ async function fetchROEData() {
   try {
     addLog(`Fetching GL expense data: trailing 12 fiscal periods`);
 
-    const glRows = await tryFetch('GL Expenses (ROE)', 'GC-ExpenseBySubAccount', {
-      '$select': 'GLHistory_finYear,FinancialPeriod,Subaccount,GLHistory_tranPtdDebit,GLHistory_tranPtdCredit',
-    });
+    // Diagnostic: log the exact URL being called
+    const diagUrl = new URL(`${CONFIG.workerUrl}/odata/${encodeURIComponent('GC-ExpenseBySubAccount')}`);
+    diagUrl.searchParams.set('$format','json');
+    diagUrl.searchParams.set('$top','1');
+    addLog(`ROE diagnostic URL: ${diagUrl.toString()}`);
+    try {
+      const diagRes = await fetch(diagUrl.toString(), { headers: { Authorization: `Bearer ${auth.accessToken}`, Accept: 'application/json' } });
+      const diagText = await diagRes.text();
+      addLog(`ROE diagnostic response (${diagRes.status}): ${diagText.slice(0,200)}`);
+    } catch(diagE) {
+      addLog(`ROE diagnostic fetch error: ${diagE.message}`);
+    }
+
+    const glRows = await tryFetch('GL Expenses (ROE)', 'GC-ExpenseBySubAccount', {});
 
     addLog(`GL expense rows: ${glRows.length}`);
     mergeROEData(glRows);
