@@ -535,67 +535,36 @@
         </div>
       </div>
 
-      <!-- ── SCOREBOARDS: YTD vs Budget + ROE ── -->
-      <div class="row cols-2">
-
-        <!-- YTD vs Budget Scoreboard -->
-        <div class="card">
-          <div class="card-hdr">
-            <span class="card-title">YTD Sales vs Budget — All Reps</span>
+      <!-- ── COMBINED SCOREBOARD ── -->
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Rep Scoreboard — YTD vs Budget &amp; ROE</span>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span id="roe-loading-msg" style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px">
+              <span class="spin">⟳</span> Loading ROE data…
+            </span>
+            <span id="roe-err-msg" style="display:none;font-size:10px;color:var(--red)"></span>
             <span class="card-badge" id="ytd-sb-badge">—</span>
           </div>
-          <div class="card-scroll">
-            <table id="ytd-scoreboard-tbl">
-              <thead><tr>
-                <th>Rep</th>
-                <th style="text-align:right">Actual</th>
-                <th style="text-align:right">Budget</th>
-                <th style="text-align:right">Variance</th>
-                <th style="text-align:right">% to Budget</th>
-                <th>Progress</th>
-              </tr></thead>
-              <tbody id="ytd-sb-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Loading…</td></tr></tbody>
-              <tfoot><tr>
-                <td>TOTAL</td>
-                <td style="text-align:right" id="ytd-sb-tot-actual">—</td>
-                <td style="text-align:right" id="ytd-sb-tot-budget">—</td>
-                <td style="text-align:right" id="ytd-sb-tot-var">—</td>
-                <td style="text-align:right" id="ytd-sb-tot-pct">—</td>
-                <td></td>
-              </tr></tfoot>
-            </table>
-          </div>
         </div>
-
-        <!-- ROE Scoreboard -->
-        <div class="card">
-          <div class="card-hdr">
-            <span class="card-title">ROE Ratio — All Reps (Trailing 12M)</span>
-            <span class="card-badge" id="roe-sb-badge">GP ÷ Expenses</span>
-          </div>
-          <div id="roe-loading-msg" style="padding:14px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px">
-            <span class="spin">⟳</span> Loading GL expense data…
-          </div>
-          <div class="card-scroll" id="roe-table-wrap" style="display:none">
-            <table id="roe-scoreboard-tbl">
-              <thead><tr>
-                <th>Rep</th>
-                <th style="text-align:right">Gross Profit</th>
-                <th style="text-align:right">Expenses</th>
-                <th style="text-align:right">ROE Ratio</th>
-                <th>Rating</th>
-              </tr></thead>
-              <tbody id="roe-sb-tbody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Loading…</td></tr></tbody>
-              <tfoot><tr>
-                <td>TEAM TOTAL</td>
-                <td style="text-align:right" id="roe-tot-gp">—</td>
-                <td style="text-align:right" id="roe-tot-exp">—</td>
-                <td style="text-align:right" id="roe-tot-ratio">—</td>
-                <td></td>
-              </tr></tfoot>
-            </table>
-          </div>
-          <div id="roe-err-msg" style="display:none;padding:14px;font-size:11px;color:var(--red)"></div>
+        <div class="card-scroll">
+          <table id="combined-sb-tbl">
+            <thead><tr>
+              <th>Rep</th>
+              <th style="text-align:right">% to Budget</th>
+              <th>Progress</th>
+              <th style="text-align:right">ROE Ratio</th>
+              <th>Rating</th>
+            </tr></thead>
+            <tbody id="combined-sb-tbody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Loading…</td></tr></tbody>
+            <tfoot><tr>
+              <td>TEAM TOTAL</td>
+              <td style="text-align:right" id="ytd-sb-tot-pct">—</td>
+              <td></td>
+              <td style="text-align:right" id="roe-tot-ratio">—</td>
+              <td></td>
+            </tr></tfoot>
+          </table>
         </div>
       </div>
 
@@ -1948,7 +1917,68 @@ function pill(good, label) {
   return `<div class="kpi-pill ${cls}">${arrow} ${label}</div>`;
 }
 
-// ─── YTD VS BUDGET SCOREBOARD (all reps, always visible) ─────────────────────
+// ─── COMBINED SCOREBOARD (YTD % to Budget + ROE, all reps except Bob Brown) ───
+const SCOREBOARD_EXCLUDED = new Set([...EXCLUDED_REPS, 'Bob Brown']);
+
+// Shared rep data store — YTD data populated by renderYTDScoreboard,
+// ROE data merged in by renderROEScoreboard, then both call renderCombinedTable
+let sbRepData = {}; // keyed by rep name
+
+function renderCombinedTable() {
+  const activeRep = getActiveRepFilter();
+  const rows = Object.values(sbRepData)
+    .filter(r => !SCOREBOARD_EXCLUDED.has(r.name))
+    .sort((a, b) => (b.pct||0) - (a.pct||0));
+
+  const totBudget = rows.reduce((s,r) => s+(r.budget||0), 0);
+  const totActual = rows.reduce((s,r) => s+(r.actual||0), 0);
+  const totPct    = totBudget > 0 ? (totActual/totBudget)*100 : null;
+  const totExp    = rows.reduce((s,r) => s+(r.exp||0), 0);
+  const totGP     = rows.reduce((s,r) => s+(r.gp||0), 0);
+  const totROE    = totExp > 0 ? totGP/totExp : null;
+
+  document.getElementById('combined-sb-tbody').innerHTML = rows.map(r => {
+    const isMe     = activeRep && r.name === activeRep;
+    const rowBg    = isMe ? 'background:rgba(91,143,204,0.07);font-weight:600' : '';
+    const ahead    = (r.pct||0) >= 100;
+    const pctDisp  = r.pct != null ? r.pct.toFixed(1)+'%' : '—';
+    const pctColor = ahead ? 'color:var(--asf-green)' : 'color:var(--red)';
+    const barPct   = r.pct != null ? Math.min(r.pct, 120) : 0;
+    const barColor = ahead ? '#5a9e45' : '#b83228';
+    const roeStr   = r.roe != null ? r.roe.toFixed(2)+'x' : '—';
+    const [rating, ratingColor] = roeRating(r.roe);
+    const roeColor = r.roe != null ? (r.roe>=1.5?'var(--asf-green)':r.roe>=1.0?'var(--yellow)':'var(--red)') : 'var(--muted)';
+    return `<tr style="${rowBg}">
+      <td>${r.name}${isMe?' <span style="font-size:9px;color:var(--asf-blue)">(you)</span>':''}</td>
+      <td style="text-align:right;font-weight:700;${pctColor}">${pctDisp}</td>
+      <td style="width:100px;padding-right:12px">
+        <div style="height:8px;background:#e4ecf5;border-radius:4px;overflow:hidden;position:relative">
+          <div style="height:100%;width:${barPct}%;background:${barColor};border-radius:4px;transition:width 0.8s ease"></div>
+        </div>
+      </td>
+      <td style="text-align:right;font-weight:700;color:${roeColor}">${roeStr}</td>
+      <td><span style="font-size:10px;font-weight:700;color:${ratingColor}">${rating}</span></td>
+    </tr>`;
+  }).join('');
+
+  // Footer totals
+  const totPctColor = totPct!=null ? (totPct>=100?'color:var(--asf-green)':'color:var(--red)') : '';
+  const totRoeColor = totROE!=null ? (totROE>=1.5?'var(--asf-green)':totROE>=1.0?'var(--yellow)':'var(--red)') : 'var(--muted)';
+  document.getElementById('ytd-sb-tot-pct').innerHTML = totPct!=null
+    ? `<span style="${totPctColor};font-weight:700">${totPct.toFixed(1)}%</span>` : '—';
+  document.getElementById('roe-tot-ratio').innerHTML = totROE!=null
+    ? `<span style="font-weight:700;color:${totRoeColor}">${totROE.toFixed(2)}x</span>` : '—';
+}
+
+function roeRating(roe) {
+  if (roe === null || roe === undefined) return ['—', 'var(--muted)'];
+  if (roe >= 3.0) return ['Excellent', 'var(--asf-green)'];
+  if (roe >= 2.0) return ['Strong',    '#3a7a28'];
+  if (roe >= 1.5) return ['Good',      'var(--asf-blue)'];
+  if (roe >= 1.0) return ['Fair',      'var(--yellow)'];
+  return ['Below Target', 'var(--red)'];
+}
+
 function renderYTDScoreboard() {
   const fetchYear = String(CUR_YEAR);
 
@@ -1971,178 +2001,95 @@ function renderYTDScoreboard() {
     repActuals[rep] = (repActuals[rep]||0) + (+r.ExtAmount||0);
   });
 
-  // Build rows from REP_TARGETS (canonical list of active reps with budgets)
-  const rows = Object.entries(REP_TARGETS)
-    .filter(([name]) => !EXCLUDED_REPS.has(name))
-    .map(([name, t]) => {
-      const actual   = repActuals[name] || 0;
-      const budget   = t.budgetCum[fpIdx] || 0;
-      const variance = actual - budget;
-      const pct      = budget > 0 ? (actual / budget) * 100 : null;
-      return { name, actual, budget, variance, pct };
-    })
-    .sort((a, b) => b.actual - a.actual);
+  // Populate sbRepData with YTD figures (ROE merged in later by mergeROEData)
+  Object.entries(REP_TARGETS)
+    .filter(([name]) => !SCOREBOARD_EXCLUDED.has(name))
+    .forEach(([name, t]) => {
+      const actual = repActuals[name] || 0;
+      const budget = t.budgetCum[fpIdx] || 0;
+      const pct    = budget > 0 ? (actual / budget) * 100 : null;
+      if (!sbRepData[name]) sbRepData[name] = { name };
+      sbRepData[name].actual = actual;
+      sbRepData[name].budget = budget;
+      sbRepData[name].pct    = pct;
+    });
 
-  const totActual = rows.reduce((s,r) => s+r.actual, 0);
-  const totBudget = rows.reduce((s,r) => s+r.budget, 0);
-  const totVar    = totActual - totBudget;
-  const totPct    = totBudget > 0 ? (totActual/totBudget)*100 : null;
-
-  const activeRep = getActiveRepFilter(); // used only to highlight logged-in rep's row
-
-  document.getElementById('ytd-sb-tbody').innerHTML = rows.map(r => {
-    const isMe    = activeRep && r.name === activeRep;
-    const ahead   = r.variance >= 0;
-    const pctDisp = r.pct !== null ? r.pct.toFixed(1)+'%' : '—';
-    const barPct  = r.pct !== null ? Math.min(r.pct, 120) : 0;
-    const barColor= ahead ? '#5a9e45' : '#b83228';
-    const varStyle= ahead ? 'color:var(--asf-green)' : 'color:var(--red)';
-    const rowBg   = isMe ? 'background:rgba(91,143,204,0.07);font-weight:600' : '';
-    return `<tr style="${rowBg}">
-      <td>${r.name}${isMe ? ' <span style="font-size:9px;color:var(--asf-blue)">(you)</span>' : ''}</td>
-      <td style="text-align:right">${fmtK(r.actual)}</td>
-      <td style="text-align:right;color:var(--muted)">${fmtK(r.budget)}</td>
-      <td style="text-align:right;${varStyle}">${ahead?'+':''}${fmtK(r.variance)}</td>
-      <td style="text-align:right;font-weight:700;${varStyle}">${pctDisp}</td>
-      <td style="width:90px;padding-right:12px">
-        <div style="height:8px;background:#e4ecf5;border-radius:4px;overflow:hidden;position:relative">
-          <div style="height:100%;width:${barPct}%;background:${barColor};border-radius:4px;transition:width 0.8s ease"></div>
-          ${barPct>100?`<div style="position:absolute;top:0;left:0;height:100%;width:${Math.min((r.pct-100)/20*100,100)}%;background:rgba(255,255,255,0.35);border-radius:4px"></div>`:''}
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('ytd-sb-tot-actual').textContent = fmt$(totActual);
-  document.getElementById('ytd-sb-tot-budget').textContent = fmt$(totBudget);
-  const varStyle = totVar >= 0 ? 'color:var(--asf-green)' : 'color:var(--red)';
-  document.getElementById('ytd-sb-tot-var').innerHTML = `<span style="${varStyle}">${totVar>=0?'+':''}${fmt$(totVar)}</span>`;
-  document.getElementById('ytd-sb-tot-pct').innerHTML = totPct !== null
-    ? `<span style="${varStyle};font-weight:700">${totPct.toFixed(1)}%</span>` : '—';
+  renderCombinedTable();
 }
 
-// ─── ROE SCOREBOARD (GP / Expenses, trailing 12M, all reps) ──────────────────
-// subaccount format: "000-##" — we look up the numeric suffix from REP_TARGETS[name].sub
-// GC-GLDetail fields (confirmed via OData): Account, Subaccount, TurnoverAmt (or similar),
-// FinancialPeriod — fetched via Cloudflare Worker proxy
-
-// Map subaccount → rep name for quick lookup
+// ─── ROE DATA FETCH & MERGE ───────────────────────────────────────────────────
 const SUB_TO_REP = {};
 Object.entries(REP_TARGETS).forEach(([name, t]) => { if (t.sub) SUB_TO_REP[t.sub] = name; });
 
 let roeLoaded = false;
 
 async function fetchROEData() {
-  // Show loading state
   const loadEl = document.getElementById('roe-loading-msg');
-  const tableEl = document.getElementById('roe-table-wrap');
-  const errEl   = document.getElementById('roe-err-msg');
+  const errEl  = document.getElementById('roe-err-msg');
   loadEl.style.display = 'flex';
-  tableEl.style.display = 'none';
-  errEl.style.display   = 'none';
+  errEl.style.display  = 'none';
 
   try {
-    // Trailing 12 months date range
-    const today   = new Date();
-    const todayStr = today.toISOString().slice(0,10);
-    const t12Start = new Date(today);
+    const today       = new Date();
+    const todayStr    = today.toISOString().slice(0,10);
+    const t12Start    = new Date(today);
     t12Start.setFullYear(t12Start.getFullYear() - 1);
     t12Start.setDate(t12Start.getDate() + 1);
     const t12StartStr = t12Start.toISOString().slice(0,10);
 
     addLog(`Fetching GL expense data: ${t12StartStr} → ${todayStr}`);
 
-    // GC-GLDetail: filter to expense accounts 6010–9999
-    // The endpoint returns rows by account/subaccount/period with turnover amounts
     const glRows = await tryFetch('GL Expenses (ROE)', 'GC-GLDetail', {
       '$filter': `Account ge '6010' and Account le '9999' and Date ge datetime'${t12StartStr}T00:00:00' and Date le datetime'${todayStr}T23:59:59'`,
       '$select': 'Account,Subaccount,Amount,TurnoverAmt,CuryTurnover,DebitAmt,CreditAmt,FinancialPeriod,Date',
     });
 
     addLog(`GL expense rows: ${glRows.length}`);
-    renderROEScoreboard(glRows);
-    loadEl.style.display  = 'none';
-    tableEl.style.display = 'block';
+    mergeROEData(glRows);
+    loadEl.style.display = 'none';
     roeLoaded = true;
 
   } catch(e) {
     addLog('ROE fetch failed: '+e.message, 'error');
     loadEl.style.display = 'none';
     errEl.style.display  = 'block';
-    errEl.textContent    = `⚠ Could not load GL expense data: ${e.message}. Check that GC-GLDetail is published and the field names match.`;
+    errEl.textContent    = `⚠ GL expense data unavailable: ${e.message}`;
   }
 }
 
-function renderROEScoreboard(glRows) {
-  // Aggregate expense turnover by subaccount
-  // TurnoverAmt = net debit (positive = expense). Fall back to DebitAmt - CreditAmt if needed.
+function mergeROEData(glRows) {
   const expByRep = {};
   glRows.forEach(r => {
     const sub = (r.Subaccount||'').trim();
     const rep = SUB_TO_REP[sub];
-    if (!rep || EXCLUDED_REPS.has(rep)) return;
-    // Use TurnoverAmt if present, else DebitAmt - CreditAmt, else Amount
+    if (!rep || SCOREBOARD_EXCLUDED.has(rep)) return;
     let amt = parseFloat(r.TurnoverAmt);
     if (isNaN(amt)) amt = (parseFloat(r.DebitAmt)||0) - (parseFloat(r.CreditAmt)||0);
     if (isNaN(amt)) amt = parseFloat(r.Amount)||0;
     expByRep[rep] = (expByRep[rep]||0) + amt;
   });
 
-  // Gross profit from D.trailing12rows (already computed, trailing 12M)
   const gpByRep = {};
   (D.trailing12rows||[]).forEach(r => {
     const rep = (r.SalesRep||'').trim();
-    if (!rep || EXCLUDED_REPS.has(rep)) return;
+    if (!rep || SCOREBOARD_EXCLUDED.has(rep)) return;
     gpByRep[rep] = (gpByRep[rep]||0) + (+r.ExtProfit||0);
   });
 
-  // Build rows for all reps that have targets
-  const rows = Object.keys(REP_TARGETS)
-    .filter(name => !EXCLUDED_REPS.has(name))
-    .map(name => {
+  Object.keys(REP_TARGETS)
+    .filter(name => !SCOREBOARD_EXCLUDED.has(name))
+    .forEach(name => {
+      if (!sbRepData[name]) sbRepData[name] = { name };
       const gp  = gpByRep[name]  || 0;
       const exp = expByRep[name] || 0;
-      const roe = exp > 0 ? gp / exp : null;
-      return { name, gp, exp, roe };
-    })
-    .sort((a, b) => (b.roe||0) - (a.roe||0));
+      sbRepData[name].gp  = gp;
+      sbRepData[name].exp = exp;
+      sbRepData[name].roe = exp > 0 ? gp / exp : null;
+    });
 
-  const totGP  = rows.reduce((s,r) => s+r.gp, 0);
-  const totExp = rows.reduce((s,r) => s+r.exp, 0);
-  const totROE = totExp > 0 ? totGP / totExp : null;
-
-  function roeRating(roe) {
-    if (roe === null) return ['—', 'var(--muted)'];
-    if (roe >= 3.0)  return ['Excellent', 'var(--asf-green)'];
-    if (roe >= 2.0)  return ['Strong',    '#3a7a28'];
-    if (roe >= 1.5)  return ['Good',      'var(--asf-blue)'];
-    if (roe >= 1.0)  return ['Fair',      'var(--yellow)'];
-    return ['Below Target', 'var(--red)'];
-  }
-
-  const activeRep = getActiveRepFilter();
-
-  document.getElementById('roe-sb-tbody').innerHTML = rows.map(r => {
-    const isMe   = activeRep && r.name === activeRep;
-    const rowBg  = isMe ? 'background:rgba(91,143,204,0.07);font-weight:600' : '';
-    const roeStr = r.roe !== null ? r.roe.toFixed(2)+'x' : '—';
-    const [rating, ratingColor] = roeRating(r.roe);
-    const roeColor = r.roe !== null ? (r.roe >= 1.5 ? 'var(--asf-green)' : r.roe >= 1.0 ? 'var(--yellow)' : 'var(--red)') : 'var(--muted)';
-    return `<tr style="${rowBg}">
-      <td>${r.name}${isMe ? ' <span style="font-size:9px;color:var(--asf-blue)">(you)</span>' : ''}</td>
-      <td style="text-align:right;color:var(--asf-green)">${fmtK(r.gp)}</td>
-      <td style="text-align:right;color:var(--muted)">${r.exp > 0 ? fmtK(r.exp) : '<span style="color:var(--muted);font-style:italic">no data</span>'}</td>
-      <td style="text-align:right;font-weight:700;font-size:14px;${roeColor ? 'color:'+roeColor : ''}">${roeStr}</td>
-      <td><span style="font-size:10px;font-weight:700;color:${ratingColor}">${rating}</span></td>
-    </tr>`;
-  }).join('');
-
-  const [totRating, totRatingColor] = roeRating(totROE);
-  document.getElementById('roe-tot-gp').textContent  = fmt$(totGP);
-  document.getElementById('roe-tot-exp').textContent = fmt$(totExp);
-  document.getElementById('roe-tot-ratio').innerHTML = totROE !== null
-    ? `<span style="font-weight:700;color:${totROE>=1.5?'var(--asf-green)':totROE>=1.0?'var(--yellow)':'var(--red)'}">${totROE.toFixed(2)}x</span>` : '—';
+  renderCombinedTable();
 }
+
 let custData = []; // merged per-customer
 
 function renderCustomerData() {
