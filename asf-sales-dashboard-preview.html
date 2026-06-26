@@ -2049,8 +2049,8 @@ async function fetchROEData() {
     const periodFilter = t12Periods.map(p => `FinPeriodID eq ${p}`).join(' or ');
 
     const glRows = await tryFetch('GL Expenses (ROE)', 'GC-GLDetail', {
-      '$filter': `AccountID ge '6010' and AccountID le '9999' and (${periodFilter})`,
-      '$select': 'AccountID,SubID,FinYear,FinPeriodID,TranPtdDebit,TranPtdCredit',
+      '$filter': `AccountClassID eq 'EXPENSE' and (${periodFilter})`,
+      '$select': 'AccountID,SubID,FinYear,FinPeriodID,TranPtdDebit,TranPtdCredit,AccountClassID',
     });
 
     addLog(`GL expense rows: ${glRows.length}`);
