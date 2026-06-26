@@ -538,7 +538,7 @@
       <!-- ── COMBINED SCOREBOARD ── -->
       <div class="card">
         <div class="card-hdr">
-          <span class="card-title">Rep Scoreboard — YTD vs Budget &amp; ROE</span>
+          <span class="card-title">Rep Scoreboard — YTD vs Budget &amp; ROI (GP/Expense)</span>
           <div style="display:flex;align-items:center;gap:12px">
             <span id="roe-loading-msg" style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px">
               <span class="spin">⟳</span> Loading ROE data…
@@ -553,7 +553,7 @@
               <th>Rep</th>
               <th style="text-align:right">% to Budget</th>
               <th>Progress</th>
-              <th style="text-align:right">ROE Ratio</th>
+              <th style="text-align:right">ROI (GP/Expense)</th>
               <th>Rating</th>
             </tr></thead>
             <tbody id="combined-sb-tbody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Loading…</td></tr></tbody>
@@ -1928,7 +1928,7 @@ function renderCombinedTable() {
   const activeRep = getActiveRepFilter();
   const rows = Object.values(sbRepData)
     .filter(r => !SCOREBOARD_EXCLUDED.has(r.name))
-    .sort((a, b) => (b.pct||0) - (a.pct||0));
+    .sort((a, b) => (b.roe||0) - (a.roe||0));
 
   const totBudget = rows.reduce((s,r) => s+(r.budget||0), 0);
   const totActual = rows.reduce((s,r) => s+(r.actual||0), 0);
