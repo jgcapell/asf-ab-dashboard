@@ -2033,7 +2033,6 @@ async function fetchROEData() {
     addLog(`Fetching GL expense data: trailing 12 fiscal periods`);
 
     const glRows = await tryFetch('GL Expenses (ROE)', 'GC-ExpenseBySubAccount', {
-      '$filter': `GLHistory_FinYear eq '${CUR_YEAR}' or GLHistory_FinYear eq '${CUR_YEAR - 1}'`,
       '$select': 'GLHistory_FinYear,FinPeriodID,SubCD,GLHistory_TranPtdDebit,GLHistory_TranPtdCredit',
     });
 
