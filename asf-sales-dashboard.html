@@ -1460,7 +1460,6 @@ async function loadData() {
       '$select':'ID,AccountName,Summary,Owner,OwnerName,StartDate,RelatedEntityType,Description',
       '$filter': `StartDate ge datetime'${actWinStart}T00:00:00' and StartDate le datetime'${actWinEnd}T23:59:59'`,
       '$orderby':'StartDate desc',
-      '$top':'500',
     });
 
     // 4c. Tasks (open, due within next 7 days + recently completed)
@@ -2417,10 +2416,14 @@ function renderAct120Table() {
   const ago120     = new Date(today); ago120.setDate(today.getDate() - 120);
 
   // Build set of customers who HAVE had activity logged (past 120 days OR any future)
-  // Both past and scheduled future activities count as "active"
+  // IMPORTANT: filter by rep so only activities from the selected rep count
+  // Otherwise a colleague's activity against the same customer would incorrectly
+  // mark it as "active" for the wrong rep (e.g. someone else logging against Hall's Flooring)
   const activeSet = new Set();
   D.activities.forEach(r => {
     if (!r.StartDate) return;
+    // Apply rep filter — only count activity if it belongs to the active rep
+    if (activeRep && !ownerMatchesRep((r.OwnerName||'').trim(), activeRep)) return;
     const actDate = new Date(r.StartDate);
     // Include if within last 120 days OR scheduled for the future
     if (actDate < ago120 && actDate < today) return;
