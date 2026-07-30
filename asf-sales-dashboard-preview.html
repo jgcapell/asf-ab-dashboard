@@ -3069,7 +3069,13 @@ async function runLeadSearch() {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.accessToken}` },
       body: JSON.stringify({ customerName: liSelectedCustomer, mode: liMode, radiusMiles })
     });
-    if (!resp.ok) throw new Error(`Worker returned ${resp.status} — /leadintel/search may not be deployed yet.`);
+    if (!resp.ok) {
+      let serverMsg = null;
+      try { serverMsg = (await resp.json()).error; } catch (parseErr) { /* body wasn't JSON */ }
+      if (serverMsg) throw new Error(serverMsg);
+      if (resp.status === 404) throw new Error('Worker returned 404 — /leadintel/search may not be deployed yet.');
+      throw new Error(`Worker returned ${resp.status} with no error detail.`);
+    }
     const data = await resp.json();
     liAccount = data.account || null;
     renderLiResults(data);
@@ -3115,14 +3121,36 @@ function liStatusPillClass(status) {
   return 'status-design';
 }
 
+let liDescCache = {}; // full descriptions, keyed by card id, for the expand/collapse toggle
+
+function toggleLeadDesc(id) {
+  const span = document.getElementById(id + '-text');
+  const link = document.getElementById(id + '-toggle');
+  if (!span || !link) return;
+  const full = liDescCache[id] || '';
+  const expanded = link.dataset.expanded === '1';
+  if (expanded) {
+    span.textContent = full.slice(0, 280) + '…';
+    link.textContent = 'Show more';
+    link.dataset.expanded = '0';
+  } else {
+    span.textContent = full;
+    link.textContent = 'Show less';
+    link.dataset.expanded = '1';
+  }
+}
+
 function renderLeadCard(lead) {
   const value = lead.projectValue
     ? '$' + Number(lead.projectValue).toLocaleString()
     : (lead.projectValueRange?.[0] || '—');
   const bidDate   = lead.bidDate   ? new Date(lead.bidDate).toLocaleDateString()   : null;
   const startDate = lead.startDate ? new Date(lead.startDate).toLocaleDateString() : null;
-  const desc = (lead.projectDescription || '').replace(/<[^>]*>/g,'').slice(0, 280);
-  const truncated = (lead.projectDescription || '').replace(/<[^>]*>/g,'').length > 280;
+  const fullDesc  = (lead.projectDescription || '').replace(/<[^>]*>/g,'').trim();
+  const isLong    = fullDesc.length > 280;
+  const shortDesc = isLong ? fullDesc.slice(0, 280) + '…' : fullDesc;
+  const descId    = 'ld-' + (lead.projectId || Math.random().toString(36).slice(2));
+  if (isLong) liDescCache[descId] = fullDesc;
   const tags = (lead.csiCodesFlooring || []).map(c => `<span class="lead-tag">${c.replace(/^\d+\s*/,'')}</span>`).join('');
   return `
     <div class="lead-card">
@@ -3136,7 +3164,7 @@ function renderLeadCard(lead) {
         ${bidDate ? `<span>📅 Bid: ${bidDate}</span>` : ''}
         ${startDate ? `<span>🏗 Start: ${startDate}</span>` : ''}
       </div>
-      ${desc ? `<div class="lead-desc">${desc}${truncated ? '…' : ''}</div>` : ''}
+      ${fullDesc ? `<div class="lead-desc"><span id="${descId}-text">${shortDesc}</span>${isLong ? ` <a class="lead-link" style="cursor:pointer" id="${descId}-toggle" data-expanded="0" onclick="toggleLeadDesc('${descId}')">Show more</a>` : ''}</div>` : ''}
       ${tags ? `<div class="lead-tags">${tags}</div>` : ''}
       <a class="lead-link" href="${lead.projectUrl}" target="_blank" rel="noopener">View on ConstructConnect →</a>
     </div>`;
