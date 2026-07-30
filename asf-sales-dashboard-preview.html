@@ -265,6 +265,37 @@
 
   .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 12px; }
 
+  /* Lead Intelligence tab */
+  .li-mode-toggle { display: flex; gap: 8px; }
+  .li-mode-btn { flex: 1; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; text-align: left; transition: all 0.15s; font-family: inherit; }
+  .li-mode-btn:hover { border-color: var(--asf-blue); }
+  .li-mode-btn.active { border-color: var(--asf-navy); background: rgba(91,143,204,0.06); box-shadow: 0 0 0 1px var(--asf-navy) inset; }
+  .li-mode-btn-title { font-size: 12px; font-weight: 700; color: var(--asf-navy); margin-bottom: 3px; }
+  .li-mode-btn-sub { font-size: 10px; color: var(--muted); line-height: 1.4; }
+  .li-search-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .li-radius-input { width: 70px; }
+  .li-account-chip { display: none; background: rgba(91,143,204,0.1); border: 1px solid rgba(91,143,204,0.25); border-radius: 6px; padding: 8px 12px; font-size: 11px; font-weight: 600; color: var(--asf-navy); }
+  .li-bucket-hdr { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--surface2); border-bottom: 1px solid var(--border2); }
+  .li-bucket-title { font-size: 11px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.07em; }
+  .li-bucket-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .lead-list { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+  .lead-card { border: 1px solid var(--border2); border-radius: 8px; padding: 12px 14px; background: var(--surface); transition: box-shadow 0.15s; }
+  .lead-card:hover { box-shadow: 0 2px 10px rgba(30,80,128,0.1); }
+  .lead-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .lead-title { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .lead-value { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800; color: var(--asf-navy); white-space: nowrap; }
+  .lead-meta-row { display: flex; gap: 12px; flex-wrap: wrap; font-size: 10px; color: var(--dim); margin-bottom: 8px; font-weight: 500; }
+  .lead-meta-row span { display: flex; align-items: center; gap: 4px; }
+  .lead-desc { font-size: 11px; color: var(--dim); line-height: 1.5; margin-bottom: 8px; }
+  .lead-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+  .lead-tag { font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 99px; background: rgba(107,82,184,0.1); color: var(--purple); border: 1px solid rgba(107,82,184,0.25); }
+  .lead-status { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+  .status-design { background: rgba(91,143,204,0.12); color: var(--asf-navy); border: 1px solid rgba(91,143,204,0.3); }
+  .status-bid { background: rgba(196,137,10,0.1); color: #7a5500; border: 1px solid rgba(196,137,10,0.3); }
+  .status-award { background: rgba(90,158,69,0.12); color: #3a7a28; border: 1px solid rgba(90,158,69,0.3); }
+  .lead-link { font-size: 10px; font-weight: 700; color: var(--asf-blue); text-decoration: none; }
+  .lead-link:hover { text-decoration: underline; }
+
   /* ── E.A.T.E.R. Tab ────────────────────────────────────────────────────── */
   .eater-score-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
   .eater-score-col { padding: 14px 16px; border-right: 1px solid var(--border2); }
@@ -437,6 +468,7 @@
     <button class="tab" data-tab="customers" onclick="showTab(this)">Customer Summary</button>
     <button class="tab" data-tab="opportunities" onclick="showTab(this)">Activities &amp; Opportunities</button>
     <button class="tab" data-tab="eater" onclick="showTab(this);initEaterTab()">E.A.T.E.R.</button>
+    <button class="tab" data-tab="leadintel" onclick="showTab(this);initLeadIntelTab()">Lead Intelligence</button>
   </div>
 
   <!-- ═══════════════════════════════════ TAB: SALES OVERVIEW -->
@@ -1146,6 +1178,65 @@
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════ TAB: LEAD INTELLIGENCE -->
+  <div id="pane-leadintel" class="tab-pane">
+    <div class="page">
+
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Lead Intelligence — ConstructConnect</span></div>
+        <div class="card-body" style="font-size:11px;color:var(--dim);line-height:1.6">
+          Surface construction projects relevant to a selected customer, sourced live from ConstructConnect. Pick a customer, choose a search mode, and pull current leads.
+        </div>
+      </div>
+
+      <div class="row cols-2">
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">1. Select Customer</span></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:10px;position:relative">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <input class="ctrl-input" id="li-cust-search" placeholder="Type customer name…"
+                     oninput="onLiCustSearch()" onfocus="onLiCustFocus()" onblur="onLiCustBlur()"
+                     autocomplete="off" style="width:100%;max-width:320px">
+              <button class="btn-sm" onclick="clearLiCustFilter()">Clear</button>
+            </div>
+            <div id="li-cust-dropdown" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;max-height:180px;overflow-y:auto;display:none;position:absolute;top:44px;z-index:10;width:100%;max-width:320px"></div>
+            <div id="li-account-chip" class="li-account-chip"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">2. Search Mode</span></div>
+          <div class="card-body">
+            <div class="li-mode-toggle">
+              <button class="li-mode-btn active" id="li-mode-company-btn" onclick="setLiMode('company')">
+                <div class="li-mode-btn-title">Search by Company</div>
+                <div class="li-mode-btn-sub">Design firms, hospital/school systems, developers — projects tied to this account specifically.</div>
+              </button>
+              <button class="li-mode-btn" id="li-mode-territory-btn" onclick="setLiMode('territory')">
+                <div class="li-mode-btn-title">Search by Territory</div>
+                <div class="li-mode-btn-sub">Flooring contractors, GCs — nearby projects the customer may not already be linked to.</div>
+              </button>
+            </div>
+            <div id="li-radius-row" style="display:none;margin-top:12px" class="li-search-row">
+              <label style="font-size:11px;color:var(--dim);font-weight:600">Radius (miles):</label>
+              <input class="ctrl-input li-radius-input" id="li-radius" type="number" value="50" min="5" max="250">
+            </div>
+            <div style="margin-top:14px">
+              <button class="hbtn primary" id="li-search-btn" onclick="runLeadSearch()" style="padding:10px 22px;font-size:11px">🔍 FIND LEADS</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="li-results-wrap" style="display:none"></div>
+
+      <div id="li-empty" class="card">
+        <div class="card-body"><div class="empty">Select a customer above, then run a search to see results.</div></div>
+      </div>
+
+    </div>
+  </div>
+
 </div><!-- /#dashboard -->
 
 <script>
@@ -1153,7 +1244,6 @@
 const CONFIG = {
   acumaticaUrl: 'https://allsouthflooring.acumatica.com',
   clientId:     '6337533B-4E40-14F2-F483-DD653A38138B@ASF',
-  clientSecret: 'djA-sMyV_8128aNE8g5IKg',
   scopes:       'api offline_access openid profile email',
   redirectUri:  window.location.origin + window.location.pathname,
   workerUrl:    'https://asf-inventory-dashboard.greg-capell.workers.dev',
@@ -1231,7 +1321,7 @@ async function handleCallback(code, state) {
     // 1. Exchange code for tokens
     const resp = await fetch(`${CONFIG.workerUrl}/token`, {
       method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: CONFIG.redirectUri, client_id: CONFIG.clientId, client_secret: CONFIG.clientSecret }),
+      body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: CONFIG.redirectUri, client_id: CONFIG.clientId }),
     });
     if (!resp.ok) throw new Error(`Token exchange failed (${resp.status})`);
     const t = await resp.json();
@@ -1363,7 +1453,7 @@ function onRepFilterChange() {
 async function doRefreshToken() {
   const resp = await fetch(`${CONFIG.workerUrl}/token`, {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: auth.refreshToken, client_id: CONFIG.clientId, client_secret: CONFIG.clientSecret }),
+    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: auth.refreshToken, client_id: CONFIG.clientId }),
   });
   if (!resp.ok) { logout(); throw new Error('Session expired.'); }
   const t = await resp.json(); auth.accessToken = t.access_token; auth.refreshToken = t.refresh_token || auth.refreshToken;
@@ -2826,6 +2916,184 @@ function showTab(btn) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('pane-' + btn.dataset.tab).classList.add('active');
+}
+
+// ─── LEAD INTELLIGENCE TAB ──────────────────────────────────────────────────────
+// NOTE: runLeadSearch() below calls {workerUrl}/leadintel/search, which is a NEW
+// Worker route that does not exist yet and needs to be built server-side. Contract:
+//
+//   POST {workerUrl}/leadintel/search
+//   Body: { customerName: string, mode: "company" | "territory", radiusMiles: number }
+//
+//   Response when mode === "company":
+//     { account: {name, city, state}, leads: [ ...trimmed project objects... ] }
+//
+//   Response when mode === "territory":
+//     { account: {name, city, state},
+//       getSpecified: [ ...trimmed project objects... ],   // Bucket 1
+//       bidNow:       [ ...trimmed project objects... ] }  // Bucket 2
+//
+// The Worker is responsible for: resolving the Acumatica business account (via
+// CData/OData) to get city/state; for "company" mode, fuzzy-matching that account
+// to ConstructConnect CompanyLeads and pulling ProjectLeads by companyId; for
+// "territory" mode, geocoding the account address and pulling ProjectLeads by
+// radius across the two status buckets. The ConstructConnect API key stays
+// server-side in the Worker — never exposed here. Full field reference, trimmed
+// payload shape, and both query flows are documented in
+// constructconnect-integration-spec.md.
+
+let liInitialized = false;
+let liSelectedCustomer = null;
+let liMode = 'company'; // 'company' | 'territory'
+let liAccount = null;   // resolved {name, city, state} echoed back by the Worker
+
+function initLeadIntelTab() {
+  if (liInitialized) return;
+  liInitialized = true;
+}
+
+// Reuses the same customer name universe already loaded for Customer Summary
+function onLiCustSearch() {
+  const q = document.getElementById('li-cust-search').value.toLowerCase().trim();
+  const allCusts = [...new Set(D.sales.map(r => (r.CustomerName||'').trim()).filter(Boolean))].sort();
+  const matches = q ? allCusts.filter(c => c.toLowerCase().includes(q)).slice(0, 12) : [];
+  renderLiCustDropdown(matches);
+}
+
+function renderLiCustDropdown(matches) {
+  const dd = document.getElementById('li-cust-dropdown');
+  if (!matches.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = matches.map(c =>
+    `<div class="cust-dd-item" data-name="${c.replace(/"/g,'&quot;')}">${c}</div>`
+  ).join('');
+  dd.querySelectorAll('.cust-dd-item').forEach(el => {
+    el.addEventListener('mousedown', e => { e.preventDefault(); selectLiCustomer(el.dataset.name); });
+    el.addEventListener('mouseover', () => el.style.background = '#eef4fb');
+    el.addEventListener('mouseout',  () => el.style.background = '');
+  });
+  dd.style.display = 'block';
+}
+
+function onLiCustFocus() { if (!liSelectedCustomer) onLiCustSearch(); }
+function onLiCustBlur() { setTimeout(() => { document.getElementById('li-cust-dropdown').style.display = 'none'; }, 150); }
+
+function selectLiCustomer(name) {
+  liSelectedCustomer = name;
+  liAccount = null;
+  document.getElementById('li-cust-search').value = name;
+  document.getElementById('li-cust-dropdown').style.display = 'none';
+  const chip = document.getElementById('li-account-chip');
+  chip.textContent = '🔍 ' + name;
+  chip.style.display = 'block';
+  document.getElementById('li-results-wrap').style.display = 'none';
+  document.getElementById('li-empty').style.display = 'block';
+}
+
+function clearLiCustFilter() {
+  liSelectedCustomer = null;
+  liAccount = null;
+  document.getElementById('li-cust-search').value = '';
+  document.getElementById('li-cust-dropdown').style.display = 'none';
+  document.getElementById('li-account-chip').style.display = 'none';
+  document.getElementById('li-results-wrap').style.display = 'none';
+  document.getElementById('li-empty').style.display = 'block';
+}
+
+function setLiMode(mode) {
+  liMode = mode;
+  document.getElementById('li-mode-company-btn').classList.toggle('active', mode === 'company');
+  document.getElementById('li-mode-territory-btn').classList.toggle('active', mode === 'territory');
+  document.getElementById('li-radius-row').style.display = mode === 'territory' ? 'flex' : 'none';
+}
+
+async function runLeadSearch() {
+  if (!liSelectedCustomer) { showErr('Select a customer first.'); return; }
+  clearErr();
+  const btn = document.getElementById('li-search-btn');
+  btn.disabled = true; btn.textContent = '⟳ SEARCHING…';
+  document.getElementById('li-empty').style.display = 'none';
+  const wrap = document.getElementById('li-results-wrap');
+  wrap.style.display = 'block';
+  wrap.innerHTML = '<div class="card"><div class="card-body"><div class="empty">Searching ConstructConnect…</div></div></div>';
+
+  try {
+    const radiusMiles = parseInt(document.getElementById('li-radius').value, 10) || 50;
+    const resp = await fetch(`${CONFIG.workerUrl}/leadintel/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.accessToken}` },
+      body: JSON.stringify({ customerName: liSelectedCustomer, mode: liMode, radiusMiles })
+    });
+    if (!resp.ok) throw new Error(`Worker returned ${resp.status} — /leadintel/search may not be deployed yet.`);
+    const data = await resp.json();
+    liAccount = data.account || null;
+    renderLiResults(data);
+  } catch (e) {
+    wrap.innerHTML = `<div class="card"><div class="card-body"><div class="empty">⚠ ${e.message}</div></div></div>`;
+    addLog('Lead Intelligence search failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '🔍 FIND LEADS';
+  }
+}
+
+function renderLiResults(data) {
+  const wrap = document.getElementById('li-results-wrap');
+  const acctLine = data.account ? `Matched: ${data.account.name} — ${data.account.city}, ${data.account.state}` : '';
+  if (liMode === 'company') {
+    wrap.innerHTML = renderLeadBucket('Company Match Results', acctLine, data.leads || []);
+  } else {
+    wrap.innerHTML =
+      renderLeadBucket('Get Specified — Early Design Phase', 'No bid date yet — opportunity to influence the spec. ' + acctLine, data.getSpecified || []) +
+      '<div style="height:16px"></div>' +
+      renderLeadBucket('Bid / VE Now — Active or Recent Bidding', 'Active bidding window or recently closed — value engineering opportunity. ' + acctLine, data.bidNow || []);
+  }
+}
+
+function renderLeadBucket(title, sub, leads) {
+  const body = leads.length
+    ? `<div class="lead-list">${leads.map(renderLeadCard).join('')}</div>`
+    : `<div class="empty">No matching projects found.</div>`;
+  return `
+    <div class="card">
+      <div class="li-bucket-hdr">
+        <div><div class="li-bucket-title">${title}</div>${sub ? `<div class="li-bucket-sub">${sub}</div>` : ''}</div>
+        <span class="card-badge">${leads.length} result${leads.length===1?'':'s'}</span>
+      </div>
+      ${body}
+    </div>`;
+}
+
+function liStatusPillClass(status) {
+  if (!status) return 'status-design';
+  const s = status.toLowerCase();
+  if (s.includes('bid') || s.includes('award')) return s.includes('award') ? 'status-award' : 'status-bid';
+  return 'status-design';
+}
+
+function renderLeadCard(lead) {
+  const value = lead.projectValue
+    ? '$' + Number(lead.projectValue).toLocaleString()
+    : (lead.projectValueRange?.[0] || '—');
+  const bidDate   = lead.bidDate   ? new Date(lead.bidDate).toLocaleDateString()   : null;
+  const startDate = lead.startDate ? new Date(lead.startDate).toLocaleDateString() : null;
+  const desc = (lead.projectDescription || '').replace(/<[^>]*>/g,'').slice(0, 280);
+  const truncated = (lead.projectDescription || '').replace(/<[^>]*>/g,'').length > 280;
+  const tags = (lead.csiCodesFlooring || []).map(c => `<span class="lead-tag">${c.replace(/^\d+\s*/,'')}</span>`).join('');
+  return `
+    <div class="lead-card">
+      <div class="lead-card-top">
+        <div class="lead-title">${lead.title || 'Untitled project'}</div>
+        <div class="lead-value">${value}</div>
+      </div>
+      <div class="lead-meta-row">
+        <span class="lead-status ${liStatusPillClass(lead.projectStatus)}">${lead.projectStatus || '—'}</span>
+        <span>📍 ${lead.city || '—'}${lead.state ? ', ' + lead.state : ''}</span>
+        ${bidDate ? `<span>📅 Bid: ${bidDate}</span>` : ''}
+        ${startDate ? `<span>🏗 Start: ${startDate}</span>` : ''}
+      </div>
+      ${desc ? `<div class="lead-desc">${desc}${truncated ? '…' : ''}</div>` : ''}
+      ${tags ? `<div class="lead-tags">${tags}</div>` : ''}
+      <a class="lead-link" href="${lead.projectUrl}" target="_blank" rel="noopener">View on ConstructConnect →</a>
+    </div>`;
 }
 
 // ─── UI HELPERS ───────────────────────────────────────────────────────────────
