@@ -2947,25 +2947,71 @@ let liSelectedCustomer = null;
 let liMode = 'company'; // 'company' | 'territory'
 let liAccount = null;   // resolved {name, city, state} echoed back by the Worker
 
+// All Acumatica business accounts — not just customers with sales history.
+// Design firms, hospital/school systems, and other non-transactional accounts
+// (e.g. LS3P, Gresham Smith, UNC Health facilities) show up here as Prospects
+// with zero invoiced sales, so they'd never appear in D.sales. This is a
+// separate, full pull from CR-BusinessAccounts2018R1 specifically for this tab.
+let liAllAccounts = [];
+let liAccountsLoaded = false;
+let liAccountsLoading = false;
+
 function initLeadIntelTab() {
   if (liInitialized) return;
   liInitialized = true;
+  loadLiBusinessAccounts();
 }
 
-// Reuses the same customer name universe already loaded for Customer Summary
+async function loadLiBusinessAccounts() {
+  if (liAccountsLoaded || liAccountsLoading) return;
+  liAccountsLoading = true;
+  const input = document.getElementById('li-cust-search');
+  const prevPlaceholder = input.placeholder;
+  input.placeholder = 'Loading accounts…';
+  input.disabled = true;
+  try {
+    const rows = await odataGet('CR-BusinessAccounts2018R1', {
+      '$select': 'BusinessAccountName,City,State,BusinessAccountClassID'
+    });
+    liAllAccounts = rows
+      .map(r => ({
+        name: (r.BusinessAccountName || '').trim(),
+        city: (r.City || '').trim(),
+        state: (r.State || '').trim(),
+        classId: (r.BusinessAccountClassID || '').trim(),
+      }))
+      .filter(a => a.name)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    liAccountsLoaded = true;
+  } catch (e) {
+    addLog('Failed to load business accounts for Lead Intelligence: ' + e.message, 'error');
+    input.placeholder = 'Failed to load accounts — try refreshing';
+  } finally {
+    liAccountsLoading = false;
+    input.disabled = false;
+    if (liAccountsLoaded) input.placeholder = prevPlaceholder;
+  }
+}
+
 function onLiCustSearch() {
   const q = document.getElementById('li-cust-search').value.toLowerCase().trim();
-  const allCusts = [...new Set(D.sales.map(r => (r.CustomerName||'').trim()).filter(Boolean))].sort();
-  const matches = q ? allCusts.filter(c => c.toLowerCase().includes(q)).slice(0, 12) : [];
+  if (!liAccountsLoaded) { renderLiCustDropdown([]); return; }
+  const matches = q
+    ? liAllAccounts.filter(a => a.name.toLowerCase().includes(q)).slice(0, 15)
+    : [];
   renderLiCustDropdown(matches);
 }
 
 function renderLiCustDropdown(matches) {
   const dd = document.getElementById('li-cust-dropdown');
   if (!matches.length) { dd.style.display = 'none'; return; }
-  dd.innerHTML = matches.map(c =>
-    `<div class="cust-dd-item" data-name="${c.replace(/"/g,'&quot;')}">${c}</div>`
-  ).join('');
+  dd.innerHTML = matches.map(a => {
+    const loc = [a.city, a.state].filter(Boolean).join(', ');
+    return `<div class="cust-dd-item" data-name="${a.name.replace(/"/g,'&quot;')}">
+      <div>${a.name}</div>
+      ${loc || a.classId ? `<div style="font-size:9px;color:var(--muted);font-weight:500;margin-top:2px">${loc}${loc && a.classId ? ' · ' : ''}${a.classId||''}</div>` : ''}
+    </div>`;
+  }).join('');
   dd.querySelectorAll('.cust-dd-item').forEach(el => {
     el.addEventListener('mousedown', e => { e.preventDefault(); selectLiCustomer(el.dataset.name); });
     el.addEventListener('mouseover', () => el.style.background = '#eef4fb');
