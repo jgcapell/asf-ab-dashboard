@@ -3166,8 +3166,71 @@ function renderLeadCard(lead) {
       </div>
       ${fullDesc ? `<div class="lead-desc"><span id="${descId}-text">${shortDesc}</span>${isLong ? ` <a class="lead-link" style="cursor:pointer" id="${descId}-toggle" data-expanded="0" onclick="toggleLeadDesc('${descId}')">Show more</a>` : ''}</div>` : ''}
       ${tags ? `<div class="lead-tags">${tags}</div>` : ''}
-      <a class="lead-link" href="${lead.projectUrl}" target="_blank" rel="noopener">View on ConstructConnect →</a>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <a class="lead-link" href="${lead.projectUrl}" target="_blank" rel="noopener">View on ConstructConnect →</a>
+        <a class="lead-link" style="cursor:pointer" id="${descId}-contacts-link"
+           onclick="toggleLeadContacts('${descId}', ${lead.projectId}, '${lead.contentType || 'CuratedProject'}', ${lead.packageId ? `'${lead.packageId}'` : 'null'})">👤 View Contacts</a>
+      </div>
+      <div id="${descId}-contacts" style="display:none;margin-top:8px"></div>
     </div>`;
+}
+
+let liContactsCache = {}; // trimmed contact lists, keyed by card id, loaded on demand
+
+async function toggleLeadContacts(id, projectId, contentType, packageId) {
+  const panel = document.getElementById(id + '-contacts');
+  const link  = document.getElementById(id + '-contacts-link');
+  if (!panel || !link) return;
+
+  const isOpen = panel.style.display !== 'none';
+  if (isOpen) { panel.style.display = 'none'; link.textContent = '👤 View Contacts'; return; }
+
+  if (liContactsCache[id]) {
+    panel.innerHTML = liContactsCache[id];
+    panel.style.display = 'block';
+    link.textContent = '👤 Hide Contacts';
+    return;
+  }
+
+  link.textContent = '⟳ Loading…';
+  try {
+    const params = new URLSearchParams({ projectId, contentType });
+    if (packageId) params.set('packageId', packageId);
+    const resp = await fetch(`${CONFIG.workerUrl}/leadintel/contacts?${params}`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` }
+    });
+    let data;
+    if (!resp.ok) {
+      let msg = `Worker returned ${resp.status}`;
+      try { msg = (await resp.json()).error || msg; } catch (parseErr) { /* not JSON */ }
+      throw new Error(msg);
+    }
+    data = await resp.json();
+    const html = renderContactsList(data.contacts || []);
+    liContactsCache[id] = html;
+    panel.innerHTML = html;
+    panel.style.display = 'block';
+    link.textContent = '👤 Hide Contacts';
+  } catch (e) {
+    panel.innerHTML = `<div style="font-size:10px;color:var(--red)">⚠ ${e.message}</div>`;
+    panel.style.display = 'block';
+    link.textContent = '👤 View Contacts';
+    addLog('Failed to load project contacts: ' + e.message, 'error');
+  }
+}
+
+function renderContactsList(contacts) {
+  if (!contacts.length) {
+    return `<div style="font-size:10px;color:var(--muted);padding:6px 0">No confirmed project contacts listed — try View on ConstructConnect for more detail.</div>`;
+  }
+  return `<div style="display:flex;flex-direction:column;gap:6px">` +
+    contacts.map(c => `
+      <div style="font-size:10px;line-height:1.5;padding:7px 9px;background:var(--surface2);border-radius:6px;border:1px solid var(--border2)">
+        <div style="font-weight:700;color:var(--asf-navy)">${c.contact || '—'} <span style="font-weight:500;color:var(--dim)">— ${c.role || '—'}</span></div>
+        <div style="color:var(--dim)">${c.companyName || ''}${c.city ? ` · ${c.city}${c.state ? ', '+c.state : ''}` : ''}</div>
+        <div style="color:var(--muted);margin-top:2px">${c.phone ? '📞 '+c.phone+'  ' : ''}${c.email ? '✉ '+c.email : ''}</div>
+      </div>`).join('') +
+    `</div>`;
 }
 
 // ─── UI HELPERS ───────────────────────────────────────────────────────────────
