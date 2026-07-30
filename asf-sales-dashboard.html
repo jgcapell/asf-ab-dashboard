@@ -1110,7 +1110,6 @@
 const CONFIG = {
   acumaticaUrl: 'https://allsouthflooring.acumatica.com',
   clientId:     '6337533B-4E40-14F2-F483-DD653A38138B@ASF',
-  clientSecret: 'djA-sMyV_8128aNE8g5IKg',
   scopes:       'api offline_access openid profile email',
   redirectUri:  window.location.origin + window.location.pathname,
   workerUrl:    'https://asf-inventory-dashboard.greg-capell.workers.dev',
@@ -1188,7 +1187,7 @@ async function handleCallback(code, state) {
     // 1. Exchange code for tokens
     const resp = await fetch(`${CONFIG.workerUrl}/token`, {
       method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: CONFIG.redirectUri, client_id: CONFIG.clientId, client_secret: CONFIG.clientSecret }),
+      body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: CONFIG.redirectUri, client_id: CONFIG.clientId }),
     });
     if (!resp.ok) throw new Error(`Token exchange failed (${resp.status})`);
     const t = await resp.json();
@@ -1319,7 +1318,7 @@ function onRepFilterChange() {
 async function doRefreshToken() {
   const resp = await fetch(`${CONFIG.workerUrl}/token`, {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: auth.refreshToken, client_id: CONFIG.clientId, client_secret: CONFIG.clientSecret }),
+    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: auth.refreshToken, client_id: CONFIG.clientId }),
   });
   if (!resp.ok) { logout(); throw new Error('Session expired.'); }
   const t = await resp.json(); auth.accessToken = t.access_token; auth.refreshToken = t.refresh_token || auth.refreshToken;
