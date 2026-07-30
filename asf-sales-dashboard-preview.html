@@ -290,6 +290,7 @@
   .lead-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
   .lead-tag { font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 99px; background: rgba(107,82,184,0.1); color: var(--purple); border: 1px solid rgba(107,82,184,0.25); }
   .lead-status { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+  .lead-category-badge { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; background: var(--surface2); color: var(--dim); border: 1px solid var(--border); }
   .status-design { background: rgba(91,143,204,0.12); color: var(--asf-navy); border: 1px solid rgba(91,143,204,0.3); }
   .status-bid { background: rgba(196,137,10,0.1); color: #7a5500; border: 1px solid rgba(196,137,10,0.3); }
   .status-award { background: rgba(90,158,69,0.12); color: #3a7a28; border: 1px solid rgba(90,158,69,0.3); }
@@ -3087,17 +3088,96 @@ async function runLeadSearch() {
   }
 }
 
+let liRawResults = null;     // last successful search response, kept in memory for client-side filtering
+let liFilterCategory = '';
+let liFilterStatus = '';
+let liFilterCsi = '';
+
 function renderLiResults(data) {
+  liRawResults = data;
+  liFilterCategory = ''; liFilterStatus = ''; liFilterCsi = ''; // reset filters on a fresh search
+  renderLiResultsFiltered();
+}
+
+// Builds the set of filter options actually present in the current results —
+// not a fixed global list — so reps never see an option that would return
+// nothing.
+function collectLiFilterOptions() {
+  const allLeads = liMode === 'company'
+    ? (liRawResults.leads || [])
+    : [...(liRawResults.getSpecified || []), ...(liRawResults.bidNow || [])];
+  const categories = new Set(), statuses = new Set(), csis = new Set();
+  allLeads.forEach(l => {
+    (l.categories || []).forEach(c => categories.add(c));
+    if (l.projectStatus) statuses.add(l.projectStatus);
+    (l.csiCodesFlooring || []).forEach(c => csis.add(c.replace(/^\d+\s*/,'')));
+  });
+  return { categories: [...categories].sort(), statuses: [...statuses].sort(), csis: [...csis].sort() };
+}
+
+function leadMatchesLiFilters(lead) {
+  if (liFilterCategory && !(lead.categories || []).includes(liFilterCategory)) return false;
+  if (liFilterStatus && lead.projectStatus !== liFilterStatus) return false;
+  if (liFilterCsi && !(lead.csiCodesFlooring || []).some(c => c.replace(/^\d+\s*/,'') === liFilterCsi)) return false;
+  return true;
+}
+
+function onLiFilterChange() {
+  liFilterCategory = document.getElementById('li-filter-category').value;
+  liFilterStatus   = document.getElementById('li-filter-status').value;
+  liFilterCsi      = document.getElementById('li-filter-csi').value;
+  renderLiResultsFiltered();
+}
+
+function clearLiFilters() {
+  liFilterCategory = ''; liFilterStatus = ''; liFilterCsi = '';
+  renderLiResultsFiltered();
+}
+
+function renderLiFilterBar(opts) {
+  const opt = v => `<option value="${v.replace(/"/g,'&quot;')}">${v}</option>`;
+  return `
+    <div class="card" style="margin-bottom:12px">
+      <div class="ctrl-bar">
+        <select class="ctrl-select" id="li-filter-category" onchange="onLiFilterChange()">
+          <option value="">All Categories</option>${opts.categories.map(opt).join('')}
+        </select>
+        <select class="ctrl-select" id="li-filter-status" onchange="onLiFilterChange()">
+          <option value="">All Stages</option>${opts.statuses.map(opt).join('')}
+        </select>
+        <select class="ctrl-select" id="li-filter-csi" onchange="onLiFilterChange()">
+          <option value="">All Flooring Types</option>${opts.csis.map(opt).join('')}
+        </select>
+        <button class="btn-sm" onclick="clearLiFilters()">Clear Filters</button>
+      </div>
+    </div>`;
+}
+
+function renderLiResultsFiltered() {
   const wrap = document.getElementById('li-results-wrap');
-  const acctLine = data.account ? `Matched: ${data.account.name} — ${data.account.city}, ${data.account.state}` : '';
+  if (!liRawResults) return;
+  const opts = collectLiFilterOptions();
+  const acctLine = liRawResults.account
+    ? `Matched: ${liRawResults.account.name} — ${liRawResults.account.city}, ${liRawResults.account.state}` : '';
+
+  let body;
   if (liMode === 'company') {
-    wrap.innerHTML = renderLeadBucket('Company Match Results', acctLine, data.leads || []);
+    const filtered = (liRawResults.leads || []).filter(leadMatchesLiFilters);
+    body = renderLeadBucket('Company Match Results', acctLine, filtered);
   } else {
-    wrap.innerHTML =
-      renderLeadBucket('Get Specified — Early Design Phase', 'No bid date yet — opportunity to influence the spec. ' + acctLine, data.getSpecified || []) +
+    const spec = (liRawResults.getSpecified || []).filter(leadMatchesLiFilters);
+    const bid  = (liRawResults.bidNow || []).filter(leadMatchesLiFilters);
+    body =
+      renderLeadBucket('Get Specified — Early Design Phase', 'No bid date yet — opportunity to influence the spec. ' + acctLine, spec) +
       '<div style="height:16px"></div>' +
-      renderLeadBucket('Bid / VE Now — Active or Recent Bidding', 'Active bidding window or recently closed — value engineering opportunity. ' + acctLine, data.bidNow || []);
+      renderLeadBucket('Bid / VE Now — Active or Recent Bidding', 'Active bidding window or recently closed — value engineering opportunity. ' + acctLine, bid);
   }
+
+  wrap.innerHTML = renderLiFilterBar(opts) + body;
+  // Restore selected filter values after the re-render wipes the <select> elements
+  if (liFilterCategory) document.getElementById('li-filter-category').value = liFilterCategory;
+  if (liFilterStatus)   document.getElementById('li-filter-status').value   = liFilterStatus;
+  if (liFilterCsi)      document.getElementById('li-filter-csi').value      = liFilterCsi;
 }
 
 function renderLeadBucket(title, sub, leads) {
@@ -3160,6 +3240,7 @@ function renderLeadCard(lead) {
       </div>
       <div class="lead-meta-row">
         <span class="lead-status ${liStatusPillClass(lead.projectStatus)}">${lead.projectStatus || '—'}</span>
+        ${lead.categories && lead.categories.length ? `<span class="lead-category-badge">${lead.categories.join(', ')}</span>` : ''}
         <span>📍 ${lead.city || '—'}${lead.state ? ', ' + lead.state : ''}</span>
         ${bidDate ? `<span>📅 Bid: ${bidDate}</span>` : ''}
         ${startDate ? `<span>🏗 Start: ${startDate}</span>` : ''}
