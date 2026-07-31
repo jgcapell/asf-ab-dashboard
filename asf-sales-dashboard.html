@@ -1363,8 +1363,17 @@ async function tryFetch(label, endpoint, params) {
   catch(e) { addLog(`✗ ${label}: ${e.message}`, 'error'); showErr(e.message); return []; }
 }
 
+// Same as tryFetch but for optional/non-critical lookups — logs failure quietly
+// instead of surfacing the red error banner. Used for the attribute-value lookup
+// GI, which may not exist yet in Acumatica or may be mid-setup.
+async function tryFetchSoft(label, endpoint, params) {
+  addLog(`Fetching ${label}…`);
+  try { const r = await odataGet(endpoint, params); addLog(`✓ ${label}: ${r.length} rows`, 'ok'); return r; }
+  catch(e) { addLog(`○ ${label} unavailable (${e.message}) — falling back to static labels`, 'error'); return []; }
+}
+
 // ─── DATA STORE ───────────────────────────────────────────────────────────────
-let D = { sales:[], ar:[], displays:[], opportunities:[], activities:[], tasks:[], newCustomers:[], empCodeToName:{}, trailing12:[], trailing12rows:[], salesByClass:[], priorSales:[] };
+let D = { sales:[], ar:[], displays:[], attributeValues:[], opportunities:[], activities:[], tasks:[], newCustomers:[], empCodeToName:{}, trailing12:[], trailing12rows:[], salesByClass:[], priorSales:[] };
 
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
 async function loadData() {
@@ -1395,7 +1404,9 @@ async function loadData() {
     priorEndDate.setFullYear(priorEndDate.getFullYear() - 1);
     const priEnd = priorEndDate.toISOString().slice(0, 10);
 
-    const SALES_COLS = 'ReferenceNbr,CustomerName,InvoiceDate,PaymentDate,SalesRep,ExtAmount,ExtCost,ExtProfit,ItemClass,Quantity,FinancialPeriod,FiscalYear,DisplayingDealers';
+    // 'DisplaySystem' is a column on the InvoicedItems GI in Acumatica (mirrors
+    // 'DisplayingDealers'), sourced from the DISPLAYSYS attribute.
+    const SALES_COLS = 'ReferenceNbr,CustomerName,InvoiceDate,PaymentDate,SalesRep,ExtAmount,ExtCost,ExtProfit,ItemClass,Quantity,FinancialPeriod,FiscalYear,DisplayingDealers,DisplaySystem';
 
     addLog(`Fetching FY${curFyLabel}: ${curStart} → ${todayStr}`);
     addLog(`Fetching FY${priFyLabel} YTD: ${priStart} → ${priEnd}`);
@@ -1433,6 +1444,15 @@ async function loadData() {
       '$select':'CustomerName,DisplaysPlaced,Date,DefaultSalesperson,InvoiceAmt',
     });
     step(`DISPLAYS — ${D.displays.length} rows`);
+
+    // 3b. Attribute value lookup (ValueID -> Description) for DISPLAY and DISPLAYSYS
+    // attributes, sourced from the GC-AttributeValues GI over CSAttributeDetail.
+    // GI columns: AttributeID, ValueID, ValueDescription (per-value description).
+    // Optional — if the GI doesn't exist yet in Acumatica, this quietly returns []
+    // and the code below falls back to the static DISPLAY_NORM map.
+    D.attributeValues = await tryFetchSoft('Attribute Values', 'GC-AttributeValues', {
+      '$select':'AttributeID,ValueID,ValueDescription',
+    });
 
     // 4. Opportunities — CR-Opportunities2018R1 has DisplayName (owner full name)
     //    which matches SalesRep names directly for rep filtering
@@ -1944,9 +1964,36 @@ function renderCustomerData() {
     'LG Display':   'LG Display',
   };
 
-  function normalizeDisplay(raw) {
+  // Dynamic ValueID -> Description lookup, keyed by AttributeID, sourced from the
+  // GC-AttributeValues GI (mirrors Acumatica's Attributes screen directly, so it
+  // never drifts out of sync the way a hand-maintained map can).
+  const ATTR_LOOKUP = {}; // { DISPLAY: { 'ART Displa': 'Artisan Edge', ... }, DISPLAYSYS: {...} }
+  (D.attributeValues||[]).forEach(a => {
+    const attrId = (a.AttributeID||'').trim();
+    const valId  = (a.ValueID||'').trim();
+    if (!attrId || !valId) return;
+    if (!ATTR_LOOKUP[attrId]) ATTR_LOOKUP[attrId] = {};
+    ATTR_LOOKUP[attrId][valId] = (a.ValueDescription||'').trim() || valId;
+  });
+
+  // Resolve a raw attribute code to its Description. Tries the live Acumatica
+  // lookup first; for the DISPLAY attribute specifically, falls back to the
+  // static DISPLAY_NORM map (kept as a safety net for stale/pre-GI data);
+  // otherwise falls back to the raw code so nothing silently disappears.
+  function resolveAttrValue(attrId, raw) {
     const trimmed = raw.trim();
-    return DISPLAY_NORM[trimmed] || trimmed;
+    const dynamic = ATTR_LOOKUP[attrId] && ATTR_LOOKUP[attrId][trimmed];
+    if (dynamic) return dynamic;
+    if (attrId === 'DISPLAY') return DISPLAY_NORM[trimmed] || trimmed;
+    return trimmed;
+  }
+
+  function normalizeDisplay(raw) {
+    return resolveAttrValue('DISPLAY', raw);
+  }
+
+  function normalizeDisplaySystem(raw) {
+    return resolveAttrValue('DISPLAYSYS', raw);
   }
 
   // Build displays from DisplayingDealers field on InvoicedItems
@@ -1957,6 +2004,16 @@ function renderCustomerData() {
     if (!name || !raw) return;
     if (!dispMap[name]) dispMap[name] = { displays: new Set() };
     raw.split(',').map(d => normalizeDisplay(d)).filter(Boolean).forEach(d => dispMap[name].displays.add(d));
+  });
+
+  // Build display systems (towers/stackers) from the new DisplaySystem field on InvoicedItems
+  const dispSysMap = {};
+  repSales.forEach(r => {
+    const name = (r.CustomerName||'').trim();
+    const raw  = (r.DisplaySystem||'').trim();
+    if (!name || !raw) return;
+    if (!dispSysMap[name]) dispSysMap[name] = { displays: new Set() };
+    raw.split(',').map(d => normalizeDisplaySystem(d)).filter(Boolean).forEach(d => dispSysMap[name].displays.add(d));
   });
 
   // Build merged list
@@ -1974,10 +2031,12 @@ function renderCustomerData() {
   custData = Object.values(salesMap).map(s => {
     const ar   = arMap[s.name] || {};
     const dp   = dispMap[s.name] || { displays: new Set() };
+    const dps  = dispSysMap[s.name] || { displays: new Set() };
     const dtp  = daysToPayMap[s.name];
     const prior = priorMap[s.name] || { ytd: 0 };
     const avgDaysToPay = dtp && dtp.count > 0 ? Math.round(dtp.total / dtp.count) : null;
     const displayList  = [...dp.displays].sort();
+    const displaySystemList = [...dps.displays].sort();
     const yoyVar = prior.ytd > 0 ? s.ytd - prior.ytd : null;
     const yoyPct = prior.ytd > 0 ? ((s.ytd - prior.ytd) / prior.ytd) * 100 : null;
     const t12sales = t12CustMap[s.name] || 0;
@@ -1992,6 +2051,8 @@ function renderCustomerData() {
       terms: ar.Terms||'—',
       displayCount: displayList.length,
       displayList,
+      displaySystemCount: displaySystemList.length,
+      displaySystemList,
     };
   });
 
@@ -2262,16 +2323,26 @@ function renderCustomerTable() {
     const yoyCol = r.yoyVar === null ? 'var(--muted)' : r.yoyVar >= 0 ? 'var(--asf-green)' : 'var(--red)';
     const yoyTxt = r.yoyVar === null ? '—'
       : `${r.yoyVar >= 0 ? '▲' : '▼'} ${fmt$(Math.abs(r.yoyVar))} (${Math.abs(r.yoyPct).toFixed(1)}%)`;
-    const hasDisp = r.displayCount > 0;
+    const hasDisp = r.displayCount > 0 || r.displaySystemCount > 0;
     const rowId   = 'cust-row-' + i;
     const expandRow = hasDisp ? `
       <tr id="${rowId}-expand" style="display:none;background:#f0f5fb">
         <td></td>
-        <td colspan="9" style="padding:10px 16px">
-          <div style="font-size:10px;font-weight:700;color:var(--asf-navy);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Displays Placed (${r.displayCount})</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px">
-            ${r.displayList.map(d => `<span class="badge b-blue">${d}</span>`).join('')}
-          </div>
+        <td colspan="9" style="padding:10px 16px;display:flex;flex-direction:column;gap:12px">
+          ${r.displayCount > 0 ? `
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--asf-navy);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Displaying Dealers (${r.displayCount})</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${r.displayList.map(d => `<span class="badge b-blue">${d}</span>`).join('')}
+            </div>
+          </div>` : ''}
+          ${r.displaySystemCount > 0 ? `
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--asf-navy);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Display System (${r.displaySystemCount})</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${r.displaySystemList.map(d => `<span class="badge b-dim">${d}</span>`).join('')}
+            </div>
+          </div>` : ''}
         </td>
       </tr>` : '';
     return `<tr style="cursor:${hasDisp?'pointer':'default'}" onclick="${hasDisp?`toggleCustExpand('${rowId}')`:''}" title="${hasDisp?'Click to see displays':''}">
