@@ -1186,27 +1186,13 @@
       <div class="card">
         <div class="card-hdr"><span class="card-title">Lead Intelligence — ConstructConnect</span></div>
         <div class="card-body" style="font-size:11px;color:var(--dim);line-height:1.6">
-          Surface construction projects relevant to a selected customer, sourced live from ConstructConnect. Pick a customer, choose a search mode, and pull current leads.
+          Surface construction projects sourced live from ConstructConnect. Fill in whichever fields apply and pull current leads — every field is optional, but a Company Name or Zip Code is strongly recommended to keep results manageable.
         </div>
       </div>
 
       <div class="row cols-1">
         <div class="card">
-          <div class="card-hdr"><span class="card-title">1. Select Customer</span></div>
-          <div class="card-body" style="display:flex;flex-direction:column;gap:10px;position:relative">
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <input class="ctrl-input" id="li-cust-search" placeholder="Type customer name…"
-                     oninput="onLiCustSearch()" onfocus="onLiCustFocus()" onblur="onLiCustBlur()"
-                     autocomplete="off" style="width:100%;max-width:320px">
-              <button class="btn-sm" onclick="clearLiCustFilter()">Clear</button>
-            </div>
-            <div id="li-cust-dropdown" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;max-height:180px;overflow-y:auto;display:none;position:absolute;top:44px;z-index:10;width:100%;max-width:320px"></div>
-            <div id="li-account-chip" class="li-account-chip"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">2. Find Leads</span></div>
+          <div class="card-hdr"><span class="card-title">Find Leads</span></div>
           <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
 
             <div>
@@ -1225,7 +1211,7 @@
                 <div style="margin-top:6px"><input class="ctrl-input li-radius-input" id="li-radius" type="number" value="50" min="5" max="250"></div>
               </div>
             </div>
-            <div style="font-size:10px;color:var(--muted);margin-top:-10px">If left blank, defaults to the selected customer's address on file. Ignored if a Company Name is provided — company anchor takes precedence over geography.</div>
+            <div style="font-size:10px;color:var(--dim);font-weight:600;margin-top:-10px">⚠ If both Company Name and Zip Code are left blank, results are not narrowed by location or company at all — expect a very large result set. Fill in at least one to keep results manageable. Zip Code is ignored if a Company Name is provided — company anchor takes precedence over geography.</div>
 
             <div>
               <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Project Description</label>
@@ -1266,7 +1252,7 @@
       <div id="li-results-wrap" style="display:none"></div>
 
       <div id="li-empty" class="card">
-        <div class="card-body"><div class="empty">Select a customer above, then run a search to see results.</div></div>
+        <div class="card-body"><div class="empty">Fill in the fields above, then run a search to see results.</div></div>
       </div>
 
     </div>
@@ -2978,106 +2964,12 @@ function showTab(btn) {
 // constructconnect-integration-spec.md.
 
 let liInitialized = false;
-let liSelectedCustomer = null;
-let liAccount = null;   // resolved {name, city, state} echoed back by the Worker
-
-// All Acumatica business accounts — not just customers with sales history.
-// Design firms, hospital/school systems, and other non-transactional accounts
-// (e.g. LS3P, Gresham Smith, UNC Health facilities) show up here as Prospects
-// with zero invoiced sales, so they'd never appear in D.sales. This is a
-// separate, full pull from CR-BusinessAccounts2018R1 specifically for this tab.
-let liAllAccounts = [];
-let liAccountsLoaded = false;
-let liAccountsLoading = false;
+let liAccount = null;   // resolved {name, city, state} echoed back by the Worker when a Company Name is provided
 
 function initLeadIntelTab() {
   if (liInitialized) return;
   liInitialized = true;
-  loadLiBusinessAccounts();
   renderLiAdvGroups();
-}
-
-async function loadLiBusinessAccounts() {
-  if (liAccountsLoaded || liAccountsLoading) return;
-  liAccountsLoading = true;
-  const input = document.getElementById('li-cust-search');
-  const prevPlaceholder = input.placeholder;
-  input.placeholder = 'Loading accounts…';
-  input.disabled = true;
-  try {
-    const rows = await odataGet('CR-BusinessAccounts2018R1', {
-      '$select': 'BusinessAccountName,City,State,BusinessAccountClassID'
-    });
-    liAllAccounts = rows
-      .map(r => ({
-        name: (r.BusinessAccountName || '').trim(),
-        city: (r.City || '').trim(),
-        state: (r.State || '').trim(),
-        classId: (r.BusinessAccountClassID || '').trim(),
-      }))
-      .filter(a => a.name)
-      .sort((a, b) => a.name.localeCompare(b.name));
-    liAccountsLoaded = true;
-  } catch (e) {
-    addLog('Failed to load business accounts for Lead Intelligence: ' + e.message, 'error');
-    input.placeholder = 'Failed to load accounts — try refreshing';
-  } finally {
-    liAccountsLoading = false;
-    input.disabled = false;
-    if (liAccountsLoaded) input.placeholder = prevPlaceholder;
-  }
-}
-
-function onLiCustSearch() {
-  const q = document.getElementById('li-cust-search').value.toLowerCase().trim();
-  if (!liAccountsLoaded) { renderLiCustDropdown([]); return; }
-  const matches = q
-    ? liAllAccounts.filter(a => a.name.toLowerCase().includes(q)).slice(0, 15)
-    : [];
-  renderLiCustDropdown(matches);
-}
-
-function renderLiCustDropdown(matches) {
-  const dd = document.getElementById('li-cust-dropdown');
-  if (!matches.length) { dd.style.display = 'none'; return; }
-  dd.innerHTML = matches.map(a => {
-    const loc = [a.city, a.state].filter(Boolean).join(', ');
-    return `<div class="cust-dd-item" data-name="${a.name.replace(/"/g,'&quot;')}">
-      <div>${a.name}</div>
-      ${loc || a.classId ? `<div style="font-size:9px;color:var(--muted);font-weight:500;margin-top:2px">${loc}${loc && a.classId ? ' · ' : ''}${a.classId||''}</div>` : ''}
-    </div>`;
-  }).join('');
-  dd.querySelectorAll('.cust-dd-item').forEach(el => {
-    el.addEventListener('mousedown', e => { e.preventDefault(); selectLiCustomer(el.dataset.name); });
-    el.addEventListener('mouseover', () => el.style.background = '#eef4fb');
-    el.addEventListener('mouseout',  () => el.style.background = '');
-  });
-  dd.style.display = 'block';
-}
-
-function onLiCustFocus() { if (!liSelectedCustomer) onLiCustSearch(); }
-function onLiCustBlur() { setTimeout(() => { document.getElementById('li-cust-dropdown').style.display = 'none'; }, 150); }
-
-function selectLiCustomer(name) {
-  liSelectedCustomer = name;
-  liAccount = null;
-  document.getElementById('li-cust-search').value = name;
-  document.getElementById('li-cust-dropdown').style.display = 'none';
-  const chip = document.getElementById('li-account-chip');
-  chip.textContent = '🔍 ' + name;
-  chip.style.display = 'block';
-  document.getElementById('li-results-wrap').style.display = 'none';
-  document.getElementById('li-empty').style.display = 'block';
-}
-
-function clearLiCustFilter() {
-  liSelectedCustomer = null;
-  liAccount = null;
-  document.getElementById('li-cust-search').value = '';
-  document.getElementById('li-cust-dropdown').style.display = 'none';
-  document.getElementById('li-account-chip').style.display = 'none';
-  document.getElementById('li-results-wrap').style.display = 'none';
-  document.getElementById('li-empty').style.display = 'block';
 }
 
 // Mirrors the Worker's FLOORING_RELEVANT_CATEGORIES — kept in sync manually.
@@ -3127,7 +3019,6 @@ function toggleLiAdvGroup(group, checked) {
 }
 
 async function runLeadSearch() {
-  if (!liSelectedCustomer) { showErr('Select a customer first.'); return; }
   clearErr();
   const btn = document.getElementById('li-search-btn');
   btn.disabled = true; btn.textContent = '⟳ SEARCHING…';
@@ -3137,7 +3028,7 @@ async function runLeadSearch() {
   wrap.innerHTML = '<div class="card"><div class="card-body"><div class="empty">Searching ConstructConnect…</div></div></div>';
 
   try {
-    const body = { customerName: liSelectedCustomer };
+    const body = {};
     body.radiusMiles = parseInt(document.getElementById('li-radius').value, 10) || 50;
     body.companyName = document.getElementById('li-adv-company').value.trim() || null;
     body.zipCode = document.getElementById('li-adv-zip').value.trim() || null;
@@ -3162,7 +3053,7 @@ async function runLeadSearch() {
       throw new Error(`Worker returned ${resp.status} with no error detail.`);
     }
     const data = await resp.json();
-    liAccount = data.account || null;
+    liAccount = data.companyMatches || null;
     renderLiResults(data);
   } catch (e) {
     wrap.innerHTML = `<div class="card"><div class="card-body"><div class="empty">⚠ ${e.message}</div></div></div>`;
@@ -3239,8 +3130,10 @@ function renderLiResultsFiltered() {
   const wrap = document.getElementById('li-results-wrap');
   if (!liRawResults) return;
   const opts = collectLiFilterOptions();
-  const acctLine = liRawResults.account
-    ? `Matched: ${liRawResults.account.name} — ${liRawResults.account.city}, ${liRawResults.account.state}` : '';
+  const acctLine = (liRawResults.companyMatches && liRawResults.companyMatches.length)
+    ? `Matched ${liRawResults.companyMatches.length} company record${liRawResults.companyMatches.length===1?'':'s'}: ` +
+      liRawResults.companyMatches.map(c => `${c.name}${c.city ? ` (${c.city}${c.state ? ', '+c.state : ''})` : ''}`).join('; ')
+    : '';
 
   const spec = (liRawResults.getSpecified || []).filter(leadMatchesLiFilters);
   const bid  = (liRawResults.bidNow || []).filter(leadMatchesLiFilters);
