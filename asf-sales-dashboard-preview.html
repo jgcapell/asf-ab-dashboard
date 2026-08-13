@@ -1195,50 +1195,63 @@
           <div class="card-hdr"><span class="card-title">Find Leads</span></div>
           <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
 
-            <div>
-              <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Company Name</label>
-              <div style="font-size:10px;color:var(--muted);margin:2px 0 6px">Optional. Design firms, hospital/school systems, developers — anchors results to a specific company's projects. Note: may not surface every project for a GC/owner that isn't independently registered as a company in ConstructConnect — pair with other fields below for full coverage.</div>
-              <input class="ctrl-input" id="li-adv-company" placeholder="e.g. LS3P, Rodgers Builders" style="width:100%;max-width:400px">
-            </div>
-
-            <div style="display:flex;gap:24px;flex-wrap:wrap">
+            <div class="row cols-2" style="gap:20px">
               <div>
-                <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Zip Code</label>
-                <div style="margin-top:6px"><input class="ctrl-input" id="li-adv-zip" placeholder="e.g. 28204" style="width:120px"></div>
+                <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Company Name</label>
+                <div style="font-size:10px;color:var(--muted);margin:2px 0 6px">Optional. Design firms, hospital/school systems, developers — anchors results to a specific company's projects. Note: may not surface every project for a GC/owner that isn't independently registered as a company in ConstructConnect.</div>
+                <input class="ctrl-input" id="li-adv-company" placeholder="e.g. LS3P, Rodgers Builders" style="width:100%">
+                <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">
+                  <div>
+                    <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Zip Code</label>
+                    <div style="margin-top:6px"><input class="ctrl-input" id="li-adv-zip" placeholder="e.g. 28204" style="width:120px"></div>
+                  </div>
+                  <div>
+                    <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Radius (miles)</label>
+                    <div style="margin-top:6px"><input class="ctrl-input li-radius-input" id="li-radius" type="number" value="50" min="5" max="250"></div>
+                  </div>
+                </div>
+                <div style="font-size:10px;color:var(--dim);font-weight:600;margin-top:8px">⚠ If both Company Name and Zip Code are left blank, results are not narrowed by location or company at all. Zip Code is ignored if a Company Name is provided.</div>
               </div>
+
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Project Description</label>
+                  <div style="font-size:10px;color:var(--muted);margin:2px 0 6px">Optional keyword search against ConstructConnect's project summary text.</div>
+                  <input class="ctrl-input" id="li-adv-desc" placeholder="e.g. hospital renovation" style="width:100%">
+                </div>
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Product Name (search inside spec documents)</label>
+                  <div style="font-size:10px;color:var(--muted);margin:2px 0 6px">Optional. Searches the actual text of uploaded plans/specs — use a specific product or brand name; generic terms can match broadly on large document sets.</div>
+                  <input class="ctrl-input" id="li-adv-docsearch" placeholder="e.g. Shaw Contract, Interface" style="width:100%">
+                </div>
+              </div>
+            </div>
+
+            <div class="row cols-3" style="gap:16px">
               <div>
-                <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Radius (miles)</label>
-                <div style="margin-top:6px"><input class="ctrl-input li-radius-input" id="li-radius" type="number" value="50" min="5" max="250"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Category</label>
+                  <span><button class="btn-sm" onclick="toggleLiAdvGroup('cat',true)">All</button> <button class="btn-sm" onclick="toggleLiAdvGroup('cat',false)">None</button></span>
+                </div>
+                <div id="li-adv-categories" style="margin-top:6px;max-height:220px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:4px;font-size:11px"></div>
               </div>
-            </div>
-            <div style="font-size:10px;color:var(--dim);font-weight:600;margin-top:-10px">⚠ If both Company Name and Zip Code are left blank, results are not narrowed by location or company at all — expect a very large result set. Fill in at least one to keep results manageable. Zip Code is ignored if a Company Name is provided — company anchor takes precedence over geography.</div>
 
-            <div>
-              <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Project Description</label>
-              <div style="font-size:10px;color:var(--muted);margin:2px 0 6px">Optional keyword search against ConstructConnect's project summary text.</div>
-              <input class="ctrl-input" id="li-adv-desc" placeholder="e.g. hospital renovation" style="width:100%;max-width:400px">
-            </div>
-
-            <div>
-              <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Product Name (search inside spec documents)</label>
-              <div style="font-size:10px;color:var(--muted);margin:2px 0 6px">Optional. Searches the actual text of uploaded plans/specs — use a specific product or brand name; generic terms (e.g. "flooring") can match broadly on large document sets.</div>
-              <input class="ctrl-input" id="li-adv-docsearch" placeholder="e.g. Shaw Contract, Interface" style="width:100%;max-width:400px">
-            </div>
-
-            <div>
-              <div style="display:flex;justify-content:space-between;align-items:center;max-width:520px">
-                <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Category</label>
-                <span><button class="btn-sm" onclick="toggleLiAdvGroup('cat',true)">All</button> <button class="btn-sm" onclick="toggleLiAdvGroup('cat',false)">None</button></span>
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Product Type</label>
+                  <span><button class="btn-sm" onclick="toggleLiAdvGroup('csi',true)">All</button> <button class="btn-sm" onclick="toggleLiAdvGroup('csi',false)">None</button></span>
+                </div>
+                <div id="li-adv-csi" style="margin-top:6px;max-height:220px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:4px;font-size:11px"></div>
               </div>
-              <div id="li-adv-categories" style="margin-top:6px;max-height:160px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;padding:8px;max-width:520px;display:flex;flex-direction:column;gap:4px;font-size:11px"></div>
-            </div>
 
-            <div>
-              <div style="display:flex;justify-content:space-between;align-items:center;max-width:520px">
-                <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Product Type</label>
-                <span><button class="btn-sm" onclick="toggleLiAdvGroup('csi',true)">All</button> <button class="btn-sm" onclick="toggleLiAdvGroup('csi',false)">None</button></span>
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Project Stage</label>
+                  <span><button class="btn-sm" onclick="toggleLiAdvGroup('stage',true)">All</button> <button class="btn-sm" onclick="toggleLiAdvGroup('stage',false)">None</button></span>
+                </div>
+                <div style="font-size:10px;color:var(--muted);margin-top:2px">Determines which of the two result buckets below get populated — e.g. deselecting all Bid/VE-Now stages returns only Get Specified results.</div>
+                <div id="li-adv-stage" style="margin-top:6px;max-height:190px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:4px;font-size:11px"></div>
               </div>
-              <div id="li-adv-csi" style="margin-top:6px;max-height:160px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;padding:8px;max-width:520px;display:flex;flex-direction:column;gap:4px;font-size:11px"></div>
             </div>
 
             <div>
@@ -3002,6 +3015,13 @@ const LI_PRODUCT_TYPE_OPTIONS = [
   { code: "096726", label: "Quartz Flooring" },
 ];
 
+// Mirrors the Worker's two bucket status lists. Order matches project
+// lifecycle: Get Specified stages first, then Bid/VE Now stages.
+const LI_STAGE_OPTIONS = [
+  "Conceptual", "Design", "Final Planning", "Pre-Construction/Negotiated",
+  "Sub-Bidding", "GC Bidding", "Post-Bid"
+];
+
 function renderLiAdvGroups() {
   document.getElementById('li-adv-categories').innerHTML = LI_CATEGORY_OPTIONS.map(c => `
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
@@ -3011,10 +3031,14 @@ function renderLiAdvGroups() {
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
       <input type="checkbox" class="li-adv-csi-cb" value="${p.code}" checked> ${p.label}
     </label>`).join('');
+  document.getElementById('li-adv-stage').innerHTML = LI_STAGE_OPTIONS.map(s => `
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+      <input type="checkbox" class="li-adv-stage-cb" value="${s.replace(/"/g,'&quot;')}" checked> ${s}
+    </label>`).join('');
 }
 
 function toggleLiAdvGroup(group, checked) {
-  const cls = group === 'cat' ? '.li-adv-cat-cb' : '.li-adv-csi-cb';
+  const cls = group === 'cat' ? '.li-adv-cat-cb' : group === 'csi' ? '.li-adv-csi-cb' : '.li-adv-stage-cb';
   document.querySelectorAll(cls).forEach(cb => cb.checked = checked);
 }
 
@@ -3036,10 +3060,12 @@ async function runLeadSearch() {
     body.productNameInSpecs = document.getElementById('li-adv-docsearch').value.trim() || null;
     const checkedCats = [...document.querySelectorAll('.li-adv-cat-cb:checked')].map(cb => cb.value);
     const checkedCsi  = [...document.querySelectorAll('.li-adv-csi-cb:checked')].map(cb => cb.value);
+    const checkedStages = [...document.querySelectorAll('.li-adv-stage-cb:checked')].map(cb => cb.value);
     // Only send an override if the rep actually deselected something —
     // otherwise omit so the Worker applies its own full default list.
     body.categories = checkedCats.length < LI_CATEGORY_OPTIONS.length ? checkedCats : null;
     body.productTypes = checkedCsi.length < LI_PRODUCT_TYPE_OPTIONS.length ? checkedCsi : null;
+    body.stages = checkedStages.length < LI_STAGE_OPTIONS.length ? checkedStages : null;
     const resp = await fetch(`${CONFIG.workerUrl}/leadintel/search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.accessToken}` },
