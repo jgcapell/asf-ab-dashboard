@@ -3135,12 +3135,14 @@ function renderLiResultsFiltered() {
       liRawResults.companyMatches.map(c => `${c.name}${c.city ? ` (${c.city}${c.state ? ', '+c.state : ''})` : ''}`).join('; ')
     : '';
 
-  const spec = (liRawResults.getSpecified || []).filter(leadMatchesLiFilters);
-  const bid  = (liRawResults.bidNow || []).filter(leadMatchesLiFilters);
+  const rawSpec = liRawResults.getSpecified || [];
+  const rawBid  = liRawResults.bidNow || [];
+  const spec = rawSpec.filter(leadMatchesLiFilters);
+  const bid  = rawBid.filter(leadMatchesLiFilters);
   const body =
-    renderLeadBucket('Get Specified — Early Design Phase', 'No bid date yet — opportunity to influence the spec. ' + acctLine, spec) +
+    renderLeadBucket('Get Specified — Early Design Phase', 'No bid date yet — opportunity to influence the spec. ' + acctLine, spec, rawSpec.length, liRawResults.getSpecifiedTotal ?? rawSpec.length) +
     '<div style="height:16px"></div>' +
-    renderLeadBucket('Bid / VE Now — Active or Recent Bidding', 'Active bidding window or recently closed — value engineering opportunity. ' + acctLine, bid);
+    renderLeadBucket('Bid / VE Now — Active or Recent Bidding', 'Active bidding window or recently closed — value engineering opportunity. ' + acctLine, bid, rawBid.length, liRawResults.bidNowTotal ?? rawBid.length);
 
   wrap.innerHTML = renderLiFilterBar(opts) + body;
   // Restore selected filter values after the re-render wipes the <select> elements
@@ -3149,14 +3151,26 @@ function renderLiResultsFiltered() {
   if (liFilterCsi)      document.getElementById('li-filter-csi').value      = liFilterCsi;
 }
 
-function renderLeadBucket(title, sub, leads) {
+function renderLeadBucket(title, sub, leads, rawCount, total) {
   const body = leads.length
     ? `<div class="lead-list">${leads.map(renderLeadCard).join('')}</div>`
     : `<div class="empty">No matching projects found.</div>`;
+  // Compares the RAW fetched count (before the rep's own category/stage/CSI
+  // filter selections) against the true server-side total — never the
+  // post-filter count, since a rep intentionally narrowing results isn't
+  // "truncation." This surfaces the real page-limit issue that caused a
+  // wider radius search to appear to silently drop previously-visible
+  // projects: they didn't leave the radius, they got pushed off a 150-result
+  // page by other, more-recently-updated projects the wider radius pulled in.
+  const truncated = total > rawCount;
   return `
     <div class="card">
       <div class="li-bucket-hdr">
-        <div><div class="li-bucket-title">${title}</div>${sub ? `<div class="li-bucket-sub">${sub}</div>` : ''}</div>
+        <div>
+          <div class="li-bucket-title">${title}</div>
+          ${sub ? `<div class="li-bucket-sub">${sub}</div>` : ''}
+          ${truncated ? `<div class="li-bucket-sub" style="color:#a15c00;font-weight:700">⚠ Showing ${rawCount} of ${total} total matches — narrow your search (add categories, product types, or a smaller radius) to see the rest.</div>` : ''}
+        </div>
         <span class="card-badge">${leads.length} result${leads.length===1?'':'s'}</span>
       </div>
       ${body}
