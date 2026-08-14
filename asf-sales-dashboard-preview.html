@@ -290,6 +290,9 @@
   .lead-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
   .lead-tag { font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 99px; background: rgba(107,82,184,0.1); color: var(--purple); border: 1px solid rgba(107,82,184,0.25); }
   .lead-status { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+  .lead-doc-badge { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+  .doc-available { background: rgba(90,158,69,0.12); color: #3a7a28; border: 1px solid rgba(90,158,69,0.3); }
+  .doc-none { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
   .lead-category-badge { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; background: var(--surface2); color: var(--dim); border: 1px solid var(--border); }
   .status-design { background: rgba(91,143,204,0.12); color: var(--asf-navy); border: 1px solid rgba(91,143,204,0.3); }
   .status-bid { background: rgba(196,137,10,0.1); color: #7a5500; border: 1px solid rgba(196,137,10,0.3); }
@@ -3210,6 +3213,21 @@ function liStatusPillClass(status) {
   return 'status-design';
 }
 
+// Surfaces whether it's worth clicking through to ConstructConnect for
+// plans/specs, so reps aren't digging in only to find nothing uploaded yet.
+// documentCount is the concrete signal (how many document records exist);
+// documentAcquisitionStatus adds nuance when present (e.g. "Drawings Only"
+// vs full "Available") but is often null on early-stage records.
+function renderDocBadge(lead) {
+  const count = lead.documentCount || 0;
+  const status = lead.documentAcquisitionStatus;
+  if (count > 0) {
+    const statusNote = (status && status !== 'Unknown') ? ` · ${status}` : '';
+    return `<span class="lead-doc-badge doc-available">📄 ${count} Doc${count===1?'':'s'}${statusNote}</span>`;
+  }
+  return `<span class="lead-doc-badge doc-none">📄 No Documents Yet</span>`;
+}
+
 let liDescCache = {}; // full descriptions, keyed by card id, for the expand/collapse toggle
 
 function toggleLeadDesc(id) {
@@ -3250,6 +3268,7 @@ function renderLeadCard(lead) {
       <div class="lead-meta-row">
         <span class="lead-status ${liStatusPillClass(lead.projectStatus)}">${lead.projectStatus || '—'}</span>
         ${lead.categories && lead.categories.length ? `<span class="lead-category-badge">${lead.categories.join(', ')}</span>` : ''}
+        ${renderDocBadge(lead)}
         <span>📍 ${lead.city || '—'}${lead.state ? ', ' + lead.state : ''}</span>
         ${bidDate ? `<span>📅 Bid: ${bidDate}</span>` : ''}
         ${startDate ? `<span>🏗 Start: ${startDate}</span>` : ''}
