@@ -1,0 +1,1091 @@
+{
+  "_readme": "Source-of-truth business rules for the ASF Display Program Tracker. attributes: DisplayingDealers code -> friendly current-display name. updateMap: same code -> list of display names the dealer needs to receive (empty = already current). skuMap: InventoryID -> which display that SKU counts toward. Edit this file and re-run/redeploy to change the rules; both the static dashboard and the live Worker read from it. requiredSkus (optional): for a display listed here, ONLY the listed SKUs count as fulfilling/scheduling that update \u2014 other SKUs mapped to the same display in skuMap still show in line detail but do not mark it complete. Omit a display from requiredSkus to keep the default behavior (any mapped SKU counts). collectionAliases (optional): maps a display name to the Collection field value(s) actually used on GC-SalesByCollectionTrailing12, for cases where the sales-tagging Collection name doesn't exactly match the display name elsewhere (e.g. both Sequoia generations are tagged simply \"Sequoia\" in that GI). Omit a display to match its own name directly. displaySystemLabels: normalizes AR-Customers.DisplaySystem raw tokens (mix of short codes like 1TOWER and descriptive text like \"Single Tower\" for the same underlying fixture) to one canonical label each, so the dashboard filter/dedup treats them as identical.",
+  "attributes": {
+    "ACTIVEQS": "Active Quick-ship Tiles",
+    "APP RES": "Appalachian Reserve",
+    "ART Displa": "Artisan Edge",
+    "EW CAFE": "Echelon Wood Cafe",
+    "EW CASC": "Echelon Wood Cascadia",
+    "EW CH": "Echelon Wood Coffee House",
+    "EW Coast": "Echelon Wood Coast",
+    "EW ISLR": "Echelon Wood Island Retreat",
+    "EW KEYSTON": "Echelon Wood Keystone",
+    "EW PLB": "Echelon Wood Pacific Longboard",
+    "EW RC": "Echelon Wood Vintage Charm",
+    "GC Display": "Gulf Coast SPC",
+    "LW BCH": "Lifewood Beachfront",
+    "LW BCH+": "Lifewood Beachfront Select",
+    "LW Rss/Ban": "Lifewood Ross",
+    "LW Seq 2.0": "Lifewood Sequoia 2.0 Display",
+    "LW Sequoia": "Lifewood Sequoia 1.0 Display",
+    "LW TRACE": "Lifewood Trace",
+    "LW Trl/Trc": "Lifewood Trail",
+    "NEXTSTEP": "Barlinek NextStep",
+    "NOBLEWOOD": "Noblewood Display",
+    "SequoiaBPI": "Sequoia - BPI",
+    "T1 WPC OB": "Outer Banks WPC",
+    "WB Display": "Whiskey Barrel SPC",
+    "WORKSHOP": "Workshop Table Top Display",
+    "YESWOOD": "Barlinek YesWood",
+    "EW TRAILHD": "Echelon Wood Trailhead",
+    "EW VANTAGE": "Echelon Wood Vantage",
+    "EW RESERVE": "Echelon Wood Reserve",
+    "GCHD WPC": "Gulf Coast HD WPC",
+    "TRQ SPC": "Tranquil SPC"
+  },
+  "updateMap": {
+    "ACTIVEQS": [],
+    "APP RES": [],
+    "ART Displa": [
+      "Appalachian Reserve"
+    ],
+    "EW CAFE": [
+      "Echelon Wood Keystone"
+    ],
+    "EW CASC": [],
+    "EW CH": [
+      "Echelon Wood Keystone"
+    ],
+    "EW Coast": [],
+    "EW ISLR": [],
+    "EW KEYSTON": [],
+    "EW PLB": [],
+    "EW RC": [],
+    "GC Display": [
+      "Gulf Coast HD WPC"
+    ],
+    "LW BCH": [],
+    "LW BCH+": [],
+    "LW Rss/Ban": [
+      "Lifewood Beachfront",
+      "Lifewood Beachfront Select"
+    ],
+    "LW Seq 2.0": [],
+    "LW Sequoia": [
+      "Lifewood Sequoia 2.0 Display"
+    ],
+    "LW TRACE": [
+      "Lifewood Trace"
+    ],
+    "LW Trl/Trc": [
+      "Lifewood Trail"
+    ],
+    "NEXTSTEP": [],
+    "NOBLEWOOD": [],
+    "SequoiaBPI": [],
+    "T1 WPC OB": [],
+    "WB Display": [
+      "Whiskey Barrel SPC"
+    ],
+    "WORKSHOP": [],
+    "YESWOOD": [],
+    "EW TRAILHD": [],
+    "EW VANTAGE": [],
+    "EW RESERVE": [],
+    "GCHD WPC": [],
+    "TRQ SPC": [],
+    "Lifewood Sequoia 1.0 Display": [
+      "Lifewood Sequoia 2.0 Display"
+    ]
+  },
+  "skuMap": {
+    "ARSAMP-052L": {
+      "description": "Appalachian Reserve Display Boards Foxfire Oak 21\" x 27\"",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "ARSAMP-1004-1": {
+      "description": "Appalachian Reserve Display Boards Blue Ridge Oak 21\" x 27\"",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "ARSAMP-1004-4": {
+      "description": "Appalachian Reserve Display Boards Old Growth Walnut 21\" x 27\"",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "ARSAMP-1156": {
+      "description": "Appalachian Reserve Display Boards Laurel Summit 21\" x 27\"",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "ARSAMP-116": {
+      "description": "Appalachian Reserve Display Boards Raven Rock 21\" x 27\"",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "ARSAMP-1580": {
+      "description": "Appalachian Reserve Display Boards Timberline 21\" x 27\"",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "ARSAMP-191": {
+      "description": "Appalachian Reserve Display Boards Highland Hemlock 21\" x 27\"",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "ARSAMP-1926": {
+      "description": "Appalachian Reserve Display Boards Smokemont Ask 21\" x 27\"",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "ARSAMP-199": {
+      "description": "Appalachian Reserve Display Boards Hearthstone 21\" x 27\"",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "ARSAMP-859": {
+      "description": "Appalachian Reserve Display Boards Cumberland Estate 21\" x 27\"",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "ARSAMP-912L": {
+      "description": "Appalachian Reserve Display Boards Chestnut Legacy 21\" x 27\"",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "ARSAMP-923": {
+      "description": "Appalachian Reserve Display Boards Alleghany Onyx 21\" x 27\"",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "ASFCOAST-SETA": {
+      "description": "ECHELON Coast Display Boards Set A - Driftwood, Sand Bar, Rose All Day",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Coast"
+    },
+    "ASFCOAST-SETB": {
+      "description": "ECHELON Coast Display Boards Set B - Sunset, Beach House, Coquina",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Coast"
+    },
+    "ASFPACIFICLB-SETA": {
+      "description": "ECHELON Pacific Longboard Display Boards Set A - Malibu, Santa Cruz, Hungtington Beach",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Pacific Longboard"
+    },
+    "ASFPACIFICLB-SETB": {
+      "description": "ECHELON Pacific Longboard Display Boards Set B - Rincon, Cardiff Reef, Trestles",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Pacific Longboard"
+    },
+    "XXX-SEQ2-DSK16-001": {
+      "description": "Lifewood Sequoia 1.0 & 2.0 Display Set - 2 8 Slot Racks + 1 Side Plank + 1 Header + 1 Accessories + 1 Cross Beam",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 2.0 Display"
+    },
+    "BEADISDRI": {
+      "description": "Beachfront Display Board - Driftwood",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Lifewood Beachfront"
+    },
+    "BEADISPIE": {
+      "description": "Beachfront Display Board - Pier",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Lifewood Beachfront"
+    },
+    "BEADISSAN": {
+      "description": "Beachfront Display Board - Sand Dune",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Lifewood Beachfront"
+    },
+    "BEADISSEO": {
+      "description": "Beachfront Display Board - Sea Oats",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Lifewood Beachfront"
+    },
+    "BEASELDISBRE": {
+      "description": "Beachfront Select Display Board - Breeze",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Lifewood Beachfront Select"
+    },
+    "BEASELDISMAR": {
+      "description": "Beachfront Select Display Board - Marina",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Lifewood Beachfront Select"
+    },
+    "BEASELDISSAN": {
+      "description": "Beachfront Select Display Board - Sand Castle",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Lifewood Beachfront Select"
+    },
+    "BEASELDISSUR": {
+      "description": "Beachfront Select Display Board - Surf",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Lifewood Beachfront Select"
+    },
+    "BEASELDISTID": {
+      "description": "Beachfront Select Display Board - Tides",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Lifewood Beachfront Select"
+    },
+    "BEASELDISWAV": {
+      "description": "Beachfront Select Display Board - Waves",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Lifewood Beachfront Select"
+    },
+    "BOXAPEBPIN": {
+      "description": "Reserve Engineered Wood Display Set A - Pebble Beach/Pinehurst",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Reserve"
+    },
+    "BOXBAUGSPY": {
+      "description": "Reserve Engineered Wood Display Set B - Augusta/Spyglass",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Reserve"
+    },
+    "BOXCMUIOAK": {
+      "description": "Reserve Engineered Wood Display Set C - Muirfield/Oakmont",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Reserve"
+    },
+    "CASCADIASAMP-ALLCOLORS": {
+      "description": "Cascadia Engineered Wood Display Boards - 6 color set",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Cascadia"
+    },
+    "EKS-EKS-NXT-US25-24S-TSX": {
+      "description": "Barlinek NextStep 12-slot Tower Shelves - 2025 (2 per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek NextStep"
+    },
+    "EKS-EKS-NXT-US25-24S-TBX": {
+      "description": "Barlinek NextStep 24-slot Tower Base - 2025 (1 per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek NextStep"
+    },
+    "EKS-EKS-NXT-US25-24S-TLX": {
+      "description": "Barlinek NextStep 24-slot Tower Legs - 2025 (1 per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek NextStep"
+    },
+    "WZO-WSD-NXT-US25-5ST-STA": {
+      "description": "Barlinek NextStep Sample Boards - Set A - 5/Box (1 ctn. per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek NextStep"
+    },
+    "ECHKEYSTONEDISP-SETA": {
+      "description": "Keystone Engineered Wood Display Boards - Set A",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Keystone"
+    },
+    "ECHKEYSTONEDISP-SETB": {
+      "description": "Keystone Engineered Wood Display Boards - Set B",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Keystone"
+    },
+    "WZO-WSD-NXT-US25-6ST-STB": {
+      "description": "Barlinek NextStep Sample Boards - Set B - 6/Box (1 ctn. per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek NextStep"
+    },
+    "WZO-WSD-NXT-US25-01S-FLA": {
+      "description": "Barlinek NextStep XL Sample Boards - Flax Oak - 1/Box (1 ctn. per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek NextStep"
+    },
+    "WZO-WSD-NXT-US25-6LG-STA": {
+      "description": "Barlinek NextStep XL Sample Boards - Set A - 6/Box (1 ctn. per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek NextStep"
+    },
+    "WZO-WSD-NXT-US25-6LG-STB": {
+      "description": "Barlinek NextStep XL Sample Boards - Set B - 6/Box (1 ctn. per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek NextStep"
+    },
+    "EKS-EKS-YWX-US25-24S-TSX": {
+      "description": "Barlinek YesWood 12-Slot Tower Shelves - 2025 (2 per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "EKS-EKS-YWX-US25-24S-TBX": {
+      "description": "Barlinek YesWood 24-Slot Tower Base - 2025 (1 per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "GCHDSAMP-BLMN11": {
+      "description": "Gulf Coast HD Display Boards 21\"x24\" - Bloomington - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast HD WPC"
+    },
+    "GCHDSAMP-BP03": {
+      "description": "Gulf Coast HD Display Boards 21\"x24\" - Barn Pine - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast HD WPC"
+    },
+    "GCHDSAMP-BR01": {
+      "description": "Gulf Coast HD Display Boards 21\"x24\" - Bayridge - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast HD WPC"
+    },
+    "GCHDSAMP-BS04": {
+      "description": "Gulf Coast HD Display Boards 21\"x24\" - Brookside - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast HD WPC"
+    },
+    "GCHDSAMP-CTCK14": {
+      "description": "Gulf Coast HD Display Boards 21\"x24\" - Chestnut Creek - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast HD WPC"
+    },
+    "GCHDSAMP-CVPS10": {
+      "description": "Gulf Coast HD Display Boards 21\"x24\" - Coventry Pass - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast HD WPC"
+    },
+    "GCHDSAMP-HP02": {
+      "description": "Gulf Coast HD Display Boards 21\"x24\" - Heartwood Pine - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast HD WPC"
+    },
+    "GCHDSAMP-PKSD12": {
+      "description": "Gulf Coast HD Display Boards 21\"x24\" - Parkside - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast HD WPC"
+    },
+    "GCHDSAMP-SMBK09": {
+      "description": "Gulf Coast HD Display Boards 21\"x24\" - Summerbrooke - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast HD WPC"
+    },
+    "GCHDSAMP-SR06": {
+      "description": "Gulf Coast HD Display Boards 21\"x24\" - Santa Rosa - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast HD WPC"
+    },
+    "GCHDSAMP-TMLK13": {
+      "description": "Gulf Coast HD Display Boards 21\"x24\" - Thomas Lake - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast HD WPC"
+    },
+    "GCHDSAMP-VB05": {
+      "description": "Gulf Coast HD Display Boards 21\"x24\" - Vista Beach - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast HD WPC"
+    },
+    "GCSAMP-0007": {
+      "description": "Gulf Coast Display Boards 21\"x24\" - Vintage Barnwood 0007 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-0008": {
+      "description": "Gulf Coast Display Boards 21\"x24\" - Smoked Oak 0008 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-1020": {
+      "description": "Gulf Coast Display Boards 21\"x24\" - Calypso 1020 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-168B1": {
+      "description": "Gulf Coast Display Boards 21\"x24\" - Antique Heart Pine 168B1 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-393A": {
+      "description": "Gulf Coast Display Boards 21\"x24\" - Sawgrass 393A - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-524L11": {
+      "description": "Gulf Coast Display Boards 21\"x24\" - Long Leaf Boardwalk Pine 524L11 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-7001": {
+      "description": "Gulf Coast Display Boards 21\"x24\" - Siesta Key 7001 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-7002": {
+      "description": "Gulf Coast Display Boards 21\"x24\" - Tides 7002 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-7003": {
+      "description": "Gulf Coast Display Boards 21\"x24\" - Dockside 7003 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-7004": {
+      "description": "Gulf Coast Display Boards 21\"x24\" - Bayrunner 7004 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-7006": {
+      "description": "Gulf Coast Display Boards 21\"x24\" - Sun Jetty 7006 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-7008": {
+      "description": "Gulf Coast Display Boards 21\"x24\" - Sanibel 7008 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-SET A": {
+      "description": "Gulf Coast Display Boards Set A - 7001 Siesta Key, 7002 Tides 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-SET B": {
+      "description": "Gulf Coast Display Boards Set B - 7003 Dockside, 7004 Bayrunner 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-SET C": {
+      "description": "Gulf Coast Display Boards Set C - 7006 Sun Jetty, 7008 Sanibel 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-SET D": {
+      "description": "Gulf Coast Display Boards Set D - 0007 Vintage Barnwood, 0008 Smoked Oak 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-SET E": {
+      "description": "Gulf Coast Display Boards Set E - 1020 Calypso, 168B1 Antique Heart Pine 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-SET F": {
+      "description": "Gulf Coast Display Boards Set F - 393A Sawgrass, 524L11 Long Leaf Boardwalk Pine 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-SET G": {
+      "description": "Gulf Coast Display Boards Set G - LVGC393A - 3ea 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-SET H": {
+      "description": "Gulf Coast Display Boards Set H - LVGC524L10 - 3ea 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "GCSAMP-SETI": {
+      "description": "Gulf Coast Display Boards Set I - LVGC1020 Calypso - 3ea 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Gulf Coast SPC"
+    },
+    "IMP-TRQ-BSBL-SETA": {
+      "description": "Tranquil Display Board 21\" x 24\" Set A - 13, 14, 15, 16",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Tranquil SPC"
+    },
+    "ISLRETREATSAMP-SETA": {
+      "description": "Island Retreat Display Board Set A - 01,02,03,04",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Island Retreat"
+    },
+    "ISLRETREATSAMP-SETB": {
+      "description": "Island Retreat Display Board Set B - 05,06,07,08",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Island Retreat"
+    },
+    "LWROSSDISP-4701": {
+      "description": "Lifewood Ross Display Boards 20.5\"W x 27\"H - 4701 Seminole",
+      "itemClass": "ALLCOVERINGS    -SAMPLES/ADVERT",
+      "display": "Lifewood Ross"
+    },
+    "LWROSSDISP-4702": {
+      "description": "Lifewood Ross Display Boards 20.5\"W x 27\"H - 4702 Pinehurst",
+      "itemClass": "ALLCOVERINGS    -SAMPLES/ADVERT",
+      "display": "Lifewood Ross"
+    },
+    "LWROSSDISP-SETA*NEW*": {
+      "description": "Lifewood Ross Display Boards 20.5\"W x 27\"H Set A - 4701, 4702",
+      "itemClass": "ALLCOVERINGS    -SAMPLES/ADVERT",
+      "display": "Lifewood Ross"
+    },
+    "LWROSSDISP-SETB*NEW*": {
+      "description": "Lifewood Ross EC Display Boards 20.5\"W x 27\"H Set B - 5635B, 5635G, 573201",
+      "itemClass": "ALLCOVERINGS    -SAMPLES/ADVERT",
+      "display": "Lifewood Ross"
+    },
+    "LWROSSDISP-SETC*NEW*": {
+      "description": "Lifewood Ross EC Display Boards 20.5\"W x 27\"H Set C - 573204, 573207, 573210",
+      "itemClass": "ALLCOVERINGS    -SAMPLES/ADVERT",
+      "display": "Lifewood Ross"
+    },
+    "LWROSSDISP-SETF*OLD*": {
+      "description": "Lifewood Ross Stacker Display Boards Set F - 4701 - 4702",
+      "itemClass": "ALLCOVERINGS    -SAMPLES/ADVERT",
+      "display": "Lifewood Ross"
+    },
+    "LWSEQUDISP-CASTLE ROCK": {
+      "description": "Lifewood Sequoia 2.0 Display Board - Castle Rock 72022",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 2.0 Display"
+    },
+    "LWSEQUDISP-CRYSTAL LAKE": {
+      "description": "Lifewood Sequoia 2.0 Display Board - Crystal Lake 72021",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 2.0 Display"
+    },
+    "LWSEQUDISP-KAWEAH GAP": {
+      "description": "Lifewood Sequoia 2.0 Display Board - Kaweah Gap 72027",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 2.0 Display"
+    },
+    "LWSEQUDISP-LIPPINCOTT PEAK": {
+      "description": "Lifewood Sequoia 2.0 Display Board - Lippincott Peak 72025",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 2.0 Display"
+    },
+    "LWSEQUDISP-LIVE OAK": {
+      "description": "Lifewood Sequoia 2.0 Display Board - Live Oak 72023",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 2.0 Display"
+    },
+    "LWSEQUDISP-OAK RIDGE": {
+      "description": "Lifewood Sequoia 2.0 Display Board - Oak Ridge 72024",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 2.0 Display"
+    },
+    "LWSEQUDISP-REDWOOD": {
+      "description": "Lifewood Sequoia 2.0 Display Board - Redwood 72020",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 2.0 Display"
+    },
+    "LWSEQUDISP-TOKOPAH FALLS": {
+      "description": "Lifewood Sequoia 2.0 Display Board - Tokopah Falls 72026",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 2.0 Display"
+    },
+    "XXX-SEQ2-DB8-001": {
+      "description": "Lifewood Sequoia 2.0 Display Board Set - 72020, 72021, 72022, 72023, 72024, 72025, 72026, 72027",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 2.0 Display"
+    },
+    "LWSEQUDISP-ALTASIERRA": {
+      "description": "Lifewood Sequoia Display Board - Alta Sierra 72017",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "LWSEQUDISP-CLIFF CREEK": {
+      "description": "Lifewood Sequoia Display Board - Cliff Creek 72010",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "LWSEQUDISP-EAGLE SCOUT": {
+      "description": "Lifewood Sequoia Display Board - Eagle Scout 72014",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "LWSEQUDISP-EMPIRE": {
+      "description": "Lifewood Sequoia Display Board - Empire 72013",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "LWSEQUDISP-FLORENCE PEAK": {
+      "description": "Lifewood Sequoia Display Board - Florence Peak 72019",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "LWSEQUDISP-MINERAL PEAK": {
+      "description": "Lifewood Sequoia Display Board - Mineral Peak 72012",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "LWSEQUDISP-SPRING LAKE": {
+      "description": "Lifewood Sequoia Display Board - Spring Lake 72018",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "LWSEQUDISP-TIMBER GAP": {
+      "description": "Lifewood Sequoia Display Board - Timber Gap 72011",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "ASF-SEQ-DB-008": {
+      "description": "Lifewood Sequoia Display Board Set 19\" x 35\" - 8 colors",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "LWSEQUDISP-SETB": {
+      "description": "Lifewood Sequoia Display Boards - 2 Display Boards (72013 & 72014)",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "LWSEQUDISP-SETA": {
+      "description": "Lifewood Sequoia Display Boards - 3 Display Boards (72010, 72011, 72012)",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "LWSEQUDISP": {
+      "description": "Lifewood Sequoia Display Set - 8 Slot Rack + Display Header + Side Plank (3 Pc Kit)",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "LWSEQUDISP-SETC": {
+      "description": "Lifewood Sequoia Display Update - 2 Display Boards (72018 & 72019)",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Sequoia 1.0 Display"
+    },
+    "LWTRACEDISP-22025": {
+      "description": "Lifewood Trace Display Board - American Oak 22025",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRACEDISP-22026": {
+      "description": "Lifewood Trace Display Board - Front Porch Oak 22026",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRACEDISP-2214": {
+      "description": "Lifewood Trace Display Board - Harrison Bay 2214",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRACEDISP-22001": {
+      "description": "Lifewood Trace Display Board - Heritage Oak 22001",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRACEDISP-22029": {
+      "description": "Lifewood Trace Display Board - Hickory Homestead 22029",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRACEDISP-22028": {
+      "description": "Lifewood Trace Display Board - Hickory Stone 22028",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRACEDISP-2220": {
+      "description": "Lifewood Trace Display Board - Oakridge 2220",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRACEDISP-22022": {
+      "description": "Lifewood Trace Display Board - Timber Oak 22022",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRACEDISP-SETA*NEW*": {
+      "description": "Lifewood Trace Display Boards 20.5\"W x 27\"H Set A - 2212, 2214",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRACEDISP-SETB*NEW*": {
+      "description": "Lifewood Trace Display Boards 20.5\"W x 27\"H Set B - 2220, 2221",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRACEDISP-SETA": {
+      "description": "Lifewood Trace Display Boards Set A - 2212, 2214",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRACEDISP-SETB": {
+      "description": "Lifewood Trace Display Boards Set B - 2217, 2219",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRACEDISP-SETC": {
+      "description": "Lifewood Trace Display Boards Set C - 2220, 2221",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trace"
+    },
+    "LWTRAILDISP-2205": {
+      "description": "Lifewood Trail Display Board - Hampton Cove 2205",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trail"
+    },
+    "LWTRAILDISP-2208": {
+      "description": "Lifewood Trail Display Board - Highland Oaks 2208",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trail"
+    },
+    "LWTRAILDISP-2204": {
+      "description": "Lifewood Trail Display Board - Lakewood 2204",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trail"
+    },
+    "LWTRAILDISP-SETB*NEW*": {
+      "description": "Lifewood Trail Display Boards 20.5\" x 27\" Set B - 5501, 5502",
+      "itemClass": "ALLCOVERINGS    -SAMPLES/ADVERT",
+      "display": "Lifewood Trail"
+    },
+    "LWTRAILDISP-22085": {
+      "description": "Lifewood Trail Display Boards 20.5\"W x 27\"H 3/ctn - 22085",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trail"
+    },
+    "LWTRAILDISP-SETC*NEW*": {
+      "description": "Lifewood Trail Display Boards 20.5\" x 27\" Set C - 8904, 8910",
+      "itemClass": "ALLCOVERINGS    -SAMPLES/ADVERT",
+      "display": "Lifewood Trail"
+    },
+    "OBSAMP-SETA": {
+      "description": "Outer Banks WPC Display Boards 20.5\"W x 27\"H Set A - 1201,1202",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Outer Banks WPC"
+    },
+    "OBSAMP-SETB": {
+      "description": "Outer Banks WPC Display Boards 20.5\"W x 27\"H Set B - 1203,1204",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Outer Banks WPC"
+    },
+    "OBSAMP-SETC": {
+      "description": "Outer Banks WPC Display Boards 20.5\"W x 27\"H Set C - 1205,1206",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Outer Banks WPC"
+    },
+    "OBSAMP-SETD": {
+      "description": "Outer Banks WPC Display Boards 20.5\"W x 27\"H Set D - 1207,1208",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Outer Banks WPC"
+    },
+    "OBSAMP-SETE": {
+      "description": "Outer Banks WPC Display Boards 20.5\"W x 27\"H Set E - 1209,1210",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Outer Banks WPC"
+    },
+    "PLBSAMP-CARDIFFREEF": {
+      "description": "Pacific Longboard Engineered Wood Display Boards - Cardiff Reef",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Pacific Longboard"
+    },
+    "PLBSAMP-HUNTBEACH": {
+      "description": "Pacific Longboard Engineered Wood Display Boards - Huntington Beach",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Pacific Longboard"
+    },
+    "PLBSAMP-MALIBU": {
+      "description": "Pacific Longboard Engineered Wood Display Boards - Malibu",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Pacific Longboard"
+    },
+    "PLBSAMP-MAVERICKS": {
+      "description": "Pacific Longboard Engineered Wood Display Boards - Mavericks",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Pacific Longboard"
+    },
+    "PLBSAMP-RINCON": {
+      "description": "Pacific Longboard Engineered Wood Display Boards - Rincon",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Pacific Longboard"
+    },
+    "PLBSAMP-SANTABARBARA": {
+      "description": "Pacific Longboard Engineered Wood Display Boards - Santa Barbara",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Pacific Longboard"
+    },
+    "PLBSAMP-SANTACRUZ": {
+      "description": "Pacific Longboard Engineered Wood Display Boards - Santa Cruz",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Pacific Longboard"
+    },
+    "PLBSAMP-SETB": {
+      "description": "Pacific Longboard Engineered Wood Display Boards Set B - 03,04",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Pacific Longboard"
+    },
+    "PLBSAMP-SETD": {
+      "description": "Pacific Longboard Engineered Wood Display Boards Set D - 04,05",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Pacific Longboard"
+    },
+    "PLBSAMP-TRESTLES": {
+      "description": "Pacific Longboard Engineered Wood Display Boards - Trestels",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Pacific Longboard"
+    },
+    "SAMAR-STRAP": {
+      "description": "Appalachian Reserve SPC Strap Set - All Colors",
+      "itemClass": "BENCHWICK       -SAMPLES",
+      "display": "Appalachian Reserve"
+    },
+    "SAMTRAAGED": {
+      "description": "Trailhead Display Board - Aged Bronze",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Trailhead"
+    },
+    "SAMTRAIL4CHB": {
+      "description": "Trailhead Handboard - 4 colors/board",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Trailhead"
+    },
+    "SAMTRAILSTRAP": {
+      "description": "Trailhead Strap Set - 4 colors",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Trailhead"
+    },
+    "SAMTRANATU": {
+      "description": "Trailhead Display Board - Natural",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Trailhead"
+    },
+    "SAMTRASEPIA": {
+      "description": "Trailhead Display Board - Sepia",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Trailhead"
+    },
+    "SAMTRAWHIS": {
+      "description": "Trailhead Display Board - Whiskey Barrel",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Trailhead"
+    },
+    "VANDISBOXA": {
+      "description": "Vantage Engineered Wood Display Set A - Del Mar/Santa Anita",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Vantage"
+    },
+    "VANDISBOXB": {
+      "description": "Vantage Engineered Wood Display Set B - Pimlico/Saratoga",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Vantage"
+    },
+    "VANDISBOXC": {
+      "description": "Vantage Engineered Wood Display Set C - Belmont/Churchill",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Vantage"
+    },
+    "VINTCHARMSAMP-SETA": {
+      "description": "Vintage Charm Engineered Wood Display Boards Set A - 01,02,03",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Vintage Charm"
+    },
+    "VINTCHARMSAMP-SETB": {
+      "description": "Vintage Charm Engineered Wood Display Boards Set B - 04,05,06",
+      "itemClass": "ECHELONFLOORS   -SAMPLES/ADVERT",
+      "display": "Echelon Wood Vintage Charm"
+    },
+    "WBSAMP-0011": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Moonshine Hickory 0011 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-0013": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Angel's Share 0013 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-0017": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Private Reserve 0017 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-0018": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Aged Oak 0018 - 1/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-1020": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Rustic Barnwood 1020 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-5912": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Saloon 5912 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-5913": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Charred Oak 5913 - 2/box**DROPPED**",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-5915": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Bourbon 5915 - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-591A": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Single Barrel 591A - 2/box",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-CWTR14": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Cottonwood Trail CWTR14",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-NEWSETA": {
+      "description": "Whiskey Barrel Display Board Update - CWTR14, SPG15, WHRV16",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-SET A": {
+      "description": "Whiskey Barrel Display Boards Set A - WB11 Moonshine Hickory, WB13 Angel's Share 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-SET B": {
+      "description": "Whiskey Barrel Display Boards Set B - WB17 Private Reserve, WB18 Aged Oak 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-SET C": {
+      "description": "Whiskey Barrel Display Boards Set C - WB5912 Saloon, WB591A Single Barrel 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-SET D": {
+      "description": "Whiskey Barrel Display Boards Set D - WB5915 Bourbon, WB5913 Charred Oak 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-SET E": {
+      "description": "Whiskey Barrel Tile Display Boards Set E - WBT001 Monteagle Marble, WBT002 Cumberland Carrera 21\" x 24\"",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-SET F": {
+      "description": "Whiskey Barrel Tile Display Boards Set F - WBT003 Tanyard Travertine, WBT004 Squire Travertine 21\" x 24\" **DROPPED**",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-SET G": {
+      "description": "Whiskey Barrel Display Boards Set G - WB591A 21\" x 24\" - 3 ea",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-SPG15": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Spring Grove SPG15",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-T003": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Tanyard Travertine T003",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-T004": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - Squire Travertine T004",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "WBSAMP-WHRV16": {
+      "description": "Whiskey Barrel Display Boards 21\"x24\" - White River Hickory WHRV14",
+      "itemClass": "RESPONSIVE      -SAMPLES/ADVERT",
+      "display": "Whiskey Barrel SPC"
+    },
+    "EKS-EKS-YWX-US25-24S-TLX": {
+      "description": "Barlinek YesWood 24-Slot Tower Legs - 2025 (1 per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "WZO-WSD-YWT-US25-04S-HER": {
+      "description": "Barlinek YesWood 5\" HB Sample Boards - Set E - 4/Box (1 ctn. per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "WZO-WSD-YWT-US25-05S-155": {
+      "description": "Barlinek YesWood 6\" Sample Boards - Set D - 5/Box (1 ctn. per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "WZO-WSD-YWT-US25-06S-180": {
+      "description": "Barlinek YesWood 7\" Sample Boards - Set B - 6/Box (1 ctn. per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "WZO-WSD-YWT-US25-05S-180": {
+      "description": "Barlinek YesWood 7\" Sample Boards - Set C - 5/Box (1 ctn. per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "WZO-WSD-YWT-US25-04S-207": {
+      "description": "Barlinek YesWood 8\" Sample Boards - Set A - 4/Box (1 ctn. per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "DRU-GRF-YWX-US25-24S-HED": {
+      "description": "Barlinek YesWood Tower Header - 2025 (1 per Kit)",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "WZO-WSD-HHW-US25-04S-HER": {
+      "description": "Hanover Hills, Wood flooring 5\" HB Sample boards 4 pcs, US 2025",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "WZO-WSD-HHW-US25-03S-TNG": {
+      "description": "Hanover Hills, Wood flooring 5\" T&G Sample boards 3 pcs, US 2025",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "WZO-WSD-HHW-US25-05S-155": {
+      "description": "Hanover Hills, Wood flooring 6\" Sample boards 5 pcs, US 2025",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "WZO-WSD-HHW-US25-05S-180": {
+      "description": "Hanover Hills, Wood flooring 7\" Sample boards 5 pcs, US 2025",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "WZO-WSD-HHW-US25-06S-180": {
+      "description": "Hanover Hills, Wood flooring 7\" Sample boards 6 pcs, US 2025",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "WZO-WSD-HHW-US25-04S-207": {
+      "description": "Hanover Hills, Wood flooring 8\" Sample boards 4 pcs, US 2025",
+      "itemClass": "BARLINEK        -SAMPLES/ADVERT",
+      "display": "Barlinek YesWood"
+    },
+    "LWTRAILDISP-SETA*NEW*": {
+      "description": "Lifewood Trail Display Boards 20.5\"W x 27\"H Set A - 2204, 2205, 2208",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trail"
+    },
+    "LWTRAILDISP-SETA": {
+      "description": "Lifewood Trail Display Boards Set A - 2203, 2204",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trail"
+    },
+    "LWTRAILDISP-SETB": {
+      "description": "Lifewood Trail Display Boards Set B - 2205, 2207",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trail"
+    },
+    "LWTRAILDISP-SETC": {
+      "description": "Lifewood Trail Display Boards Set C - 2208, 2209",
+      "itemClass": "USMILLS         -SAMPLES/ADVERT",
+      "display": "Lifewood Trail"
+    },
+    "SEQUOIA2.0-DISPLAY*NEW*": {
+      "description": "Lifewood Sequoia 2.0 Display (new) - UNVERIFIED, no Acumatica history yet",
+      "itemClass": null,
+      "display": "Lifewood Sequoia 2.0 Display"
+    },
+    "SEQUOIASTACKER-UPDATE": {
+      "description": "Lifewood Sequoia 2.0 Display Stacker Update - UNVERIFIED, no Acumatica history yet",
+      "itemClass": null,
+      "display": "Lifewood Sequoia 2.0 Display"
+    }
+  },
+  "requiredSkus": {
+    "Whiskey Barrel SPC": [
+      "WBSAMP-0018",
+      "WBSAMP-1020"
+    ]
+  },
+  "collectionAliases": {
+    "Lifewood Sequoia 1.0 Display": [
+      "Sequoia"
+    ],
+    "Lifewood Sequoia 2.0 Display": [
+      "Sequoia"
+    ]
+  },
+  "displaySystemLabels": {
+    "1TOWER": "1 Tower",
+    "Single Tower": "1 Tower",
+    "2TOWER": "2 Tower",
+    "Double Tower": "2 Tower",
+    "3TOWER": "3 Tower",
+    "Triple Tower": "3 Tower",
+    "ASFSTACKER": "ASF Waterfall Stacker",
+    "ASF 12-Slot Waterfall Stacker": "ASF Waterfall Stacker",
+    "ECHCASTER": "Echelon Caster Display",
+    "Echelon 12-Slot Caster Displays": "Echelon Caster Display",
+    "ECHSTACKER": "Echelon Waterfall Stacker",
+    "Echelon 12-Slot Waterfall Stacker": "Echelon Waterfall Stacker"
+  }
+}
