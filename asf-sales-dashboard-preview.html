@@ -1643,7 +1643,7 @@ async function resolveUserIdentity() {
         USER.roles = myRows.map(r => (r.RoleName||'').trim()).filter(Boolean);
         // Role-based access — named Acumatica roles, not the old UserType-integer heuristic
         // (which incorrectly treated anything other than exactly 4 as "manager").
-        USER.isManager = USER.roles.includes('ASF Sales Manager');
+        USER.isManager = USER.roles.includes('ASF Sales Manager') || USER.roles.includes('Administrator');
         // ASF Order Entry role → restricted to the Display Tracker tab only, regardless
         // of any other roles also held (see resolveUserIdentity gating in handleCallback).
         USER.isOrderEntryOnly = USER.roles.includes('ASF Order Entry');
@@ -2385,6 +2385,17 @@ Object.entries(REP_TARGETS).forEach(([name, t]) => { if (t.sub) SUB_TO_REP[t.sub
 let roeLoaded = false;
 
 async function fetchROEData() {
+  // GC-ExpenseBySubAccount is restricted to Administrator / ASF Sales Manager in
+  // Acumatica — reps don't have grant to this entity. Skip the attempt entirely for
+  // non-managers rather than fetching and catching a 403 (same gating philosophy as
+  // enterOrderEntryMode(), which skips loading data a role isn't permitted to see,
+  // rather than loading it and hiding the result).
+  if (!USER.isManager) {
+    document.getElementById('roe-loading-msg').style.display = 'none';
+    addLog('Skipping GL expense fetch (ROE) — requires Administrator or ASF Sales Manager role', 'warn');
+    return;
+  }
+
   const loadEl = document.getElementById('roe-loading-msg');
   const errEl  = document.getElementById('roe-err-msg');
   loadEl.style.display = 'flex';
@@ -2406,7 +2417,10 @@ async function fetchROEData() {
       addLog(`ROE diagnostic fetch error: ${diagE.message}`);
     }
 
-    const glRows = await tryFetch('GL Expenses (ROE)', 'GC-ExpenseBySubAccount', {});
+    // Soft fetch — consistent with the app's convention for optional/supplementary
+    // data (same pattern as the GC-AttributeValues lookup): logs quietly and returns
+    // [] on failure instead of surfacing the global red error banner.
+    const glRows = await tryFetchSoft('GL Expenses (ROE)', 'GC-ExpenseBySubAccount', {});
 
     addLog(`GL expense rows: ${glRows.length}`);
     mergeROEData(glRows);
