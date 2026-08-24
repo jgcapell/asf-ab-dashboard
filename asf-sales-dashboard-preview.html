@@ -24,6 +24,21 @@
     --orange:    #c4621a;
     --purple:    #6b52b8;
     --radius:    8px;
+    /* ── Display Tracker tab additions ── */
+    --ink:       #1e5080;
+    --ink-soft:  #5b8fcc;
+    --paper:     #eef2f7;
+    --panel:     #ffffff;
+    --line:      #ccd8e8;
+    --text-muted:#7a96b0;
+    --green:     #5a9e45; --green-soft: rgba(90,158,69,0.12);
+    --amber:     #c4890a; --amber-soft: rgba(196,137,10,0.12);
+    --teal:      #5b8fcc; --teal-soft:  rgba(91,143,204,0.12);
+    --plum:      #6b52b8; --plum-soft:  rgba(107,82,184,0.12);
+    --slate:     #7a96b0; --slate-soft: rgba(122,150,176,0.14);
+    --mute:      #4a6278; --mute-soft:  rgba(74,98,120,0.16);
+    --red-soft:  rgba(184,50,40,0.10);
+    --shadow: 0 1px 8px rgba(30,80,128,0.07);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -393,6 +408,150 @@
   .goal-pill-status-btn.gsb-incomplete { background: rgba(184,50,40,0.12); color: #b83228; }
   .goal-pill-status-btn.gsb-pending    { background: rgba(91,143,204,0.12); color: var(--asf-navy); }
   .goal-pill-status-btn:hover { filter: brightness(0.9); }
+
+  /* ── Display Tracker tab (scoped under #pane-display-tracker to avoid collisions) ── */
+  #pane-display-tracker .wrap{max-width:1320px;margin:0 auto;padding:28px 24px 80px;}
+  #pane-display-tracker #liveState{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; padding:4px 10px; border-radius:99px; background:rgba(255,255,255,0.12); color:rgba(255,255,255,0.75); }
+  #pane-display-tracker #liveState.live{ background:rgba(90,158,69,0.25); color:#d4ecc9; }
+  #pane-display-tracker #liveState.loading{ background:rgba(91,143,204,0.3); color:#fff; }
+  #pane-display-tracker #liveState.loading .dot{ animation: pulse-dot 1s ease-in-out infinite; }
+  @keyframes pulse-dot{ 0%,100%{ opacity:1; } 50%{ opacity:0.25; } }
+  #pane-display-tracker #liveState .dot{ width:6px;height:6px;border-radius:50%;background:currentColor; }
+
+  #pane-display-tracker .page-intro{ font-size:12.5px; color:var(--text-muted); margin:0 0 20px; line-height:1.6; }
+  #pane-display-tracker .page-intro code{ font-family:'Courier New',monospace; font-size:11.5px; background:var(--green-soft); color:var(--green); padding:1px 5px; border-radius:4px; }
+
+  #pane-display-tracker .legend{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:16px 20px; margin-bottom:20px; box-shadow:var(--shadow); }
+  #pane-display-tracker .legend-head{ font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.05em; margin:0 0 10px; }
+  #pane-display-tracker .transitions{ display:flex; flex-wrap:wrap; gap:8px 18px; }
+  #pane-display-tracker .transition{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text); }
+  #pane-display-tracker .transition .from{ color:var(--text-muted); }
+  #pane-display-tracker .transition .arrow{ color:var(--text-muted); }
+  #pane-display-tracker .transition .to{ font-weight:600; color:var(--ink); }
+
+  #pane-display-tracker .hero{ display:grid; grid-template-columns:minmax(280px,1fr) 340px; gap:32px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:28px; margin-bottom:20px; box-shadow:var(--shadow); }
+  #pane-display-tracker .mosaic-head{ font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--ink-soft); margin:0 0 14px; text-transform:uppercase; letter-spacing:0.06em; }
+
+  #pane-display-tracker .progress-panel{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:24px 28px; margin-bottom:20px; box-shadow:var(--shadow); }
+  #pane-display-tracker .progress-row{ display:grid; grid-template-columns:220px 1fr 260px; align-items:center; gap:16px; padding:9px 0; border-bottom:1px solid var(--line); }
+  #pane-display-tracker .progress-row:last-child{ border-bottom:none; }
+  #pane-display-tracker .progress-label{ font-size:13px; font-weight:600; color:var(--ink); }
+  #pane-display-tracker .progress-track{ display:flex; height:12px; border-radius:99px; overflow:hidden; background:var(--line); }
+  #pane-display-tracker .progress-seg{ height:100%; }
+  #pane-display-tracker .progress-seg.shipped{ background:var(--green); }
+  #pane-display-tracker .progress-seg.scheduled{ background:var(--teal); }
+  #pane-display-tracker .progress-seg.not-started{ background:var(--amber-soft); }
+  #pane-display-tracker .progress-count{ font-size:12px; color:var(--text-muted); white-space:nowrap; }
+  #pane-display-tracker .progress-count strong{ color:var(--ink); font-weight:600; }
+  #pane-display-tracker .progress-legend{ display:flex; gap:16px; margin-top:14px; font-size:11.5px; color:var(--text-muted); }
+  #pane-display-tracker .progress-legend span{ display:inline-flex; align-items:center; gap:5px; }
+  #pane-display-tracker .progress-legend .sw{ width:9px; height:9px; border-radius:2px; display:inline-block; }
+
+  #pane-display-tracker .controls{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:16px; background:var(--surface2); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; }
+  #pane-display-tracker #search{ flex:1 1 220px; padding:9px 12px; border:1px solid var(--line); border-radius:8px; font-family:'Inter',sans-serif; font-size:14px; background:var(--paper); color:var(--text); }
+  #pane-display-tracker #search:focus{ outline:2px solid var(--ink-soft); outline-offset:1px; }
+  #pane-display-tracker select{ padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--paper); font-family:'Inter',sans-serif; font-size:13px; color:var(--text); }
+
+  #pane-display-tracker .result-count{ font-size:13px; color:var(--text-muted); margin:2px 2px 10px; }
+
+  #pane-display-tracker .ms-container{ position:relative; }
+  #pane-display-tracker .ms-btn{ padding:9px 12px; border:1px solid var(--line); border-radius:8px; background:var(--paper); font-family:'Inter',sans-serif; font-size:13px; color:var(--text); cursor:pointer; white-space:nowrap; }
+  #pane-display-tracker .ms-btn:hover{ border-color:var(--ink-soft); }
+  #pane-display-tracker .ms-panel{ position:absolute; top:calc(100% + 4px); left:0; z-index:20; background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:var(--shadow); min-width:220px; max-height:280px; overflow-y:auto; padding:6px; }
+  #pane-display-tracker .ms-panel.hidden{ display:none; }
+  #pane-display-tracker .ms-option{ display:flex; align-items:center; gap:8px; padding:6px 8px; font-size:13px; color:var(--text); cursor:pointer; border-radius:6px; white-space:nowrap; }
+  #pane-display-tracker .ms-option:hover{ background:var(--paper); }
+  #pane-display-tracker .ms-option input{ cursor:pointer; }
+  #pane-display-tracker .ms-clear{ display:block; width:100%; text-align:left; padding:6px 8px; font-size:12px; font-weight:600; color:var(--ink-soft); background:transparent; border:none; border-bottom:1px solid var(--line); margin-bottom:4px; cursor:pointer; border-radius:0; }
+  #pane-display-tracker .ms-clear:hover{ color:var(--ink); }
+
+  #pane-display-tracker table{ width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  #pane-display-tracker thead th{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink); padding:12px 14px; background:var(--surface2); border-bottom:1px solid var(--line); cursor:pointer; user-select:none; white-space:nowrap; }
+  #pane-display-tracker thead th:hover{ color:var(--ink); }
+  #pane-display-tracker thead th.sorted::after{ content:' \2193'; }
+  #pane-display-tracker thead th.sorted.asc::after{ content:' \2191'; }
+  #pane-display-tracker tbody tr.dt-row{ border-bottom:1px solid var(--line); cursor:pointer; }
+  #pane-display-tracker tbody tr.dt-row:hover{ background:var(--paper); }
+  #pane-display-tracker tbody tr.dt-row:last-child{ border-bottom:none; }
+  #pane-display-tracker tbody td{ padding:12px 14px; font-size:13.5px; vertical-align:top; }
+  #pane-display-tracker .cust-name{ font-weight:600; color:var(--ink); }
+  #pane-display-tracker .cust-id{ font-family:'Courier New',monospace; font-size:11.5px; color:var(--text-muted); }
+  #pane-display-tracker .badge{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:4px 9px; border-radius:99px; white-space:nowrap; }
+  #pane-display-tracker .badge.updated{ background:var(--green-soft); color:var(--green); }
+  #pane-display-tracker .badge.partial{ background:var(--teal-soft); color:var(--teal); }
+  #pane-display-tracker .badge.needs_update{ background:var(--amber-soft); color:var(--amber); }
+  #pane-display-tracker .badge.unlisted{ background:var(--plum-soft); color:var(--plum); }
+  #pane-display-tracker .badge.up_to_date{ background:var(--slate-soft); color:var(--slate); }
+  #pane-display-tracker .badge.do_not_update{ background:var(--mute-soft); color:var(--mute); }
+  #pane-display-tracker .badge{ cursor:pointer; }
+  #pane-display-tracker .badge .override-pin{ margin-left:2px; opacity:0.7; }
+  #pane-display-tracker .status-editor{ display:inline-flex; align-items:center; gap:5px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:5px 7px; }
+  #pane-display-tracker .status-editor select{ font:inherit; font-size:11.5px; padding:2px 4px; border-radius:5px; }
+  #pane-display-tracker .status-editor input[type="text"]{ font:inherit; font-size:11.5px; border:1px solid var(--line); border-radius:5px; padding:2px 5px; width:110px; }
+  #pane-display-tracker .status-editor button{ border:none; background:transparent; cursor:pointer; font-size:13px; padding:2px 4px; border-radius:4px; }
+  #pane-display-tracker .status-editor .st-save{ color:var(--green); }
+  #pane-display-tracker .status-editor .st-clear{ color:var(--text-muted); }
+  #pane-display-tracker .status-editor button:hover{ background:var(--paper); }
+  #pane-display-tracker .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block; }
+  #pane-display-tracker .chip-cell{ max-width:260px; }
+  #pane-display-tracker .chip{ display:inline-block; font-size:10.5px; padding:2px 7px; border-radius:5px; margin:1px 3px 1px 0; border:1px solid transparent; }
+  #pane-display-tracker .chip.current{ background:var(--paper); border-color:var(--line); color:var(--text-muted); position:relative; padding-left:16px; }
+  #pane-display-tracker .chip.dispsys{ background:var(--paper); border-color:var(--line); color:var(--text-muted); padding-left:7px; }
+  #pane-display-tracker .chip.current .sales-dot{ position:absolute; left:5px; top:50%; transform:translateY(-50%); width:6px; height:6px; border-radius:50%; }
+  #pane-display-tracker .chip.current .sales-dot.green{ background:var(--green); }
+  #pane-display-tracker .chip.current .sales-dot.yellow{ background:var(--amber); }
+  #pane-display-tracker .chip.current .sales-dot.red{ background:var(--red); }
+  #pane-display-tracker .sales-legend{ display:flex; gap:16px; margin-top:10px; font-size:11.5px; color:var(--text-muted); }
+  #pane-display-tracker .sales-legend span{ display:inline-flex; align-items:center; gap:5px; }
+  #pane-display-tracker .sales-legend .sw{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  #pane-display-tracker .chip.need-open{ background:var(--amber-soft); color:var(--amber); font-weight:600; }
+  #pane-display-tracker .chip.need-done{ background:var(--green-soft); color:var(--green); font-weight:600; text-decoration:line-through; text-decoration-color:rgba(63,107,74,0.4); }
+  #pane-display-tracker .prio-tag{ display:inline-block; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; padding:1px 5px; border-radius:4px; margin-left:4px; vertical-align:middle; }
+  #pane-display-tracker .prio-tag.high{ background:var(--green); color:#fff; }
+  #pane-display-tracker .prio-tag.medium{ background:var(--amber); color:#fff; }
+  #pane-display-tracker .prio-tag.low{ background:var(--red); color:#fff; }
+  #pane-display-tracker .badge.priority{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:4px 9px; border-radius:99px; }
+  #pane-display-tracker .badge.priority.high{ background:var(--green-soft); color:var(--green); }
+  #pane-display-tracker .badge.priority.medium{ background:var(--amber-soft); color:#7a5500; }
+  #pane-display-tracker .badge.priority.low{ background:var(--red-soft); color:var(--red); }
+  #pane-display-tracker .badge.priority.none{ background:var(--slate-soft); color:var(--slate); }
+  #pane-display-tracker .chip.sched-so{ background:var(--teal-soft); color:var(--teal); font-weight:600; }
+  #pane-display-tracker .chip.sched-manual{ background:var(--teal-soft); color:var(--teal); font-weight:600; }
+  #pane-display-tracker .chip.sched-none{ background:var(--paper); border:1px dashed var(--line); color:var(--text-muted); cursor:pointer; }
+  #pane-display-tracker .chip.sched-none:hover{ border-color:var(--ink-soft); color:var(--ink-soft); }
+  #pane-display-tracker .chip-action{ cursor:pointer; margin-left:4px; opacity:0.7; }
+  #pane-display-tracker .chip-action:hover{ opacity:1; }
+  #pane-display-tracker .sched-editor{ display:inline-flex; align-items:center; gap:4px; background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:2px 4px; }
+  #pane-display-tracker .sched-editor input[type="date"]{ font:inherit; font-size:11px; border:none; background:transparent; padding:2px; }
+  #pane-display-tracker .sched-editor button{ border:none; background:transparent; cursor:pointer; font-size:13px; padding:2px 4px; border-radius:4px; }
+  #pane-display-tracker .sched-editor .sched-save{ color:var(--green); }
+  #pane-display-tracker .sched-editor .sched-cancel{ color:var(--text-muted); }
+  #pane-display-tracker .sched-editor button:hover{ background:var(--paper); }
+  #pane-display-tracker .chevron{ display:inline-block; transition:transform .15s ease; color:var(--text-muted); margin-right:4px; }
+  #pane-display-tracker tr.dt-row.expanded .chevron{ transform:rotate(90deg); }
+  #pane-display-tracker tr.detail-row td{ background:var(--paper); padding:0; }
+  #pane-display-tracker tr.detail-row.hidden{ display:none; }
+  #pane-display-tracker .detail-wrap{ padding:16px 20px 22px 40px; }
+  #pane-display-tracker .detail-wrap h4{ font-family:'Syne',sans-serif; font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); margin:0 0 10px; }
+  #pane-display-tracker .need-summary{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  #pane-display-tracker .detail-table{ width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  #pane-display-tracker .detail-table th{ font-family:'Inter',sans-serif; font-weight:700; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink); text-align:left; padding:8px 12px; background:var(--surface2); border-bottom:1px solid var(--line); }
+  #pane-display-tracker .detail-table td{ padding:8px 12px; font-size:12.5px; border-bottom:1px solid var(--line); }
+  #pane-display-tracker .detail-table tr:last-child td{ border-bottom:none; }
+  #pane-display-tracker .detail-table tr.counts{ background:var(--green-soft); }
+  #pane-display-tracker .detail-table .sku{ font-family:'Courier New',monospace; font-size:11.5px; color:var(--text-muted); }
+  #pane-display-tracker .detail-table .disp-tag{ font-size:11px; font-weight:600; color:var(--green); }
+  #pane-display-tracker .detail-table .disp-tag.none{ font-weight:400; color:var(--text-muted); font-style:italic; }
+  #pane-display-tracker .empty-note{ padding:16px 20px 22px 40px; font-size:13px; color:var(--text-muted); font-style:italic; }
+
+  #pane-display-tracker footer{ margin-top:28px; font-size:12px; color:var(--text-muted); line-height:1.6; }
+  #pane-display-tracker footer strong{ color:var(--ink-soft); }
+
+
+@media (max-width: 760px){
+    #pane-display-tracker .hero{ grid-template-columns:1fr; }
+    #pane-display-tracker thead th:nth-child(3), #pane-display-tracker tbody td:nth-child(3){ display:none; }
+  }
 </style>
 </head>
 <body>
@@ -472,6 +631,7 @@
     <button class="tab" data-tab="customers" onclick="showTab(this)">Customer Summary</button>
     <button class="tab" data-tab="opportunities" onclick="showTab(this)">Activities &amp; Opportunities</button>
     <button class="tab" data-tab="eater" onclick="showTab(this);initEaterTab()">E.A.T.E.R.</button>
+    <button class="tab" data-tab="display-tracker" onclick="showTab(this);initDisplayTracker()">Display Tracker</button>
     <button class="tab" data-tab="leadintel" onclick="showTab(this);initLeadIntelTab()">Lead Intelligence</button>
   </div>
 
@@ -480,7 +640,7 @@
     <div class="page">
 
       <!-- KPI row -->
-      <div class="row" style="grid-template-columns:repeat(6,1fr)">
+      <div class="row cols-5">
         <div class="card">
           <div class="card-hdr"><span class="card-title">YTD Actual Sales</span></div>
           <div class="card-body card-body-sm">
@@ -511,14 +671,6 @@
             <div class="kpi-val" id="kpi-vs-bhag" style="color:var(--asf-green)">—</div>
             <div class="kpi-sub" id="kpi-vs-bhag-sub">—</div>
             <div id="kpi-bhag-pill"></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">MTD Sales vs Budget</span><span class="card-badge" id="kpi-mtd-month-lbl"></span></div>
-          <div class="card-body card-body-sm">
-            <div class="kpi-val" id="kpi-mtd-actual" style="color:var(--purple)">—</div>
-            <div class="kpi-sub" id="kpi-mtd-sub">—</div>
-            <div id="kpi-mtd-pill"></div>
           </div>
         </div>
         <div class="card">
@@ -594,14 +746,6 @@
               <th>Rating</th>
             </tr></thead>
             <tbody id="combined-sb-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Loading…</td></tr></tbody>
-            <tfoot><tr>
-              <td>TEAM TOTAL</td>
-              <td style="text-align:right" id="ytd-sb-tot-yoy">—</td>
-              <td style="text-align:right" id="ytd-sb-tot-pct">—</td>
-              <td></td>
-              <td style="text-align:right" id="roe-tot-ratio">—</td>
-              <td></td>
-            </tr></tfoot>
           </table>
         </div>
       </div>
@@ -1182,6 +1326,88 @@
     </div>
   </div>
 
+  <!-- ═══════════════════════════════════ TAB: DISPLAY TRACKER -->
+  <!-- Merged in directly (was previously an iframe to a standalone file). CSS is scoped under
+       #pane-display-tracker to avoid colliding with the rest of this dashboard; JS lives in the
+       DISPLAY TRACKER section near the bottom of <script>, reusing the shared `auth` token. -->
+  <div id="pane-display-tracker" class="tab-pane">
+<div class="wrap">
+
+  <p class="page-intro">
+    Invoiced activity since <code id="sinceLabel">5/1/2026</code> across item classes
+    NOBLEWOOD, BARLINEK, USMILLS, BENCHWICK, RESPONSIVE, MARKETING, ECHELONFLOORS, ALLCOVERINGS.
+    Source: Acumatica <code>InvoicedItems</code> + <code>AR-Customers</code>.
+  </p>
+  <div id="liveState"><span class="dot"></span><span id="liveStateLabel">Loading…</span></div>
+
+  <div id="mainContent">
+
+  <section class="legend">
+    <p class="legend-head">Required display transitions</p>
+    <div class="transitions" id="transitions"><!-- filled by JS --></div>
+    <div class="sales-legend">
+      <span><span class="sw" style="background:var(--green)"></span>Current display: &gt;$5,000 trailing 12mo sales</span>
+      <span><span class="sw" style="background:var(--amber)"></span>$0&ndash;$5,000</span>
+      <span><span class="sw" style="background:var(--red)"></span>$0 sales &mdash; may not be worth updating</span>
+    </div>
+  </section>
+
+  <section class="progress-panel">
+    <p class="mosaic-head">Display Collection Progress</p>
+    <div id="progressBars"><!-- filled by JS --></div>
+  </section>
+
+  <div class="controls">
+    <input id="search" type="text" placeholder="Search customer name or ID&hellip;">
+    <div id="statusFilter" class="ms-container"></div>
+    <div id="repFilter" class="ms-container"></div>
+    <div id="neededFilter" class="ms-container"></div>
+    <div id="priorityFilter" class="ms-container"></div>
+    <div id="displaySystemFilter" class="ms-container"></div>
+    <div id="scheduleFilter" class="ms-container"></div>
+  </div>
+
+  <p class="result-count" id="resultCount"></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th data-key="name">Customer</th>
+        <th data-key="rep">Rep</th>
+        <th data-key="loc">Location</th>
+        <th data-key="current">Current Displays</th>
+        <th data-key="needed">Needed Updates</th>
+        <th data-key="displaySystem">Display System</th>
+        <th data-key="scheduled">Scheduled</th>
+        <th data-key="status">Status</th>
+        <th data-key="lastUpdate">Last Qualifying Update</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <footer>
+    <p><strong>Reading the statuses</strong> &mdash;
+    <em>Needs Update</em>: has a display that requires a transition and none of the replacement material has shipped yet.
+    <em>Partial</em>: some but not all required replacement displays have shipped.
+    <em>Updated</em>: every required replacement display has shipped since 5/1/2026.
+    <em>Up to Date</em>: every display this dealer currently has is already the current generation &mdash; nothing owed.
+    <em>Unlisted</em>: invoiced for these item classes but AR-Customers shows no display program on file.
+    <em>Do Not Update</em>: manually excluded from tracking (e.g. inactive or non-paying accounts) &mdash; not counted in the progress bars.</p>
+    <p><strong>Status override</strong> &mdash; click any status badge to manually set it, with an optional note. "Do Not Update" fully removes that dealer from the progress bars; overriding to any other status just corrects the badge shown without inventing shipment history. A &#128204; marks a person's manual override; a &#128274; marks an automatic flag (see below). Hover either to see what the automatic status would have been. Overrides are shared, same as scheduled dates.</p>
+    <p><strong>Automatic "Do Not Update" flag</strong> &mdash; any customer whose name ends in <code>-COLL</code> (a credit-risk/collections account) is automatically flagged Do Not Update and excluded from the progress bars. This is a default, not a lock &mdash; click the badge to manually override it back to a tracked status if the credit issue resolves.</p>
+    <p><strong>Current Display sales indicator</strong> &mdash; each chip shows a colored dot for that collection's trailing-12-month sales at this customer: green (&gt;$5,000), yellow ($0&ndash;$5,000), red ($0). The idea: if a customer isn't buying a collection at all, it may not be worth spending display budget updating them to its replacement. Hover a chip for the exact dollar figure.</p>
+    <p><strong>Priority</strong> &mdash; each open (not-yet-shipped) needed display carries a High/Medium/Low tag on its chip in the Needed Updates column, derived from the same trailing-12-month sales figures on whichever current display(s) generated that requirement (summed, for the rare case where more than one current display maps to the same target). The "Needed collection" and "Priority" filters combine against that same open item &mdash; picking both shows only customers whose specific matching item satisfies both, e.g. "Gulf Coast HD WPC" that is specifically "High."</p>
+    <p><strong>Display System</strong> &mdash; pulled directly from the customer record, filterable, no logic applied on top. Handled internally (e.g. Tower-display customers getting first priority).</p>
+    <p><strong>Scheduled column</strong> &mdash; for each display still owed, shows an open Sales Order (SO# &amp; date) if one exists, or lets you click to note an expected date manually if no SO has been entered yet. Manual dates are shared &mdash; anyone opening this page sees the same notes, stored via the Worker. Click the pencil to edit a note or the &times; to remove it.</p>
+    <p>Click any row to expand the invoice and open-order line detail. Lines highlighted green count toward a required update; the rest are other samples/marketing collateral invoiced in the same window.</p>
+    <p>Business rules (which display replaces which, and which SKU counts toward which display) live in <code>asf-display-tracker-mapping.json</code> &mdash; edit that file to change the logic without touching this page.</p>
+  </footer>
+
+  </div>
+</div>
+  </div>
+
   <!-- ══════════════════════════════════════ TAB: LEAD INTELLIGENCE -->
   <div id="pane-leadintel" class="tab-pane">
     <div class="page">
@@ -1337,8 +1563,9 @@ let USER = {
   username:    null,   // from userinfo sub/preferred_username
   displayName: null,   // full name
   email:       null,
-  roles:       [],     // Acumatica roles
+  roles:       [],     // Acumatica roles (RoleName values from GC-CurrentUser)
   isManager:   false,  // Administrator or ASF Sales Manager
+  isOrderEntryOnly: false, // "ASF Order Entry" role present → restricted to Display Tracker tab only
   salespersonId: null, // e.g. '000-22'
   salespersonName: null, // display name matching SalesRep field
 };
@@ -1370,20 +1597,17 @@ async function handleCallback(code, state) {
     // 2. Resolve identity and load data in parallel
     // resolveUserIdentity must finish before rendering so rep filter is correct
     await resolveUserIdentity();
-    loadData();  // loadData calls clearLog() — resolveUserIdentity logs appear before it
+    if (USER.isOrderEntryOnly) {
+      enterOrderEntryMode(); // skip the full sales-data pull entirely — not just hide it
+    } else {
+      loadData();  // loadData calls clearLog() — resolveUserIdentity logs appear before it
+    }
   } catch(e) { showLoginErr(e.message); }
 }
 
-// ── Manager usernames — users who can see all reps ───────────────────────────
-// Add/remove Acumatica usernames here to control manager access
-// Manager access controlled by UserType (INTEGER) in GC-CurrentUser GI
-// null = manager/internal staff (full access)
-// 4 = outside sales rep (locked to own data)
-// Update user types directly in Acumatica — no code changes needed
-function isManagerUserType(v) {
-  // v comes back as integer from OData: null = manager, 4 = rep
-  return v === null || v === undefined || v === '' || Number(v) !== 4;
-}
+// ── Manager usernames — used only as a fallback if GC-CurrentUser is unavailable ──
+// Add/remove Acumatica usernames here to control manager access when role data can't be resolved.
+// Primary manager access is now role-based: "ASF Sales Manager" in GC-CurrentUser.RoleName.
 
 // ── Resolve who is logged in and what they can see ───────────────────────────
 async function resolveUserIdentity() {
@@ -1400,22 +1624,32 @@ async function resolveUserIdentity() {
     USER.email       = ui.email || '';
     addLog('Username: "' + USER.username + '"', 'ok');
 
-    // Step 2: Try GC-CurrentUser GI for UserType + rep name
+    // Step 2: Try GC-CurrentUser GI for rep name + role assignments
     let gcLoaded = false;
     try {
       const userRows = await odataGet('GC-CurrentUser', {
-        '$select': 'Login,FullName,Salesperson,Name,UserType',
+        '$select': 'Login,FullName,Salesperson,Name,UserType,RoleName',
       });
       addLog('GC-CurrentUser rows: ' + userRows.length, 'ok');
       if (userRows.length > 0) addLog('Sample: ' + JSON.stringify(userRows[0]), 'ok');
 
-      const myRow = userRows.find(r => (r.Login||'').toLowerCase().trim() === USER.username);
+      // A user can hold multiple Acumatica roles — GC-CurrentUser returns one row per
+      // role, so collect ALL of this user's rows, not just the first match.
+      const myRows = userRows.filter(r => (r.Login||'').toLowerCase().trim() === USER.username);
+      const myRow = myRows[0];
       if (myRow) {
-        USER.isManager = isManagerUserType(myRow.UserType);
         USER.salespersonName = (myRow.Name || myRow.FullName || '').trim() || USER.displayName;
         USER.salespersonCode = (myRow.Salesperson || '').trim(); // 2-letter code e.g. "AJ", "SM"
+        USER.roles = myRows.map(r => (r.RoleName||'').trim()).filter(Boolean);
+        // Role-based access — named Acumatica roles, not the old UserType-integer heuristic
+        // (which incorrectly treated anything other than exactly 4 as "manager").
+        USER.isManager = USER.roles.includes('ASF Sales Manager');
+        // ASF Order Entry role → restricted to the Display Tracker tab only, regardless
+        // of any other roles also held (see resolveUserIdentity gating in handleCallback).
+        USER.isOrderEntryOnly = USER.roles.includes('ASF Order Entry');
         addLog('Salesperson code: "' + USER.salespersonCode + '"', 'ok');
-        addLog('UserType: ' + (myRow.UserType === null ? 'null (manager)' : myRow.UserType) + ' isManager: ' + USER.isManager, USER.isManager ? 'ok' : 'warn');
+        addLog('Roles: [' + USER.roles.join(', ') + ']', 'ok');
+        addLog('isManager: ' + USER.isManager + '  isOrderEntryOnly: ' + USER.isOrderEntryOnly, 'ok');
         addLog('Rep: "' + USER.salespersonName + '"', 'ok');
         // Build name→code map from all rows for manager rep-filter support
         USER.repNameToCode = {};
@@ -1437,6 +1671,8 @@ async function resolveUserIdentity() {
       // Fallback manager list — update MANAGER_USERNAMES until GC-CurrentUser is working
       USER.isManager = MANAGER_USERNAMES.has(USER.username);
       USER.salespersonName = USER.displayName;
+      USER.roles = [];
+      USER.isOrderEntryOnly = false; // fail open — don't lock someone out of the full app on a data hiccup
       addLog('Fallback: isManager=' + USER.isManager + ' name="' + USER.salespersonName + '"', 'warn');
     }
 
@@ -1444,6 +1680,8 @@ async function resolveUserIdentity() {
     addLog('Identity error: ' + e.message + ' — LOCKED', 'error');
     USER.isManager       = false;
     USER.salespersonName = USER.displayName || USER.username || null;
+    USER.roles = [];
+    USER.isOrderEntryOnly = false;
   }
   updateUserBadge();
 }
@@ -1500,7 +1738,7 @@ function logout() {
   stopBackgroundSync();
   lastKVFingerprint = null;
   auth = { accessToken: null, refreshToken: null };
-  USER = { username:null, displayName:null, email:null, roles:[], isManager:false, salespersonId:null, salespersonName:null };
+  USER = { username:null, displayName:null, email:null, roles:[], isManager:false, isOrderEntryOnly:false, salespersonId:null, salespersonName:null };
   document.getElementById('rep-lock-banner').style.display='none';
   document.getElementById('rep-selector-wrap').style.display='none';
   document.getElementById('user-badge').style.display='none';
@@ -1535,8 +1773,17 @@ async function tryFetch(label, endpoint, params) {
   catch(e) { addLog(`✗ ${label}: ${e.message}`, 'error'); showErr(e.message); return []; }
 }
 
+// Same as tryFetch but for optional/non-critical lookups — logs failure quietly
+// instead of surfacing the red error banner. Used for the attribute-value lookup
+// GI, which may not exist yet in Acumatica or may be mid-setup.
+async function tryFetchSoft(label, endpoint, params) {
+  addLog(`Fetching ${label}…`);
+  try { const r = await odataGet(endpoint, params); addLog(`✓ ${label}: ${r.length} rows`, 'ok'); return r; }
+  catch(e) { addLog(`○ ${label} unavailable (${e.message}) — falling back to static labels`, 'error'); return []; }
+}
+
 // ─── DATA STORE ───────────────────────────────────────────────────────────────
-let D = { sales:[], ar:[], displays:[], opportunities:[], activities:[], tasks:[], newCustomers:[], empCodeToName:{}, trailing12:[], trailing12rows:[], salesByClass:[], priorSales:[] };
+let D = { sales:[], ar:[], displays:[], attributeValues:[], opportunities:[], activities:[], tasks:[], newCustomers:[], empCodeToName:{}, trailing12:[], trailing12rows:[], salesByClass:[], priorSales:[] };
 
 // ─── LOAD ALL ─────────────────────────────────────────────────────────────────
 async function loadData() {
@@ -1567,7 +1814,9 @@ async function loadData() {
     priorEndDate.setFullYear(priorEndDate.getFullYear() - 1);
     const priEnd = priorEndDate.toISOString().slice(0, 10);
 
-    const SALES_COLS = 'ReferenceNbr,CustomerName,InvoiceDate,PaymentDate,SalesRep,ExtAmount,ExtCost,ExtProfit,ItemClass,Quantity,FinancialPeriod,FiscalYear,DisplayingDealers';
+    // 'DisplaySystem' is a column on the InvoicedItems GI in Acumatica (mirrors
+    // 'DisplayingDealers'), sourced from the DISPLAYSYS attribute.
+    const SALES_COLS = 'ReferenceNbr,CustomerName,InvoiceDate,PaymentDate,SalesRep,ExtAmount,ExtCost,ExtProfit,ItemClass,Quantity,FinancialPeriod,FiscalYear,DisplayingDealers,DisplaySystem';
 
     addLog(`Fetching FY${curFyLabel}: ${curStart} → ${todayStr}`);
     addLog(`Fetching FY${priFyLabel} YTD: ${priStart} → ${priEnd}`);
@@ -1606,6 +1855,15 @@ async function loadData() {
     });
     step(`DISPLAYS — ${D.displays.length} rows`);
 
+    // 3b. Attribute value lookup (ValueID -> Description) for DISPLAY and DISPLAYSYS
+    // attributes, sourced from the GC-AttributeValues GI over CSAttributeDetail.
+    // GI columns: AttributeID, ValueID, ValueDescription (per-value description).
+    // Optional — if the GI doesn't exist yet in Acumatica, this quietly returns []
+    // and the code below falls back to the static DISPLAY_NORM map.
+    D.attributeValues = await tryFetchSoft('Attribute Values', 'GC-AttributeValues', {
+      '$select':'AttributeID,ValueID,ValueDescription',
+    });
+
     // 4. Opportunities — CR-Opportunities2018R1 has DisplayName (owner full name)
     //    which matches SalesRep names directly for rep filtering
     D.opportunities = await tryFetch('Opportunities', 'CR-Opportunities2018R1', {
@@ -1631,7 +1889,6 @@ async function loadData() {
       '$select':'ID,AccountName,Summary,Owner,OwnerName,StartDate,RelatedEntityType,Description',
       '$filter': `StartDate ge datetime'${actWinStart}T00:00:00' and StartDate le datetime'${actWinEnd}T23:59:59'`,
       '$orderby':'StartDate desc',
-      '$top':'500',
     });
 
     // 4c. Tasks (open, due within next 7 days + recently completed)
@@ -1861,43 +2118,6 @@ function renderOverview() {
   document.getElementById('gauge-bhag-actual').textContent   = 'Actual: '+fmtK(ytdActual);
   document.getElementById('gauge-bhag-target').textContent   = 'BHAG: '+fmtK(bhagYTD);
 
-  // ── MTD Sales vs Budget ──
-  // Determine current fiscal period number
-  const todayNow   = new Date();
-  const calMonth   = todayNow.getMonth(); // 0-indexed Jan=0
-  // Fiscal period PP: Nov=01, Dec=02, Jan=03, Feb=04... Oct=12
-  // PP = (calMonth + 2) % 12 + 1, but we need to handle the Nov/Dec rollover
-  // Simpler: (calMonth + 2) % 12 gives 0-based, +1 for 1-based
-  // Jan(0)→PP03, Feb(1)→PP04, ..., Oct(9)→PP12, Nov(10)→PP01, Dec(11)→PP02
-  const curFPNum   = ((calMonth + 2) % 12) + 1; // fiscal period 1-12
-  // Build the YYYYPP string for current period matching FinancialPeriod format
-  // The fiscal year label: PP01-02 belong to cal year for Nov/Dec (FY = cal year + 1)
-  const curFYforFP = curFPNum <= 2 ? CUR_YEAR : CUR_YEAR;  // FY2026 for all of FY2026
-  const curFPStr   = String(CUR_YEAR) + String(curFPNum).padStart(2,'0'); // e.g. "202607"
-  const mtdRows    = repSales.filter(r => {
-    const fp = (r.FinancialPeriod||'').trim();
-    return fp === curFPStr;
-  });
-  const mtdActual  = mtdRows.reduce((s,r) => s+(+r.ExtAmount||0), 0);
-
-  // MTD budget = monthly budget for the current fiscal period (index = curFPNum - 1)
-  // targets.budgetCum[i] = cumulative through PP(i+1); monthly = cum[i] - cum[i-1]
-  const fpIdx      = curFPNum - 1;  // 0-indexed
-  const budgetMonthly = targets.budgetCum[fpIdx] - (fpIdx > 0 ? targets.budgetCum[fpIdx-1] : 0);
-  const mtdVar     = mtdActual - budgetMonthly;
-  const mtdPctRaw  = budgetMonthly > 0 ? (mtdActual / budgetMonthly) * 100 : null;
-
-  // Label: current calendar month name
-  const mtdMonthName = MONTHS[calMonth];
-  document.getElementById('kpi-mtd-month-lbl').textContent = mtdMonthName;
-  document.getElementById('kpi-mtd-actual').textContent    = fmtKpi(mtdActual);
-  document.getElementById('kpi-mtd-sub').textContent = mtdVar >= 0
-    ? `${fmtK(mtdVar)} ahead of ${fmtK(budgetMonthly)} budget`
-    : `${fmtK(Math.abs(mtdVar))} behind ${fmtK(budgetMonthly)} budget`;
-  document.getElementById('kpi-mtd-pill').innerHTML = mtdPctRaw !== null
-    ? pill(mtdVar >= 0, mtdPctRaw.toFixed(1) + '% of monthly budget')
-    : '';
-
   // Cumulative YTD Line Chart — fiscal year order: Nov, Dec, Jan, Feb, ..., Oct
   // Fiscal period PP: 01=Nov, 02=Dec, 03=Jan, 04=Feb, ..., 12=Oct
   // x-axis labels in fiscal order (PP 01→12)
@@ -2053,58 +2273,50 @@ const SCOREBOARD_EXCLUDED = new Set([...EXCLUDED_REPS, 'Bob Brown']);
 // ROE data merged in by renderROEScoreboard, then both call renderCombinedTable
 let sbRepData = {}; // keyed by rep name
 
+// Gating: managers always see every rep, regardless of the global rep-filter
+// dropdown (the scoreboard's purpose is rep-to-rep comparison). Non-manager
+// (locked) reps see only their own row in the table body.
 function renderCombinedTable() {
   const activeRep = getActiveRepFilter();
-  const rows = Object.values(sbRepData)
+  const allRows = Object.values(sbRepData)
     .filter(r => !SCOREBOARD_EXCLUDED.has(r.name))
     .sort((a, b) => (b.roe||0) - (a.roe||0));
 
-  const totBudget = rows.reduce((s,r) => s+(r.budget||0), 0);
-  const totActual = rows.reduce((s,r) => s+(r.actual||0), 0);
-  const totPct    = totBudget > 0 ? (totActual/totBudget)*100 : null;
-  const totExp    = rows.reduce((s,r) => s+(r.exp||0), 0);
-  const totGP     = rows.reduce((s,r) => s+(r.gp||0), 0);
-  const totROE    = totExp > 0 ? totGP/totExp : null;
+  const rows = USER.isManager
+    ? allRows
+    : allRows.filter(r => r.name === USER.salespersonName);
 
-  document.getElementById('combined-sb-tbody').innerHTML = rows.map(r => {
-    const isMe     = activeRep && r.name === activeRep;
-    const rowBg    = isMe ? 'background:rgba(91,143,204,0.07);font-weight:600' : '';
-    const ahead    = (r.pct||0) >= 100;
-    const pctDisp  = r.pct != null ? r.pct.toFixed(1)+'%' : '—';
-    const pctColor = ahead ? 'color:var(--asf-green)' : 'color:var(--red)';
-    const barPct   = r.pct != null ? Math.min(r.pct, 120) : 0;
-    const barColor = ahead ? '#5a9e45' : '#b83228';
-    const roeStr   = r.roe != null ? r.roe.toFixed(2)+'x' : '—';
-    const [rating, ratingColor] = roeRating(r.roe);
-    const roeColor = r.roe != null ? (r.roe>=1.5?'var(--asf-green)':r.roe>=1.0?'var(--yellow)':'var(--red)') : 'var(--muted)';
-    const yoyDisp  = r.yoy != null ? (r.yoy >= 0 ? '+' : '') + r.yoy.toFixed(1) + '%' : '—';
-    const yoyColor = r.yoy != null ? (r.yoy >= 0 ? 'color:var(--asf-green)' : 'color:var(--red)') : 'color:var(--muted)';
-    return `<tr style="${rowBg}">
-      <td>${r.name}${isMe?' <span style="font-size:9px;color:var(--asf-blue)">(you)</span>':''}</td>
-      <td style="text-align:right;font-weight:700;${yoyColor}">${yoyDisp}</td>
-      <td style="text-align:right;font-weight:700;${pctColor}">${pctDisp}</td>
-      <td style="width:100px;padding-right:12px">
-        <div style="height:8px;background:#e4ecf5;border-radius:4px;overflow:hidden;position:relative">
-          <div style="height:100%;width:${barPct}%;background:${barColor};border-radius:4px;transition:width 0.8s ease"></div>
-        </div>
-      </td>
-      <td style="text-align:right;font-weight:700;color:${roeColor}">${roeStr}</td>
-      <td><span style="font-size:10px;font-weight:700;color:${ratingColor}">${rating}</span></td>
-    </tr>`;
-  }).join('');
-
-  // Footer totals
-  const totPrior  = rows.reduce((s,r) => s+(r.prior||0), 0);
-  const totYoY    = totPrior > 0 ? ((totActual - totPrior) / totPrior) * 100 : null;
-  const totPctColor = totPct!=null ? (totPct>=100?'color:var(--asf-green)':'color:var(--red)') : '';
-  const totYoYColor = totYoY!=null ? (totYoY>=0?'var(--asf-green)':'var(--red)') : 'var(--muted)';
-  const totRoeColor = totROE!=null ? (totROE>=1.5?'var(--asf-green)':totROE>=1.0?'var(--yellow)':'var(--red)') : 'var(--muted)';
-  document.getElementById('ytd-sb-tot-pct').innerHTML = totPct!=null
-    ? `<span style="${totPctColor};font-weight:700">${totPct.toFixed(1)}%</span>` : '—';
-  document.getElementById('ytd-sb-tot-yoy').innerHTML = totYoY!=null
-    ? `<span style="font-weight:700;color:${totYoYColor}">${totYoY>=0?'+':''}${totYoY.toFixed(1)}%</span>` : '—';
-  document.getElementById('roe-tot-ratio').innerHTML = totROE!=null
-    ? `<span style="font-weight:700;color:${totRoeColor}">${totROE.toFixed(2)}x</span>` : '—';
+  if (!rows.length) {
+    document.getElementById('combined-sb-tbody').innerHTML =
+      `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">No scoreboard data for your account yet.</td></tr>`;
+  } else {
+    document.getElementById('combined-sb-tbody').innerHTML = rows.map(r => {
+      const isMe     = activeRep && r.name === activeRep;
+      const rowBg    = isMe ? 'background:rgba(91,143,204,0.07);font-weight:600' : '';
+      const ahead    = (r.pct||0) >= 100;
+      const pctDisp  = r.pct != null ? r.pct.toFixed(1)+'%' : '—';
+      const pctColor = ahead ? 'color:var(--asf-green)' : 'color:var(--red)';
+      const barPct   = r.pct != null ? Math.min(r.pct, 120) : 0;
+      const barColor = ahead ? '#5a9e45' : '#b83228';
+      const roeStr   = r.roe != null ? r.roe.toFixed(2)+'x' : '—';
+      const [rating, ratingColor] = roeRating(r.roe);
+      const roeColor = r.roe != null ? (r.roe>=1.5?'var(--asf-green)':r.roe>=1.0?'var(--yellow)':'var(--red)') : 'var(--muted)';
+      const yoyDisp  = r.yoy != null ? (r.yoy >= 0 ? '+' : '') + r.yoy.toFixed(1) + '%' : '—';
+      const yoyColor = r.yoy != null ? (r.yoy >= 0 ? 'color:var(--asf-green)' : 'color:var(--red)') : 'color:var(--muted)';
+      return `<tr style="${rowBg}">
+        <td>${r.name}${isMe?' <span style="font-size:9px;color:var(--asf-blue)">(you)</span>':''}</td>
+        <td style="text-align:right;font-weight:700;${yoyColor}">${yoyDisp}</td>
+        <td style="text-align:right;font-weight:700;${pctColor}">${pctDisp}</td>
+        <td style="width:100px;padding-right:12px">
+          <div style="height:8px;background:#e4ecf5;border-radius:4px;overflow:hidden;position:relative">
+            <div style="height:100%;width:${barPct}%;background:${barColor};border-radius:4px;transition:width 0.8s ease"></div>
+          </div>
+        </td>
+        <td style="text-align:right;font-weight:700;color:${roeColor}">${roeStr}</td>
+        <td><span style="font-size:10px;font-weight:700;color:${ratingColor}">${rating}</span></td>
+      </tr>`;
+    }).join('');
+  }
 }
 
 function roeRating(roe) {
@@ -2270,6 +2482,7 @@ function mergeROEData(glRows) {
   renderCombinedTable();
 }
 
+// ─── CUSTOMER SUMMARY ─────────────────────────────────────────────────────────
 let custData = []; // merged per-customer
 
 function renderCustomerData() {
@@ -2381,9 +2594,36 @@ function renderCustomerData() {
     'LG Display':   'LG Display',
   };
 
-  function normalizeDisplay(raw) {
+  // Dynamic ValueID -> Description lookup, keyed by AttributeID, sourced from the
+  // GC-AttributeValues GI (mirrors Acumatica's Attributes screen directly, so it
+  // never drifts out of sync the way a hand-maintained map can).
+  const ATTR_LOOKUP = {}; // { DISPLAY: { 'ART Displa': 'Artisan Edge', ... }, DISPLAYSYS: {...} }
+  (D.attributeValues||[]).forEach(a => {
+    const attrId = (a.AttributeID||'').trim();
+    const valId  = (a.ValueID||'').trim();
+    if (!attrId || !valId) return;
+    if (!ATTR_LOOKUP[attrId]) ATTR_LOOKUP[attrId] = {};
+    ATTR_LOOKUP[attrId][valId] = (a.ValueDescription||'').trim() || valId;
+  });
+
+  // Resolve a raw attribute code to its Description. Tries the live Acumatica
+  // lookup first; for the DISPLAY attribute specifically, falls back to the
+  // static DISPLAY_NORM map (kept as a safety net for stale/pre-GI data);
+  // otherwise falls back to the raw code so nothing silently disappears.
+  function resolveAttrValue(attrId, raw) {
     const trimmed = raw.trim();
-    return DISPLAY_NORM[trimmed] || trimmed;
+    const dynamic = ATTR_LOOKUP[attrId] && ATTR_LOOKUP[attrId][trimmed];
+    if (dynamic) return dynamic;
+    if (attrId === 'DISPLAY') return DISPLAY_NORM[trimmed] || trimmed;
+    return trimmed;
+  }
+
+  function normalizeDisplay(raw) {
+    return resolveAttrValue('DISPLAY', raw);
+  }
+
+  function normalizeDisplaySystem(raw) {
+    return resolveAttrValue('DISPLAYSYS', raw);
   }
 
   // Build displays from DisplayingDealers field on InvoicedItems
@@ -2394,6 +2634,16 @@ function renderCustomerData() {
     if (!name || !raw) return;
     if (!dispMap[name]) dispMap[name] = { displays: new Set() };
     raw.split(',').map(d => normalizeDisplay(d)).filter(Boolean).forEach(d => dispMap[name].displays.add(d));
+  });
+
+  // Build display systems (towers/stackers) from the new DisplaySystem field on InvoicedItems
+  const dispSysMap = {};
+  repSales.forEach(r => {
+    const name = (r.CustomerName||'').trim();
+    const raw  = (r.DisplaySystem||'').trim();
+    if (!name || !raw) return;
+    if (!dispSysMap[name]) dispSysMap[name] = { displays: new Set() };
+    raw.split(',').map(d => normalizeDisplaySystem(d)).filter(Boolean).forEach(d => dispSysMap[name].displays.add(d));
   });
 
   // Build merged list
@@ -2411,10 +2661,12 @@ function renderCustomerData() {
   custData = Object.values(salesMap).map(s => {
     const ar   = arMap[s.name] || {};
     const dp   = dispMap[s.name] || { displays: new Set() };
+    const dps  = dispSysMap[s.name] || { displays: new Set() };
     const dtp  = daysToPayMap[s.name];
     const prior = priorMap[s.name] || { ytd: 0 };
     const avgDaysToPay = dtp && dtp.count > 0 ? Math.round(dtp.total / dtp.count) : null;
     const displayList  = [...dp.displays].sort();
+    const displaySystemList = [...dps.displays].sort();
     const yoyVar = prior.ytd > 0 ? s.ytd - prior.ytd : null;
     const yoyPct = prior.ytd > 0 ? ((s.ytd - prior.ytd) / prior.ytd) * 100 : null;
     const t12sales = t12CustMap[s.name] || 0;
@@ -2429,6 +2681,8 @@ function renderCustomerData() {
       terms: ar.Terms||'—',
       displayCount: displayList.length,
       displayList,
+      displaySystemCount: displaySystemList.length,
+      displaySystemList,
     };
   });
 
@@ -2699,16 +2953,26 @@ function renderCustomerTable() {
     const yoyCol = r.yoyVar === null ? 'var(--muted)' : r.yoyVar >= 0 ? 'var(--asf-green)' : 'var(--red)';
     const yoyTxt = r.yoyVar === null ? '—'
       : `${r.yoyVar >= 0 ? '▲' : '▼'} ${fmt$(Math.abs(r.yoyVar))} (${Math.abs(r.yoyPct).toFixed(1)}%)`;
-    const hasDisp = r.displayCount > 0;
+    const hasDisp = r.displayCount > 0 || r.displaySystemCount > 0;
     const rowId   = 'cust-row-' + i;
     const expandRow = hasDisp ? `
       <tr id="${rowId}-expand" style="display:none;background:#f0f5fb">
         <td></td>
-        <td colspan="9" style="padding:10px 16px">
-          <div style="font-size:10px;font-weight:700;color:var(--asf-navy);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Displays Placed (${r.displayCount})</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px">
-            ${r.displayList.map(d => `<span class="badge b-blue">${d}</span>`).join('')}
-          </div>
+        <td colspan="9" style="padding:10px 16px;display:flex;flex-direction:column;gap:12px">
+          ${r.displayCount > 0 ? `
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--asf-navy);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Displaying Dealers (${r.displayCount})</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${r.displayList.map(d => `<span class="badge b-blue">${d}</span>`).join('')}
+            </div>
+          </div>` : ''}
+          ${r.displaySystemCount > 0 ? `
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--asf-navy);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Display System (${r.displaySystemCount})</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${r.displaySystemList.map(d => `<span class="badge b-dim">${d}</span>`).join('')}
+            </div>
+          </div>` : ''}
         </td>
       </tr>` : '';
     return `<tr style="cursor:${hasDisp?'pointer':'default'}" onclick="${hasDisp?`toggleCustExpand('${rowId}')`:''}" title="${hasDisp?'Click to see displays':''}">
@@ -2852,10 +3116,14 @@ function renderAct120Table() {
   const ago120     = new Date(today); ago120.setDate(today.getDate() - 120);
 
   // Build set of customers who HAVE had activity logged (past 120 days OR any future)
-  // Both past and scheduled future activities count as "active"
+  // IMPORTANT: filter by rep so only activities from the selected rep count
+  // Otherwise a colleague's activity against the same customer would incorrectly
+  // mark it as "active" for the wrong rep (e.g. someone else logging against Hall's Flooring)
   const activeSet = new Set();
   D.activities.forEach(r => {
     if (!r.StartDate) return;
+    // Apply rep filter — only count activity if it belongs to the active rep
+    if (activeRep && !ownerMatchesRep((r.OwnerName||'').trim(), activeRep)) return;
     const actDate = new Date(r.StartDate);
     // Include if within last 120 days OR scheduled for the future
     if (actDate < ago120 && actDate < today) return;
@@ -2956,8 +3224,7 @@ function showTab(btn) {
 }
 
 // ─── LEAD INTELLIGENCE TAB ──────────────────────────────────────────────────────
-// NOTE: runLeadSearch() below calls {workerUrl}/leadintel/search, which is a NEW
-// Worker route that does not exist yet and needs to be built server-side. Contract:
+// runLeadSearch() below calls {workerUrl}/leadintel/search. Contract:
 //
 //   POST {workerUrl}/leadintel/search
 //   Body: { customerName: string, mode: "company" | "territory", radiusMiles: number }
@@ -3389,6 +3656,37 @@ function showDashboard() {
   document.getElementById('nav-tabs').style.display='flex';
   // rep-selector-wrap and badge are shown by updateUserBadge() called from resolveUserIdentity
 }
+
+// Order Entry role (e.g. marketing) → restrict to the Display Tracker tab only.
+// This is a real access boundary, not a cosmetic one: loadData() is never called for
+// these users, so no company-wide sales history is ever fetched into their browser.
+function enterOrderEntryMode() {
+  hideOverlay();
+  addLog('Order Entry role detected — restricting to Display Tracker tab only', 'warn');
+
+  const hdrSub = document.getElementById('hdr-sub');
+  if (hdrSub) hdrSub.textContent = 'DISPLAY TRACKER';
+
+  // These only make sense once sales data has loaded — hide them rather than let them
+  // sit there implying data that was never fetched.
+  ['rep-selector-wrap','rep-lock-banner','prog-wrap','refresh-btn','sync-indicator'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+
+  // Hide every tab except Display Tracker, and land on it directly.
+  document.querySelectorAll('#nav-tabs .tab').forEach(btn=>{
+    btn.classList.remove('active');
+    if (btn.dataset.tab !== 'display-tracker') btn.style.display = 'none';
+    else btn.classList.add('active');
+  });
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  const pane = document.getElementById('pane-display-tracker');
+  if (pane) pane.classList.add('active');
+
+  initDisplayTracker(); // this is the only tab an Order Entry user will ever see — load it immediately
+}
+
 function setLoadTxt(t) { document.getElementById('load-txt').textContent=t; }
 function hideOverlay() { document.getElementById('loading-overlay').style.display='none'; }
 
@@ -4095,6 +4393,952 @@ function eaterRenderAll() {
   if(code && state) { await handleCallback(code,state); return; }
   hideOverlay(); document.getElementById('login-screen').style.display='flex';
 })();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DISPLAY TRACKER TAB — merged from asf-display-tracker.html (was an iframe).
+// Uses the shared `auth.accessToken` from the login flow above — no separate sign-in.
+// ═══════════════════════════════════════════════════════════════════════════
+const STATUS_META = {
+  updated:      { label: "Updated",      order: 2 },
+  partial:      { label: "Partial",      order: 1 },
+  needs_update: { label: "Needs Update", order: 0 },
+  up_to_date:   { label: "Up to Date",   order: 3 },
+  unlisted:     { label: "Unlisted",     order: 4 },
+  do_not_update:{ label: "Do Not Update",order: 5 }
+};
+const OVERRIDABLE_STATUSES = ['needs_update','partial','updated','up_to_date','do_not_update'];
+
+let RECORDS = [];
+let RULES = { attributes:{}, updateMap:{}, skuMap:{} };
+let state = {
+  search:"",
+  statusSet:new Set(), repSet:new Set(), neededSet:new Set(), scheduleSet:new Set(), prioritySet:new Set(), displaySystemSet:new Set(),
+  sortKey:"status", sortDir:"asc", expanded:new Set()
+};
+
+// ── Live-mode config ─────────────────────────────────────────────────────
+// Fill in WORKER_URL after `wrangler deploy` (see the Worker's deploy output).
+// Everything here is a public client id / URL — no secrets belong on this page.
+const LIVE = {
+  workerUrl: "https://asf-display-tracker.greg-capell.workers.dev",
+  acumaticaBase: "https://allsouthflooring.acumatica.com",
+  clientId: "6337533B-4E40-14F2-F483-DD653A38138B@ASF",
+  scopes: "api offline_access openid profile email",
+};
+
+// ── Live OData fetch + client-side computation ──────────────────────────
+// The Worker is a dumb proxy (same as the inventory/sales dashboards) — all
+// business logic runs here, against asf-display-tracker-mapping.json, which is the single
+// source of truth shared by anyone reading this repo.
+const DEFAULT_SINCE = "2026-05-01T00:00:00";
+const ITEM_CLASSES = [
+  "NOBLEWOOD       SAMPLES&ADVERT",
+  "BARLINEK        SAMPLES/ADVERT",
+  "USMILLS         SAMPLES/ADVERT",
+  "BENCHWICK       SAMPLES       ",
+  "RESPONSIVE      SAMPLES/ADVERT",
+  "MARKETING                     ",
+  "ECHELONFLOORS   SAMPLES/ADVERT",
+  "ALLCOVERINGS    SAMPLES/ADVERT",
+];
+
+function buildItemClassFilter(since){
+  const classFilter = ITEM_CLASSES.map(ic => `ItemClass eq '${ic.replace(/'/g,"''")}'`).join(' or ');
+  return `(${classFilter}) and InvoiceDate ge datetime'${since}'`;
+}
+
+// ── Open Sales Order lines (from the "GC-SOOpenLineDetail" Generic Inquiry) ──
+// Confirmed via CData against the live schema on 8/20/2026 — resource name and
+// field names below are verified, not guesses (unlike the first draft of this).
+const OPEN_SO_RESOURCE = "GC-SOOpenLineDetail";
+const OPEN_SO_FIELDS = {
+  customerId: "CustomerID",
+  orderNbr: "OrderNbr",
+  orderDate: "Date",
+  schedShipment: "SchedShipment", // added 8/20/2026 — verified via CData against live data
+  itemClass: "ClassID",
+  inventoryId: "InventoryID",
+  description: "Description",
+  openQty: "OpenQty",
+};
+const OPEN_SO_SELECT = Object.values(OPEN_SO_FIELDS).join(',');
+
+// ── Trailing-12-month sales by collection (from "GC-SalesByCollectionTrailing12") ──
+// Confirmed via CData against live data on 8/21/2026: 1,294 rows, 645 customers, rolling
+// 365-day window already baked into the GI's own date condition — no filter needed here.
+const SALES_BY_COLLECTION_RESOURCE = "GC-SalesByCollectionTrailing12";
+const SALES_FIELDS = { customerId: "CustomerID", collection: "Collection", amount: "ExtAmount" };
+const SALES_SELECT = Object.values(SALES_FIELDS).join(',');
+const SALES_GREEN_THRESHOLD = 5000;
+
+function buildOpenSoItemClassFilter(){
+  // Same fixed-width ClassID strings as ItemClass on InvoicedItems — confirmed identical format.
+  return ITEM_CLASSES.map(ic => `${OPEN_SO_FIELDS.itemClass} eq '${ic.replace(/'/g,"''")}'`).join(' or ');
+}
+
+async function odataFetchAll(resource, filter, select, token){
+  const pageSize = 1000;
+  let skip = 0;
+  const rows = [];
+  while (true){
+    const params = new URLSearchParams();
+    if (filter) params.set('$filter', filter);
+    if (select) params.set('$select', select);
+    params.set('$top', String(pageSize));
+    params.set('$skip', String(skip));
+    params.set('$format', 'json');
+    const res = await fetch(`${LIVE.workerUrl}/odata/${resource}?${params}`, {
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+    });
+    if (!res.ok) throw new Error(`OData ${resource} failed (${res.status}): ${(await res.text()).slice(0,300)}`);
+    const data = await res.json();
+    const page = data.value || (data.d && data.d.results) || [];
+    rows.push(...page);
+    if (page.length < pageSize) break;
+    skip += pageSize;
+    if (skip > 200000) break;
+  }
+  return rows;
+}
+
+function computeRecordsClient(customers, invoiceLines, openSoLines, manualSchedule, statusOverrides, collectionSalesLines){
+  const { attributes, updateMap, skuMap, requiredSkus, collectionAliases, displaySystemLabels } = RULES;
+
+  function normalizeDisplaySystems(raw){
+    const tokens = (raw || '').split(',').map(s=>s.trim()).filter(Boolean);
+    const normalized = tokens.map(t => (displaySystemLabels && displaySystemLabels[t]) || t);
+    return [...new Set(normalized)]; // dedupe in case a customer somehow has both forms of the same one
+  }
+  openSoLines = openSoLines || [];
+  manualSchedule = manualSchedule || {};
+  statusOverrides = statusOverrides || {};
+  collectionSalesLines = collectionSalesLines || [];
+
+  // Trailing-12-month sales, summed per customer + collection (rolling window already baked
+  // into the GI itself). Used to color-code each "Current Display" chip: is this customer
+  // actually buying the collection they're currently displaying?
+  const salesByCustomer = new Map(); // customerId -> Map<collectionName, totalAmount>
+  for (const line of collectionSalesLines){
+    const cid = (line[SALES_FIELDS.customerId] || '').trim();
+    const collection = (line[SALES_FIELDS.collection] || '').trim();
+    if (!cid || !collection) continue;
+    if (!salesByCustomer.has(cid)) salesByCustomer.set(cid, new Map());
+    const m = salesByCustomer.get(cid);
+    m.set(collection, (m.get(collection) || 0) + (line[SALES_FIELDS.amount] || 0));
+  }
+  function salesForDisplay(cid, displayName){
+    const keys = (collectionAliases && collectionAliases[displayName]) || [displayName];
+    const m = salesByCustomer.get(cid);
+    if (!m) return 0;
+    return keys.reduce((sum, k) => sum + (m.get(k) || 0), 0);
+  }
+  function salesColor(amount){
+    if (amount > SALES_GREEN_THRESHOLD) return 'green';
+    if (amount > 0) return 'yellow';
+    return 'red';
+  }
+  function priorityFromAmount(amount){
+    if (amount > SALES_GREEN_THRESHOLD) return 'high';
+    if (amount > 0) return 'medium';
+    return 'low';
+  }
+  const PRIORITY_RANK = { high: 2, medium: 1, low: 0 };
+
+  // For most displays, ANY SKU mapped to that display (via skuMap) counts toward fulfilling it.
+  // requiredSkus lets specific displays override that — only the listed SKU(s) count, even though
+  // other SKUs are still mapped to the same display name for informational/detail purposes.
+  function countsTowardDisplay(display, invId){
+    if (!display) return false;
+    const whitelist = requiredSkus && requiredSkus[display];
+    return whitelist ? whitelist.includes(invId) : true;
+  }
+
+  // Applies a manual override on top of the computed status/tracking fields for one record, in place.
+  // "Do Not Update" fully opts the customer out of tracking (empty needed/fulfilled/scheduled, so the
+  // progress bars ignore them entirely). Overriding to any other status just corrects the badge shown —
+  // it does not fabricate per-display shipment data that didn't actually happen.
+  function applyOverride(record){
+    const autoStatus = record.status; // naturally-computed baseline, before any flag or override
+    record.autoStatus = autoStatus;
+
+    const isCollFlagged = /-COLL\s*$/i.test((record.name || '').trim());
+    record.collFlagged = isCollFlagged;
+
+    const override = statusOverrides[record.id];
+    if (override && override.status){
+      // A person's explicit decision always wins — including reversing an auto "-COLL" flag.
+      record.status = override.status;
+      record.overrideNote = override.note || '';
+      record.isOverridden = true;
+      if (override.status === 'do_not_update'){
+        record.neededDisplays = [];
+        record.fulfilledDisplays = [];
+        record.scheduled = {};
+        record.scheduleStatus = 'na';
+        record.openPriorityMax = null;
+        record.openPriorityCounts = { high:0, medium:0, low:0 };
+      }
+      return record;
+    }
+
+    if (isCollFlagged){
+      // "-COLL" suffix = credit risk / collections account. Auto-flagged, not a person's decision —
+      // shown with a different marker than a manual override, and still reversible via the same control.
+      record.status = 'do_not_update';
+      record.neededDisplays = [];
+      record.fulfilledDisplays = [];
+      record.scheduled = {};
+      record.scheduleStatus = 'na';
+      record.openPriorityMax = null;
+      record.openPriorityCounts = { high:0, medium:0, low:0 };
+      record.isAutoFlagged = true;
+      return record;
+    }
+
+    return record; // status stays as naturally computed
+  }
+
+  const linesByCustomer = new Map();
+  for (const line of invoiceLines){
+    const cid = (line.CustomerID || '').trim();
+    if (!linesByCustomer.has(cid)) linesByCustomer.set(cid, []);
+    linesByCustomer.get(cid).push(line);
+  }
+
+  const soByCustomer = new Map();
+  for (const line of openSoLines){
+    const cid = (line[OPEN_SO_FIELDS.customerId] || '').trim();
+    if (!soByCustomer.has(cid)) soByCustomer.set(cid, []);
+    soByCustomer.get(cid).push(line);
+  }
+
+  const enrolledIds = new Set();
+  const records = [];
+  const staleManualKeys = []; // manual notes superseded by a real SO or by shipping — safe to delete from KV
+
+  function buildScheduled(cid, neededDisplays, fulfilled){
+    // scheduled[displayName] = { source:'so', soNbr, shipDate } | { source:'manual', date, note }
+    // Only meaningful for displays that are needed but not yet fulfilled.
+    const scheduled = {};
+    for (const soLine of (soByCustomer.get(cid) || [])){
+      const invId = (soLine[OPEN_SO_FIELDS.inventoryId] || '').trim();
+      const skuEntry = skuMap[invId];
+      const display = skuEntry ? skuEntry.display : null;
+      if (!display || !neededDisplays.has(display) || fulfilled.has(display) || !countsTowardDisplay(display, invId)) continue;
+      const shipDate = (soLine[OPEN_SO_FIELDS.schedShipment] || '').slice(0,10);
+      const soNbr = soLine[OPEN_SO_FIELDS.orderNbr];
+      // Keep the earliest scheduled shipment if a display shows up on more than one open SO
+      if (!scheduled[display] || shipDate < scheduled[display].shipDate){
+        scheduled[display] = { source: 'so', soNbr, shipDate };
+      }
+    }
+    // Any manual note for a display that's now fulfilled or SO-scheduled is superseded — flag for cleanup
+    for (const d of neededDisplays){
+      const key = `${cid}::${d}`;
+      if (!manualSchedule[key]) continue;
+      if (fulfilled.has(d) || (scheduled[d] && scheduled[d].source === 'so')) staleManualKeys.push({ customerId: cid, display: d });
+    }
+    for (const d of neededDisplays){
+      if (fulfilled.has(d) || scheduled[d]) continue; // SO takes priority over a manual note
+      const key = `${cid}::${d}`;
+      const manual = manualSchedule[key];
+      if (manual) scheduled[d] = { source: 'manual', date: manual.date, note: manual.note || '' };
+    }
+    return scheduled;
+  }
+
+  for (const cust of customers){
+    const cid = (cust.CustomerID || '').trim();
+    const displayingDealers = (cust.DisplayingDealers || '').trim();
+    if (!displayingDealers) continue;
+    enrolledIds.add(cid);
+
+    const codes = displayingDealers.split(',').map(s=>s.trim()).filter(Boolean);
+    const currentDisplays = [];
+    const neededDisplays = new Set();
+    const neededSourceCodes = new Map(); // target display -> Set of codes that generated the requirement (for Priority attribution)
+    for (const code of codes){
+      const friendly = attributes[code] || code;
+      const salesAmount = salesForDisplay(cid, friendly);
+      currentDisplays.push({ code, name: friendly, salesAmount, salesColor: salesColor(salesAmount) });
+      for (const nd of (updateMap[code] || [])){
+        neededDisplays.add(nd);
+        if (!neededSourceCodes.has(nd)) neededSourceCodes.set(nd, new Set());
+        neededSourceCodes.get(nd).add(code);
+      }
+    }
+
+    // Priority per needed display: sum trailing-12mo sales across every current display that
+    // generated this requirement (usually one, occasionally two — e.g. Echelon Wood Keystone can
+    // come from either Cafe or Coffee House). High/Medium/Low uses the same $5,000 threshold as
+    // the Current Display sales dots — a customer not buying the old line is low priority to update.
+    const displayPriority = {};
+    for (const target of neededDisplays){
+      const sourceCodes = neededSourceCodes.get(target) || new Set();
+      let amount = 0;
+      for (const code of sourceCodes) amount += salesForDisplay(cid, attributes[code] || code);
+      displayPriority[target] = { level: priorityFromAmount(amount), amount };
+    }
+
+    const rawLines = (linesByCustomer.get(cid) || []).slice().sort((a,b)=> a.InvoiceDate < b.InvoiceDate ? 1 : -1);
+    const fulfilled = new Set();
+    const lines = rawLines.map(l=>{
+      const invId = (l.InventoryID || '').trim();
+      const skuEntry = skuMap[invId];
+      const display = skuEntry ? skuEntry.display : null;
+      const counts = !!display && neededDisplays.has(display) && countsTowardDisplay(display, invId);
+      if (counts) fulfilled.add(display);
+      return {
+        date: (l.InvoiceDate || '').slice(0,10),
+        itemClass: (l.ItemClass || '').trim(),
+        inventoryId: invId,
+        description: l.Description,
+        qty: l.Quantity,
+        display: display || null,
+        counts
+      };
+    });
+
+    const scheduled = buildScheduled(cid, neededDisplays, fulfilled);
+
+    const rawSoLines = (soByCustomer.get(cid) || []).slice().sort((a,b)=> (a[OPEN_SO_FIELDS.schedShipment]||'') < (b[OPEN_SO_FIELDS.schedShipment]||'') ? -1 : 1);
+    const openOrders = rawSoLines.map(l=>{
+      const invId = (l[OPEN_SO_FIELDS.inventoryId] || '').trim();
+      const skuEntry = skuMap[invId];
+      const display = skuEntry ? skuEntry.display : null;
+      return {
+        soNbr: l[OPEN_SO_FIELDS.orderNbr],
+        shipDate: (l[OPEN_SO_FIELDS.schedShipment] || '').slice(0,10),
+        itemClass: (l[OPEN_SO_FIELDS.itemClass] || '').trim(),
+        inventoryId: invId,
+        description: l[OPEN_SO_FIELDS.description],
+        openQty: l[OPEN_SO_FIELDS.openQty],
+        display,
+        counts: !!display && neededDisplays.has(display) && countsTowardDisplay(display, invId),
+      };
+    });
+
+    let status;
+    if (neededDisplays.size === 0) status = 'up_to_date';
+    else if (fulfilled.size === neededDisplays.size) status = 'updated';
+    else if (fulfilled.size > 0) status = 'partial';
+    else status = 'needs_update';
+
+    const hasSchedule = [...neededDisplays].some(d => !fulfilled.has(d) && scheduled[d]);
+    const scheduleStatus = neededDisplays.size === 0 ? 'na' : (hasSchedule ? 'scheduled' : 'not_scheduled');
+
+    // Customer-level Priority rollup: the highest priority among still-open (unfulfilled) needed
+    // displays. Once a display ships, its priority no longer matters for deciding what to do next.
+    const openTargets = [...neededDisplays].filter(d => !fulfilled.has(d));
+    const openPriorityCounts = { high: 0, medium: 0, low: 0 };
+    let openPriorityMax = null;
+    for (const d of openTargets){
+      const lvl = displayPriority[d].level;
+      openPriorityCounts[lvl]++;
+      if (openPriorityMax === null || PRIORITY_RANK[lvl] > PRIORITY_RANK[openPriorityMax]) openPriorityMax = lvl;
+    }
+
+    const qualifyingDates = lines.filter(l=>l.counts).map(l=>l.date);
+    const lastUpdate = qualifyingDates.length ? qualifyingDates.sort().reverse()[0] : null;
+    const daysSince = lastUpdate ? Math.round((Date.now() - new Date(lastUpdate+'T00:00:00Z').getTime())/86400000) : null;
+
+    records.push(applyOverride({
+      id: cid, name: cust.CustomerName,
+      rep: (cust.SalespersonID||'').trim() || (cust.SalesAgentID||'').trim(),
+      city: cust.City || '', state: cust.State || '',
+      currentDisplays, neededDisplays: [...neededDisplays].sort(), fulfilledDisplays: [...fulfilled].sort(),
+      displayPriority, openPriorityMax, openPriorityCounts,
+      displaySystems: normalizeDisplaySystems(cust.DisplaySystem),
+      scheduled, scheduleStatus,
+      status, lastUpdate, daysSince,
+      lineCount: lines.length, totalQty: lines.reduce((s,l)=>s+(l.qty||0),0),
+      lines, openOrders
+    }));
+  }
+
+  const custById = new Map(customers.map(c=>[(c.CustomerID||'').trim(), c]));
+  for (const [cid, custLines] of linesByCustomer.entries()){
+    if (enrolledIds.has(cid)) continue;
+    const cust = custById.get(cid);
+    if (!cust) continue;
+    const lines = custLines.slice().sort((a,b)=> a.InvoiceDate < b.InvoiceDate ? 1 : -1).map(l=>{
+      const invId = (l.InventoryID || '').trim();
+      const skuEntry = skuMap[invId];
+      return {
+        date: (l.InvoiceDate || '').slice(0,10), itemClass: (l.ItemClass||'').trim(),
+        inventoryId: invId, description: l.Description, qty: l.Quantity,
+        display: skuEntry ? skuEntry.display : null, counts: false
+      };
+    });
+    records.push(applyOverride({
+      id: cid, name: cust.CustomerName,
+      rep: (cust.SalespersonID||'').trim() || (cust.SalesAgentID||'').trim(),
+      city: cust.City || '', state: cust.State || '',
+      currentDisplays: [], neededDisplays: [], fulfilledDisplays: [],
+      displayPriority: {}, openPriorityMax: null, openPriorityCounts: { high:0, medium:0, low:0 },
+      displaySystems: normalizeDisplaySystems(cust.DisplaySystem),
+      scheduled: {}, scheduleStatus: 'na',
+      status: 'unlisted', lastUpdate: lines.length ? lines[0].date : null, daysSince: null,
+      lineCount: lines.length, totalQty: lines.reduce((s,l)=>s+(l.qty||0),0),
+      lines, openOrders: []
+    }));
+  }
+
+  return { records, staleManualKeys };
+}
+
+async function fetchManualSchedule(token){
+  try {
+    const res = await fetch(`${LIVE.workerUrl}/schedule`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return {};
+    return await res.json();
+  } catch (e) {
+    console.warn('Could not load manual schedule entries:', e);
+    return {};
+  }
+}
+
+async function saveScheduleEntry(customerId, display, date, note){
+  const token = auth.accessToken;
+  const res = await fetch(`${LIVE.workerUrl}/schedule`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ customerId, display, date, note: note || '' }),
+  });
+  if (!res.ok) throw new Error('Save failed: ' + (await res.text()));
+  return res.json();
+}
+
+async function deleteScheduleEntry(customerId, display){
+  const token = auth.accessToken;
+  const res = await fetch(`${LIVE.workerUrl}/schedule`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ customerId, display }),
+  });
+  if (!res.ok) throw new Error('Delete failed: ' + (await res.text()));
+  return res.json();
+}
+
+// Manual notes that a real Sales Order (or an actual shipment) has since overtaken are safe to
+// drop from KV — keeps the store tidy and avoids a stale date reappearing if that SO later falls through.
+async function cleanupStaleManualEntries(staleKeys){
+  if (!staleKeys || !staleKeys.length) return;
+  for (const { customerId, display } of staleKeys){
+    try { await deleteScheduleEntry(customerId, display); }
+    catch (e) { console.warn(`Could not clean up superseded manual entry for ${customerId} / ${display}:`, e); }
+  }
+}
+
+// ── Manual status overrides (e.g. "Do Not Update" for inactive/non-paying accounts) ──
+// Same KV namespace as the schedule notes, different key — shared across everyone viewing the dashboard.
+async function fetchStatusOverrides(token){
+  try {
+    const res = await fetch(`${LIVE.workerUrl}/status-override`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return {};
+    return await res.json();
+  } catch (e) {
+    console.warn('Could not load status overrides:', e);
+    return {};
+  }
+}
+
+async function saveStatusOverride(customerId, status, note){
+  const token = auth.accessToken;
+  const res = await fetch(`${LIVE.workerUrl}/status-override`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ customerId, status, note: note || '' }),
+  });
+  if (!res.ok) throw new Error('Save failed: ' + (await res.text()));
+  return res.json();
+}
+
+async function clearStatusOverride(customerId){
+  const token = auth.accessToken;
+  const res = await fetch(`${LIVE.workerUrl}/status-override`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ customerId }),
+  });
+  if (!res.ok) throw new Error('Clear failed: ' + (await res.text()));
+  return res.json();
+}
+
+async function loadLiveData(){
+  const token = auth.accessToken;
+  if (!token) { console.warn('No Acumatica token available for Display Tracker'); return false; }
+  setLiveState('loading', 'Loading live data…');
+  try {
+    const since = DEFAULT_SINCE;
+    const [customers, invoiceLines, openSoLines, manualSchedule, statusOverrides, collectionSalesLines] = await Promise.all([
+      odataFetchAll('AR-Customers', "CustomerStatus eq 'Active'",
+        'CustomerID,CustomerName,CustomerStatus,SalespersonID,SalesAgentID,DisplayingDealers,DisplaySystem,City,State', token),
+      odataFetchAll('InvoicedItems', buildItemClassFilter(since),
+        'CustomerID,InvoiceDate,ItemClass,InventoryID,Description,Quantity', token),
+      odataFetchAll(OPEN_SO_RESOURCE, buildOpenSoItemClassFilter(), OPEN_SO_SELECT, token)
+        .catch(e => { console.warn('Open SO fetch failed — Scheduled column will only show manual entries:', e); return []; }),
+      fetchManualSchedule(token),
+      fetchStatusOverrides(token),
+      odataFetchAll(SALES_BY_COLLECTION_RESOURCE, null, SALES_SELECT, token)
+        .catch(e => { console.warn('Collection sales fetch failed — current-display sales indicators will be unavailable:', e); return []; }),
+    ]);
+    const computed = computeRecordsClient(customers, invoiceLines, openSoLines, manualSchedule, statusOverrides, collectionSalesLines);
+    RECORDS = computed.records;
+    cleanupStaleManualEntries(computed.staleManualKeys); // fire-and-forget; don't block the render on it
+    document.getElementById('sinceLabel').textContent = since.slice(0,10);
+    setLiveState('live', `Live — fetched ${new Date().toLocaleTimeString()}`);
+    return true;
+  } catch (e) {
+    console.error('Live load failed, falling back to static snapshot:', e);
+    setLiveState('', 'Live fetch failed');
+    return false;
+  }
+}
+
+function setLiveState(kind, label){
+  const el = document.getElementById('liveState');
+  el.className = kind || '';
+  document.getElementById('liveStateLabel').textContent = label;
+}
+
+let displayTrackerInitialized = false;
+async function initDisplayTracker(){
+  if (displayTrackerInitialized) { render(); return; }
+  displayTrackerInitialized = true;
+
+  try {
+    const rulesRes = await fetch('./asf-display-tracker-mapping.json');
+    if (rulesRes.ok) RULES = await rulesRes.json();
+  } catch (e) { console.warn('asf-display-tracker-mapping.json not loaded', e); }
+
+  const gotLive = await loadLiveData();
+  if (gotLive) {
+    finishRender();
+  } else {
+    setLiveState('', 'Could not load live data — try the Refresh button.');
+  }
+}
+
+function finishRender(){
+  renderTransitionLegend();
+  buildFilters();
+  renderProgressBars();
+  render();
+}
+
+function renderTransitionLegend(){
+  const rows = Object.entries(RULES.updateMap || {}).filter(([code, needed]) => needed && needed.length);
+  const el = document.getElementById('transitions');
+  el.innerHTML = rows.map(([code, needed])=>{
+    const from = (RULES.attributes && RULES.attributes[code]) || code;
+    return `<div class="transition"><span class="from">${from}</span><span class="arrow">&rarr;</span><span class="to">${needed.join(' + ')}</span></div>`;
+  }).join('');
+}
+
+function initMultiSelect(containerId, options, stateKey, label, getOptionLabel){
+  getOptionLabel = getOptionLabel || (opt=>opt);
+  const container = document.getElementById(containerId);
+  function labelText(){
+    const n = state[stateKey].size;
+    return n ? `${label} (${n})` : `${label}: any`;
+  }
+  container.innerHTML = `
+    <button type="button" class="ms-btn">${labelText()}</button>
+    <div class="ms-panel hidden">
+      <button type="button" class="ms-clear">Clear</button>
+      ${options.map(opt=>`<label class="ms-option"><input type="checkbox" value="${opt}"> ${getOptionLabel(opt)}</label>`).join('')}
+    </div>
+  `;
+  const btn = container.querySelector('.ms-btn');
+  const panel = container.querySelector('.ms-panel');
+  const checkboxes = [...panel.querySelectorAll('input[type=checkbox]')];
+  checkboxes.forEach(cb=>{ cb.checked = state[stateKey].has(cb.value); });
+
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    document.querySelectorAll('.ms-panel').forEach(p=>{ if (p!==panel) p.classList.add('hidden'); });
+    panel.classList.toggle('hidden');
+  });
+  panel.addEventListener('click', e=>e.stopPropagation());
+  checkboxes.forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      if (cb.checked) state[stateKey].add(cb.value); else state[stateKey].delete(cb.value);
+      btn.textContent = labelText();
+      render();
+    });
+  });
+  panel.querySelector('.ms-clear').addEventListener('click', ()=>{
+    state[stateKey].clear();
+    checkboxes.forEach(cb=>cb.checked=false);
+    btn.textContent = labelText();
+    render();
+  });
+}
+
+
+function buildFilters(){
+  const statusOrder = ['needs_update','partial','updated','up_to_date','unlisted','do_not_update'];
+  initMultiSelect('statusFilter', statusOrder, 'statusSet', 'Status',
+    k => `${STATUS_META[k].label} (${RECORDS.filter(r=>r.status===k).length})`);
+
+  const reps = [...new Set(RECORDS.map(r=>r.rep).filter(Boolean))].sort();
+  initMultiSelect('repFilter', reps, 'repSet', 'Rep');
+
+  const neededDisplays = [...new Set(RECORDS.flatMap(r=>r.neededDisplays))].sort();
+  initMultiSelect('neededFilter', neededDisplays, 'neededSet', 'Needed collection');
+
+  initMultiSelect('priorityFilter', ['high','medium','low'], 'prioritySet', 'Priority');
+
+  const dsValues = [...new Set(RECORDS.flatMap(r=>r.displaySystems||[]))].sort();
+  initMultiSelect('displaySystemFilter', dsValues, 'displaySystemSet', 'Display system');
+
+  initMultiSelect('scheduleFilter', ['scheduled','not_scheduled'], 'scheduleSet', 'Scheduling');
+
+  document.addEventListener('click', ()=>{ document.querySelectorAll('.ms-panel').forEach(p=>p.classList.add('hidden')); });
+
+  document.getElementById('search').addEventListener('input', (e)=>{ state.search = e.target.value.trim().toLowerCase(); render(); });
+
+  document.querySelectorAll('thead th[data-key]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if (state.sortKey === key) { state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc'; }
+      else { state.sortKey = key; state.sortDir = 'asc'; }
+      render();
+    });
+  });
+}
+
+function renderProgressBars(){
+  const targets = [...new Set(Object.values(RULES.updateMap || {}).flat())];
+  const rows = targets.map(display=>{
+    let denom = 0, shipped = 0, scheduled = 0;
+    RECORDS.forEach(r=>{
+      if (!r.neededDisplays.includes(display)) return;
+      denom++;
+      if (r.fulfilledDisplays.includes(display)) shipped++;
+      else if (r.scheduled && r.scheduled[display]) scheduled++;
+    });
+    const notStarted = denom - shipped - scheduled;
+    const pct = n => denom ? (n/denom*100) : 0;
+    return { display, denom, shipped, scheduled, notStarted, shippedPct: pct(shipped), scheduledPct: pct(scheduled), notStartedPct: pct(notStarted) };
+  });
+
+  document.getElementById('progressBars').innerHTML = rows.map(row=>`
+    <div class="progress-row">
+      <div class="progress-label">${row.display}</div>
+      <div class="progress-track" title="${row.shipped} shipped, ${row.scheduled} scheduled, ${row.notStarted} not started">
+        <div class="progress-seg shipped" style="width:${row.shippedPct}%"></div>
+        <div class="progress-seg scheduled" style="width:${row.scheduledPct}%"></div>
+        <div class="progress-seg not-started" style="width:${row.notStartedPct}%"></div>
+      </div>
+      <div class="progress-count"><strong>${row.shipped + row.scheduled}/${row.denom}</strong> in progress or shipped &middot; ${row.notStarted} not started</div>
+    </div>
+  `).join('') + `
+    <div class="progress-legend">
+      <span><span class="sw" style="background:var(--green)"></span>Shipped</span>
+      <span><span class="sw" style="background:var(--teal)"></span>Scheduled (SO or manual note)</span>
+      <span><span class="sw" style="background:var(--amber-soft)"></span>Not started</span>
+    </div>
+  `;
+}
+
+function applyFilters(){
+  return RECORDS.filter(r=>{
+    if (state.statusSet.size && !state.statusSet.has(r.status)) return false;
+    if (state.repSet.size && !state.repSet.has(r.rep)) return false;
+    if (state.scheduleSet.size && !state.scheduleSet.has(r.scheduleStatus)) return false;
+    if (state.displaySystemSet.size && !(r.displaySystems||[]).some(d=>state.displaySystemSet.has(d))) return false;
+    // Collection + Priority combine against the customer's still-open needed displays: with both
+    // set, a customer only matches if the SAME open item satisfies both (e.g. "Gulf Coast HD WPC"
+    // that is specifically "high" priority) — not just any open item matching either independently.
+    // Each is itself an OR across whatever's selected (e.g. checking two collections matches either).
+    if (state.neededSet.size || state.prioritySet.size){
+      const openNeeded = r.neededDisplays.filter(d => !r.fulfilledDisplays.includes(d));
+      const matches = openNeeded.some(d=>{
+        if (state.neededSet.size && !state.neededSet.has(d)) return false;
+        if (state.prioritySet.size){
+          const prio = r.displayPriority && r.displayPriority[d];
+          if (!prio || !state.prioritySet.has(prio.level)) return false;
+        }
+        return true;
+      });
+      if (!matches) return false;
+    }
+    if (state.search){
+      const hay = (r.name+' '+r.id).toLowerCase();
+      if (!hay.includes(state.search)) return false;
+    }
+    return true;
+  });
+}
+
+function sortRecords(list){
+  const dir = state.sortDir === 'asc' ? 1 : -1;
+  const scheduleOrder = { not_scheduled: 0, scheduled: 1, na: 2 };
+  const priorityOrder = { low: 0, medium: 1, high: 2 };
+  return [...list].sort((a,b)=>{
+    let av, bv;
+    switch(state.sortKey){
+      case 'name': av=a.name; bv=b.name; break;
+      case 'rep': av=a.rep||''; bv=b.rep||''; break;
+      case 'loc': av=a.state+a.city; bv=b.state+b.city; break;
+      case 'current': av=a.currentDisplays.length; bv=b.currentDisplays.length; break;
+      case 'needed': av=a.neededDisplays.length; bv=b.neededDisplays.length; break;
+      case 'scheduled': av=scheduleOrder[a.scheduleStatus]; bv=scheduleOrder[b.scheduleStatus]; break;
+      case 'displaySystem': av=(a.displaySystems||[]).join(','); bv=(b.displaySystems||[]).join(','); break;
+      case 'status': av=STATUS_META[a.status].order; bv=STATUS_META[b.status].order; break;
+      case 'lastUpdate': av=a.lastUpdate||''; bv=b.lastUpdate||''; break;
+      default: av=a.name; bv=b.name;
+    }
+    if (av < bv) return -1*dir;
+    if (av > bv) return 1*dir;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+function render(){
+  document.querySelectorAll('thead th[data-key]').forEach(th=>{
+    th.classList.toggle('sorted', th.dataset.key===state.sortKey);
+    th.classList.toggle('asc', th.dataset.key===state.sortKey && state.sortDir==='asc');
+  });
+
+  renderProgressBars(); // cheap over ~400 records; keeps bars in sync after a manual schedule edit
+
+  const filtered = sortRecords(applyFilters());
+  document.getElementById('resultCount').textContent = `${filtered.length} customer${filtered.length===1?'':'s'} shown`;
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = filtered.map(r=>rowHtml(r)).join('');
+
+  tbody.querySelectorAll('tr.dt-row').forEach(tr=>{
+    tr.addEventListener('click', ()=>{
+      const id = tr.dataset.id;
+      const detailRow = tbody.querySelector(`tr.detail-row[data-id="${cssEscape(id)}"]`);
+      const isOpen = state.expanded.has(id);
+      if (isOpen){ state.expanded.delete(id); } else { state.expanded.add(id); }
+      tr.classList.toggle('expanded', !isOpen);
+      detailRow.classList.toggle('hidden', isOpen);
+    });
+  });
+
+  tbody.querySelectorAll('[data-action]').forEach(el=>{
+    el.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const { cid, display, action } = el.dataset;
+      if (action === 'edit-status') openStatusEditor(el, cid);
+      else if (action === 'clear') handleClearSchedule(cid, display, el);
+      else openScheduleEditor(el, cid, display);
+    });
+  });
+}
+
+function findRecord(cid){ return RECORDS.find(r=>r.id===cid); }
+
+function recomputeScheduleStatus(r){
+  const hasSchedule = r.neededDisplays.some(d => !r.fulfilledDisplays.includes(d) && r.scheduled[d]);
+  r.scheduleStatus = r.neededDisplays.length === 0 ? 'na' : (hasSchedule ? 'scheduled' : 'not_scheduled');
+}
+
+function openScheduleEditor(el, cid, display){
+  const record = findRecord(cid);
+  const existing = record && record.scheduled[display];
+  const existingDate = (existing && existing.source === 'manual') ? existing.date : '';
+  el.outerHTML = `
+    <span class="sched-editor" data-cid="${cid}" data-display="${display}">
+      <input type="date" class="sched-date-input" value="${existingDate}">
+      <button class="sched-save" title="Save">&#10003;</button>
+      <button class="sched-cancel" title="Cancel">&times;</button>
+    </span>`;
+  const editor = document.querySelector(`.sched-editor[data-cid="${cssEscape(cid)}"][data-display="${cssEscape(display)}"]`) ||
+                 [...document.querySelectorAll('.sched-editor')].find(e=>e.dataset.cid===cid && e.dataset.display===display);
+  if (!editor) return;
+  editor.querySelector('.sched-save').addEventListener('click', async (e)=>{
+    e.stopPropagation();
+    const date = editor.querySelector('.sched-date-input').value;
+    if (!date) return;
+    try {
+      await saveScheduleEntry(cid, display, date, '');
+      const rec = findRecord(cid);
+      rec.scheduled[display] = { source: 'manual', date, note: '' };
+      recomputeScheduleStatus(rec);
+      render();
+    } catch (err) { alert('Could not save: ' + err.message); }
+  });
+  editor.querySelector('.sched-cancel').addEventListener('click', (e)=>{ e.stopPropagation(); render(); });
+}
+
+function openStatusEditor(el, cid){
+  const record = findRecord(cid);
+  if (!record) return;
+  const options = OVERRIDABLE_STATUSES.map(s=>
+    `<option value="${s}" ${record.isOverridden && record.status===s ? 'selected':''}>${STATUS_META[s].label}</option>`
+  ).join('');
+  el.outerHTML = `
+    <span class="status-editor" data-cid="${cid}">
+      <select class="status-select">
+        <option value="">Auto (computed)</option>
+        ${options}
+      </select>
+      <input type="text" class="status-note-input" placeholder="Note (optional)" value="${record.overrideNote || ''}">
+      <button class="st-save" title="Save">&#10003;</button>
+      <button class="st-cancel" title="Cancel">&times;</button>
+    </span>`;
+  const editor = [...document.querySelectorAll('.status-editor')].find(e=>e.dataset.cid===cid);
+  if (!editor) return;
+  editor.querySelector('.st-save').addEventListener('click', async (e)=>{
+    e.stopPropagation();
+    const status = editor.querySelector('.status-select').value;
+    const note = editor.querySelector('.status-note-input').value;
+    try {
+      if (!status){
+        await clearStatusOverride(cid);
+      } else {
+        await saveStatusOverride(cid, status, note);
+      }
+      await loadLiveData(); // full recompute — an override can change progress-bar denominators
+      render();
+    } catch (err) { alert('Could not save: ' + err.message); }
+  });
+  editor.querySelector('.st-cancel').addEventListener('click', (e)=>{ e.stopPropagation(); render(); });
+}
+
+async function handleClearSchedule(cid, display, el){
+  if (!confirm(`Remove the manually-noted date for ${display}?`)) return;
+  try {    await deleteScheduleEntry(cid, display);
+    const rec = findRecord(cid);
+    delete rec.scheduled[display];
+    recomputeScheduleStatus(rec);
+    render();
+  } catch (err) { alert('Could not remove: ' + err.message); }
+}
+
+function cssEscape(s){ return s.replace(/[^a-zA-Z0-9_-]/g,'_'); }
+
+function renderScheduledCell(r){
+  const openNeeded = r.neededDisplays.filter(d => !r.fulfilledDisplays.includes(d));
+  if (!openNeeded.length) return '<span class="chip current">n/a</span>';
+  return openNeeded.map(d=>{
+    const sch = r.scheduled[d];
+    if (sch && sch.source === 'so'){
+      return `<span class="chip sched-so" title="${d}">${d}: ${sch.soNbr} &middot; ${sch.shipDate}</span>`;
+    }
+    if (sch && sch.source === 'manual'){
+      return `<span class="chip sched-manual" title="${d}">${d}: noted ${sch.date}
+        <span class="chip-action" data-cid="${r.id}" data-display="${d}" data-action="edit" title="Edit date">&#9998;</span>
+        <span class="chip-action" data-cid="${r.id}" data-display="${d}" data-action="clear" title="Remove">&times;</span>
+      </span>`;
+    }
+    return `<span class="chip sched-none" data-cid="${r.id}" data-display="${d}" data-action="add" title="Click to add an expected date">${d}: + add date</span>`;
+  }).join('');
+}
+
+function priorityTag(level){
+  if (!level) return '';
+  return `<span class="prio-tag ${level}">${level}</span>`;
+}
+
+function rowHtml(r){
+  const meta = STATUS_META[r.status];
+  const currentChips = r.currentDisplays.map(d=>
+    `<span class="chip current" title="${d.name}: $${Math.round(d.salesAmount||0).toLocaleString()} trailing 12mo sales"><span class="sales-dot ${d.salesColor||''}"></span>${d.name}</span>`
+  ).join('') || '<span class="chip current">none on file</span>';
+  const neededChips = r.neededDisplays.length
+    ? r.neededDisplays.map(d=>{
+        const done = r.fulfilledDisplays.includes(d);
+        const prio = r.displayPriority && r.displayPriority[d];
+        return `<span class="chip ${done?'need-done':'need-open'}">${d}${!done && prio ? priorityTag(prio.level) : ''}</span>`;
+      }).join('')
+    : '<span class="chip current">nothing owed</span>';
+  const scheduledChips = renderScheduledCell(r);
+  const displaySystemChips = (r.displaySystems && r.displaySystems.length)
+    ? r.displaySystems.map(v=>`<span class="chip dispsys">${v}</span>`).join('')
+    : '<span class="chip current">none on file</span>';
+  const isExpanded = state.expanded.has(r.id);
+  return `
+    <tr class="dt-row ${isExpanded?'expanded':''}" data-id="${r.id}">
+      <td><span class="chevron">&#9656;</span><span class="cust-name">${r.name}</span><br><span class="cust-id">${r.id.trim()}</span></td>
+      <td>${r.rep||'&mdash;'}</td>
+      <td>${r.city}${r.city&&r.state?', ':''}${r.state}</td>
+      <td class="chip-cell">${currentChips}</td>
+      <td class="chip-cell">${neededChips}</td>
+      <td class="chip-cell">${displaySystemChips}</td>
+      <td class="chip-cell">${scheduledChips}</td>
+      <td>
+        <span class="badge ${r.status}" data-cid="${r.id}" data-action="edit-status" title="${
+          r.isOverridden ? `Manually set (auto: ${STATUS_META[r.autoStatus]?.label || r.autoStatus})`
+          : r.isAutoFlagged ? `Auto-flagged: "-COLL" account (auto: ${STATUS_META[r.autoStatus]?.label || r.autoStatus}) — click to override`
+          : 'Click to override'
+        }">
+          <span class="dot"></span>${meta.label}${r.isOverridden ? ' <span class="override-pin">&#128204;</span>' : ''}${r.isAutoFlagged && !r.isOverridden ? ' <span class="override-pin">&#128274;</span>' : ''}
+        </span>
+      </td>
+      <td>${r.lastUpdate ? r.lastUpdate : '&mdash;'}${r.daysSince!=null ? ` <span class="cust-id">(${r.daysSince}d ago)</span>`:''}</td>
+    </tr>
+    <tr class="detail-row ${isExpanded?'':'hidden'}" data-id="${r.id}">
+      <td colspan="9">${detailHtml(r)}</td>
+    </tr>
+  `;
+}
+
+function detailHtml(r){
+  let summary = '';
+  if (r.neededDisplays.length){
+    summary = `<div class="need-summary">` + r.neededDisplays.map(d=>{
+      const done = r.fulfilledDisplays.includes(d);
+      const prio = r.displayPriority && r.displayPriority[d];
+      return `<span class="chip ${done?'need-done':'need-open'}">${done?'&#10003; ':''}${d}${!done && prio ? priorityTag(prio.level) : ''}</span>`;
+    }).join('') + `</div>`;
+  }
+
+  let soSection = '';
+  if (r.openOrders && r.openOrders.length){
+    const soRows = r.openOrders.map(l=>`
+      <tr class="${l.counts?'counts':''}">
+        <td>${l.soNbr}</td>
+        <td>${l.shipDate}</td>
+        <td>${l.itemClass}</td>
+        <td class="sku">${(l.inventoryId||'').trim()}</td>
+        <td>${l.description}</td>
+        <td>${l.openQty}</td>
+        <td><span class="disp-tag ${l.display?'':'none'}">${l.display || 'unmapped / general'}</span></td>
+      </tr>
+    `).join('');
+    soSection = `
+      <h4>${r.openOrders.length} open sales order line${r.openOrders.length===1?'':'s'} in these item classes</h4>
+      <table class="detail-table" style="margin-bottom:18px">
+        <thead><tr><th>SO#</th><th>Sched. Shipment</th><th>Item Class</th><th>SKU</th><th>Description</th><th>Open Qty</th><th>Counts Toward</th></tr></thead>
+        <tbody>${soRows}</tbody>
+      </table>`;
+  }
+
+  if (!r.lines.length && !(r.openOrders && r.openOrders.length)){
+    return `<div class="detail-wrap">${summary}<div class="empty-note">No invoice or open sales order lines in these item classes.</div></div>`;
+  }
+  const rows = r.lines.map(l=>`
+    <tr class="${l.counts?'counts':''}">
+      <td>${l.date}</td>
+      <td>${l.itemClass}</td>
+      <td class="sku">${l.inventoryId.trim()}</td>
+      <td>${l.description}</td>
+      <td>${l.qty}</td>
+      <td><span class="disp-tag ${l.display?'':'none'}">${l.display || 'unmapped / general'}</span></td>
+    </tr>
+  `).join('');
+  return `
+    <div class="detail-wrap">
+      <h4>Required updates</h4>
+      ${summary || '<p style="font-size:13px;color:var(--text-muted);margin:0 0 14px">Nothing owed &mdash; every display on file is current.</p>'}
+      ${soSection}
+      <h4>${r.lines.length} invoiced line item${r.lines.length===1?'':'s'}</h4>
+      <table class="detail-table">
+        <thead><tr><th>Date</th><th>Item Class</th><th>SKU</th><th>Description</th><th>Qty</th><th>Counts Toward</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
 </script>
 </body>
 </html>
