@@ -2385,45 +2385,32 @@ Object.entries(REP_TARGETS).forEach(([name, t]) => { if (t.sub) SUB_TO_REP[t.sub
 let roeLoaded = false;
 
 async function fetchROEData() {
-  // GC-ExpenseBySubAccount is restricted to Administrator / ASF Sales Manager in
-  // Acumatica — reps don't have grant to this entity. Skip the attempt entirely for
-  // non-managers rather than fetching and catching a 403 (same gating philosophy as
-  // enterOrderEntryMode(), which skips loading data a role isn't permitted to see,
-  // rather than loading it and hiding the result).
-  if (!USER.isManager) {
-    document.getElementById('roe-loading-msg').style.display = 'none';
-    addLog('Skipping GL expense fetch (ROE) — requires Administrator or ASF Sales Manager role', 'warn');
-    return;
-  }
-
   const loadEl = document.getElementById('roe-loading-msg');
   const errEl  = document.getElementById('roe-err-msg');
   loadEl.style.display = 'flex';
   errEl.style.display  = 'none';
 
   try {
-    addLog(`Fetching GL expense data: trailing 12 fiscal periods`);
-
-    // Diagnostic: log the exact URL being called
-    const diagUrl = new URL(`${CONFIG.workerUrl}/odata/${encodeURIComponent('GC-ExpenseBySubAccount')}`);
-    diagUrl.searchParams.set('$format','json');
-    diagUrl.searchParams.set('$top','1');
-    addLog(`ROE diagnostic URL: ${diagUrl.toString()}`);
-    try {
-      const diagRes = await fetch(diagUrl.toString(), { headers: { Authorization: `Bearer ${auth.accessToken}`, Accept: 'application/json' } });
-      const diagText = await diagRes.text();
-      addLog(`ROE diagnostic response (${diagRes.status}): ${diagText.slice(0,200)}`);
-    } catch(diagE) {
-      addLog(`ROE diagnostic fetch error: ${diagE.message}`);
+    if (USER.isManager) {
+      // Administrator / ASF Sales Manager — full team view via the original GI.
+      addLog(`Fetching GL expense data: trailing 12 fiscal periods (all reps)`);
+      // Soft fetch — consistent with the app's convention for optional/supplementary
+      // data (same pattern as the GC-AttributeValues lookup): logs quietly and returns
+      // [] on failure instead of surfacing the global red error banner.
+      const glRows = await tryFetchSoft('GL Expenses (ROE)', 'GC-ExpenseBySubAccount', {});
+      addLog(`GL expense rows: ${glRows.length}`);
+      mergeROEData(glRows);
+    } else {
+      // Everyone else — GC-ExpensesRepOnly is scoped server-side in Acumatica to the
+      // logged-in user's own account (not just filtered here in JS), and pre-trimmed
+      // to the trailing 12 fiscal periods via a dynamic condition filter on the GI
+      // itself. This is what lets the broader rep role be granted access at all —
+      // the original GI stays Administrator/ASF Sales Manager only.
+      addLog(`Fetching GL expense data: trailing 12 fiscal periods (own account only)`);
+      const glRows = await tryFetchSoft('GL Expenses (ROE) - Own', 'GC-ExpensesRepOnly', {});
+      addLog(`GL expense rows (own): ${glRows.length}`);
+      mergeROEDataSelf(glRows);
     }
-
-    // Soft fetch — consistent with the app's convention for optional/supplementary
-    // data (same pattern as the GC-AttributeValues lookup): logs quietly and returns
-    // [] on failure instead of surfacing the global red error banner.
-    const glRows = await tryFetchSoft('GL Expenses (ROE)', 'GC-ExpenseBySubAccount', {});
-
-    addLog(`GL expense rows: ${glRows.length}`);
-    mergeROEData(glRows);
     loadEl.style.display = 'none';
     roeLoaded = true;
 
@@ -2435,18 +2422,47 @@ async function fetchROEData() {
   }
 }
 
-function mergeROEData(glRows) {
-  // FinancialPeriod format: "PPYYYY" e.g. "072026" (no hyphen)
-  const todayNow = new Date();
-  const calMo    = todayNow.getMonth();
-  const curFPNum = ((calMo + 2) % 12) + 1;
-  const t12Set   = new Set();
-  for (let i = 0; i < 12; i++) {
-    let fp = curFPNum - i;
-    let fy = CUR_YEAR;
-    if (fp <= 0) { fp += 12; fy -= 1; }
-    t12Set.add(`${String(fp).padStart(2,'0')}${fy}`); // e.g. "072026"
+// Rep-only path — trusts GC-ExpensesRepOnly's server-side scoping, but verifies it
+// client-side before displaying anything: if any Login besides the current user shows
+// up in the response, the Acumatica-side restriction isn't actually working as
+// intended, and showing a number in that state risks displaying (or blending in)
+// another rep's GP/expense data. Fail closed rather than silently trust the filter.
+function mergeROEDataSelf(glRows) {
+  const me = USER.salespersonName;
+  const myLogin = (USER.username || '').toLowerCase().trim();
+
+  const logins  = [...new Set(glRows.map(r => (r.Login||'').toLowerCase().trim()).filter(Boolean))];
+  const foreign = logins.filter(l => l !== myLogin);
+  if (foreign.length > 0) {
+    addLog(`⚠ GC-ExpensesRepOnly returned login(s) other than "${myLogin}" (${foreign.join(', ')}) — server-side filter may not be scoped correctly. Discarding ROE data for safety.`, 'error');
+    return;
   }
+
+  let exp = 0;
+  glRows.forEach(r => {
+    exp += (parseFloat(r.GLHistory_tranPtdDebit)||0) - (parseFloat(r.GLHistory_tranPtdCredit)||0);
+  });
+
+  let gp = 0;
+  (D.trailing12rows||[]).forEach(r => {
+    if ((r.SalesRep||'').trim() === me) gp += (+r.ExtProfit||0);
+  });
+
+  if (!sbRepData[me]) sbRepData[me] = { name: me };
+  sbRepData[me].gp  = gp;
+  sbRepData[me].exp = exp;
+  sbRepData[me].roe = exp > 0 ? gp / exp : null;
+
+  renderCombinedTable();
+}
+
+function mergeROEData(glRows) {
+  // Trailing-12-period filtering now happens server-side via the same dynamic
+  // condition filter applied to both GC-ExpenseBySubAccount and GC-ExpensesRepOnly —
+  // no client-side period window computed here, to avoid it silently diverging from
+  // whatever Acumatica considers "trailing 12" (e.g. a timezone/clock difference
+  // between the browser and the server would otherwise cause this filter to quietly
+  // drop periods Acumatica already correctly returned).
 
   // Subaccount format in OData: "00000" (5 digits, no hyphen)
   // REP_TARGETS uses "000-##" format — convert for lookup
@@ -2464,8 +2480,6 @@ function mergeROEData(glRows) {
 
   const expByRep = {};
   glRows.forEach(r => {
-    const period = (r.FinancialPeriod||'').trim();
-    if (!t12Set.has(period)) return;
     const sub = (r.Subaccount||'').trim();
     const rep = subLookup[sub];
     if (!rep || SCOREBOARD_EXCLUDED.has(rep)) return;
