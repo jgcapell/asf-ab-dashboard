@@ -1361,6 +1361,7 @@
     <input id="search" type="text" placeholder="Search customer name or ID&hellip;">
     <div id="statusFilter" class="ms-container"></div>
     <div id="repFilter" class="ms-container"></div>
+    <div id="currentFilter" class="ms-container"></div>
     <div id="neededFilter" class="ms-container"></div>
     <div id="priorityFilter" class="ms-container"></div>
     <div id="displaySystemFilter" class="ms-container"></div>
@@ -4428,7 +4429,7 @@ let RECORDS = [];
 let RULES = { attributes:{}, updateMap:{}, skuMap:{} };
 let state = {
   search:"",
-  statusSet:new Set(), repSet:new Set(), neededSet:new Set(), scheduleSet:new Set(), prioritySet:new Set(), displaySystemSet:new Set(),
+  statusSet:new Set(), repSet:new Set(), currentSet:new Set(), neededSet:new Set(), scheduleSet:new Set(), prioritySet:new Set(), displaySystemSet:new Set(),
   sortKey:"status", sortDir:"asc", expanded:new Set()
 };
 
@@ -5001,6 +5002,9 @@ function buildFilters(){
   const reps = [...new Set(RECORDS.map(r=>r.rep).filter(Boolean))].sort();
   initMultiSelect('repFilter', reps, 'repSet', 'Rep');
 
+  const currentDisplayNames = [...new Set(RECORDS.flatMap(r=>r.currentDisplays.map(d=>d.name)))].sort();
+  initMultiSelect('currentFilter', currentDisplayNames, 'currentSet', 'Current display');
+
   const neededDisplays = [...new Set(RECORDS.flatMap(r=>r.neededDisplays))].sort();
   initMultiSelect('neededFilter', neededDisplays, 'neededSet', 'Needed collection');
 
@@ -5063,6 +5067,7 @@ function applyFilters(){
   return RECORDS.filter(r=>{
     if (state.statusSet.size && !state.statusSet.has(r.status)) return false;
     if (state.repSet.size && !state.repSet.has(r.rep)) return false;
+    if (state.currentSet.size && !r.currentDisplays.some(d=>state.currentSet.has(d.name))) return false;
     if (state.scheduleSet.size && !state.scheduleSet.has(r.scheduleStatus)) return false;
     if (state.displaySystemSet.size && !(r.displaySystems||[]).some(d=>state.displaySystemSet.has(d))) return false;
     // Collection + Priority combine against the customer's still-open needed displays: with both
