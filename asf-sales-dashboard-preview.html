@@ -1528,13 +1528,11 @@ const REP_TARGETS = {
   'Bob Brown':       { sub:'000-25', annualBudget:520000,   annualBhag:589404.35,  budgetCum:[38133.33,76266.66,114399.99,155358.66,196317.33,237276.0,286658.67,336041.34,385424.01,430282.68,475141.35,520000.02], bhagCum:[43222.99,86445.98,129668.97,176094.39,222519.81,268945.23,324919.0,380892.77,436866.54,487712.49,538558.44,589404.39] },
   'Bobby Townsend':  { sub:'000-39', annualBudget:1000000,  annualBhag:1080574.65, budgetCum:[73333.33,146666.66,219999.99,298766.66,377533.33,456300.0,551266.67,646233.34,741200.01,827466.68,913733.35,1000000.02], bhagCum:[79242.14,158484.28,237726.42,322839.68,407952.94,493066.2,595684.77,698303.34,800921.91,894139.48,987357.05,1080574.62] },
   'Jason Beamer':    { sub:'000-44', annualBudget:500000,   annualBhag:628697.98,  budgetCum:[36666.67,73333.34,110000.01,149383.34,188766.67,228150.0,275633.33,323116.66,370599.99,413733.32,456866.65,499999.98], bhagCum:[46104.52,92209.04,138313.56,187834.0,237354.44,286874.88,346580.23,406285.58,465990.93,520226.61,574462.29,628697.97] },
-  'Damon Lockhart':  { sub:'000-36', annualBudget:750000,   annualBhag:1178808.71, budgetCum:[55000.0,110000.0,165000.0,224075.0,283150.0,342225.0,413450.0,484675.0,555900.0,620600.0,685300.0,750000.0], bhagCum:[86445.97,172891.94,259337.91,352188.74,445039.57,537890.4,649837.93,761785.46,873732.99,975424.89,1077116.79,1178808.69] },
   'Derrick Almond':  { sub:'000-33', annualBudget:1075000,  annualBhag:1192564.81, budgetCum:[78833.33,157666.66,236499.99,321174.16,405848.33,490522.5,592611.67,694700.84,796790.01,889526.68,982263.35,1075000.02], bhagCum:[87454.75,174909.5,262364.25,356298.6,450232.95,544167.3,657421.2,770675.1,883929.0,986807.59,1089686.18,1192564.77] },
   'Jennifer Paredes':{ sub:'000-41', annualBudget:750000,   annualBhag:832021.96,  budgetCum:[55000.0,110000.0,165000.0,224075.0,283150.0,342225.0,413450.0,484675.0,555900.0,620600.0,685300.0,750000.0], bhagCum:[61014.94,122029.88,183044.82,248580.42,314116.02,379651.62,458665.97,537680.32,616694.67,688470.43,760246.19,832021.95] },
   'Mitchell Jones':  { sub:'000-35', annualBudget:930000,   annualBhag:982340.59,  budgetCum:[68200.0,136400.0,204600.0,277853.0,351106.0,424359.0,512678.0,600997.0,689316.0,769544.0,849772.0,930000.0], bhagCum:[72038.31,144076.62,216114.93,293490.62,370866.31,448242.0,541531.61,634821.22,728110.83,812854.08,897597.33,982340.58] },
   'Nikki Petriello': { sub:'000-23', annualBudget:1500000,  annualBhag:1664043.92, budgetCum:[110000.0,220000.0,330000.0,448150.0,566300.0,684450.0,826900.0,969350.0,1111800.0,1241200.0,1370600.0,1500000.0], bhagCum:[122029.89,244059.78,366089.67,497160.86,628232.05,759303.24,917331.94,1075360.64,1233389.34,1376940.86,1520492.38,1664043.9] },
   'Sean Mitchell':   { sub:'000-22', annualBudget:5200000,  annualBhag:5402873.25, budgetCum:[381333.33,762666.66,1143999.99,1553586.66,1963173.33,2372760.0,2866586.67,3360413.34,3854240.01,4302826.68,4751413.35,5200000.02], bhagCum:[396210.71,792421.42,1188632.13,1614198.45,2039764.77,2465331.09,2978423.95,3491516.81,4004609.67,4470697.54,4936785.41,5402873.28] },
-  'Tom Goldston':    { sub:'000-27', annualBudget:600000,   annualBhag:687638.41,  budgetCum:[44000.0,88000.0,132000.0,179260.0,226520.0,273780.0,330760.0,387740.0,444720.0,496480.0,548240.0,600000.0], bhagCum:[50426.82,100853.64,151280.46,205443.45,259606.44,313769.43,379072.16,444374.89,509677.62,568997.89,628318.16,687638.43] },
   'Michael McLeod':  { sub:'000-30', annualBudget:250000,   annualBhag:300000.0,   budgetCum:[18333.33,36666.66,54999.99,74691.66,94383.33,114075.0,137816.67,161558.34,185300.01,206866.68,228433.35,250000.02], bhagCum:[22000.0,44000.0,66000.0,89630.0,113260.0,136890.0,165380.0,193870.0,222360.0,248240.0,274120.0,300000.0] },
 };
 
@@ -1549,7 +1547,8 @@ function getTargets(repName) {
 const EXCLUDED_REPS = new Set([
   'Jeremy Diggs', 'Chris Galinetti',
   'Mike Garvey', 'Emily Johnson',
-  'Katie Haynes', 'Jennifer Paredes', 'Zanna Kelly'
+  'Katie Haynes', 'Jennifer Paredes', 'Zanna Kelly',
+  'Tom Goldston', 'Damon Lockhart' // no longer with the company — customer/display data retained, sales metrics excluded
 ]);
 
 const TRAILING_AGO = (() => { const d=new Date(); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); })();
@@ -3730,8 +3729,6 @@ const EATER_SEED = [
     self:{E:6,A:6,T:8,En:7,R:6}, mgr:{E:8,A:8,T:8,En:8,R:7}, cal:{E:7,A:7,T:7,En:7,R:6} },
   { qtr:'Q1-2026', name:'Mitchell Jones', dept:'Residential Sales',
     self:{E:8,A:8,T:8,En:8,R:8}, mgr:{E:7,A:6.5,T:6.5,En:8,R:6}, cal:{E:7,A:6,T:5,En:6,R:6} },
-  { qtr:'Q1-2026', name:'Tom Goldston',   dept:'Residential Sales',
-    self:{E:7,A:7,T:6,En:5,R:6}, mgr:{E:9,A:8,T:8,En:7,R:6}, cal:{E:7,A:6,T:6,En:5,R:5} },
   { qtr:'Q1-2026', name:'Bobby Townsend', dept:'Residential Sales',
     self:{E:7,A:10,T:9,En:6,R:6}, mgr:{E:8,A:8,T:8,En:8,R:6}, cal:{E:7,A:7,T:7,En:6,R:6} },
   { qtr:'Q1-2026', name:'Anthony Deel',   dept:'Residential Sales',
@@ -3741,8 +3738,6 @@ const EATER_SEED = [
     self:{E:9,A:9,T:9,En:8,R:9}, mgr:{E:8,A:9,T:9,En:8,R:9}, cal:{E:8,A:9,T:7,En:7,R:9} },
   { qtr:'Q1-2026', name:'Nikki Petriello',  dept:'Commercial Sales',
     self:{E:8,A:8,T:8,En:9,R:7}, mgr:{E:7,A:9,T:9,En:8,R:7}, cal:{E:6,A:7,T:8,En:6,R:7} },
-  { qtr:'Q1-2026', name:'Damon Lockhart',   dept:'Commercial Sales',
-    self:{E:6,A:5,T:7,En:5,R:3}, mgr:{E:4,A:5,T:8,En:4,R:2}, cal:{E:4,A:5,T:7,En:4,R:3} },
   { qtr:'Q1-2026', name:'Jennifer Paredes', dept:'Commercial Sales',
     self:{E:7,A:9,T:7,En:7,R:5}, mgr:{E:7,A:8,T:8,En:7,R:7}, cal:{E:7,A:7,T:7,En:6,R:5} },
   { qtr:'Q1-2026', name:'Michael McLeod',   dept:'Commercial Sales',
@@ -3759,8 +3754,6 @@ const EATER_SEED = [
     self:{E:8,A:7,T:7,En:8,R:6}, mgr:{E:8,A:8,T:7,En:7,R:7}, cal:{E:8,A:8,T:7,En:7,R:6} },
   { qtr:'Q2-2026', name:'Mitchell Jones', dept:'Residential Sales',
     self:{E:8,A:8,T:7,En:7,R:6}, mgr:{E:7,A:7,T:6,En:6,R:5}, cal:{E:7,A:6,T:6,En:6,R:5} },
-  { qtr:'Q2-2026', name:'Tom Goldston',   dept:'Residential Sales',
-    self:{E:8,A:8,T:8,En:8,R:8}, mgr:{E:7,A:7,T:7,En:7,R:6}, cal:{E:7,A:8,T:7,En:7,R:6} },
   { qtr:'Q2-2026', name:'Bobby Townsend', dept:'Residential Sales',
     self:{E:7,A:8,T:7,En:6,R:7}, mgr:{E:7,A:7,T:7,En:7,R:7}, cal:{E:null,A:null,T:null,En:null,R:null} },
   { qtr:'Q2-2026', name:'Anthony Deel',   dept:'Residential Sales',
@@ -3770,8 +3763,6 @@ const EATER_SEED = [
     self:{E:8,A:8,T:8,En:8,R:7}, mgr:{E:8,A:9,T:9,En:7,R:7}, cal:{E:8,A:9,T:9,En:7,R:7} },
   { qtr:'Q2-2026', name:'Nikki Petriello',  dept:'Commercial Sales',
     self:{E:8,A:8,T:8,En:7,R:7}, mgr:{E:8,A:9,T:8,En:7,R:7}, cal:{E:8,A:9,T:8,En:7,R:8} },
-  { qtr:'Q2-2026', name:'Damon Lockhart',   dept:'Commercial Sales',
-    self:{E:6,A:6,T:6,En:5,R:3}, mgr:{E:6,A:6,T:7,En:5,R:3}, cal:{E:6,A:6,T:6,En:5,R:3} },
   { qtr:'Q2-2026', name:'Jennifer Paredes', dept:'Commercial Sales',
     self:{E:7,A:9,T:7,En:7,R:5}, mgr:{E:7,A:8,T:8,En:7,R:7}, cal:{E:7,A:7,T:7,En:6,R:5} },
   { qtr:'Q2-2026', name:'Michael McLeod',   dept:'Commercial Sales',
@@ -3787,8 +3778,6 @@ const EATER_EMPLOYEES = [
   { name:'Bobby Townsend',  dept:'Residential Sales' },
   { name:'Derrick Almond',  dept:'Residential Sales' },
   { name:'Mitchell Jones',  dept:'Residential Sales' },
-  { name:'Tom Goldston',    dept:'Residential Sales' },
-  { name:'Damon Lockhart',   dept:'Commercial Sales'  },
   { name:'Jason Beamer',    dept:'Commercial Sales'  },
   { name:'Michael McLeod',  dept:'Commercial Sales'  },
   { name:'Nikki Petriello', dept:'Commercial Sales'  },
