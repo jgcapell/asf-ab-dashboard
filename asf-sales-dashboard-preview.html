@@ -2300,7 +2300,6 @@ function renderCombinedTable() {
       const barColor = ahead ? '#5a9e45' : '#b83228';
       const roeStr   = r.roe != null ? r.roe.toFixed(2)+'x' : '—';
       const [rating, ratingColor] = roeRating(r.roe);
-      const roeColor = r.roe != null ? (r.roe>=1.5?'var(--asf-green)':r.roe>=1.0?'var(--yellow)':'var(--red)') : 'var(--muted)';
       const yoyDisp  = r.yoy != null ? (r.yoy >= 0 ? '+' : '') + r.yoy.toFixed(1) + '%' : '—';
       const yoyColor = r.yoy != null ? (r.yoy >= 0 ? 'color:var(--asf-green)' : 'color:var(--red)') : 'color:var(--muted)';
       return `<tr style="${rowBg}">
@@ -2312,7 +2311,7 @@ function renderCombinedTable() {
             <div style="height:100%;width:${barPct}%;background:${barColor};border-radius:4px;transition:width 0.8s ease"></div>
           </div>
         </td>
-        <td style="text-align:right;font-weight:700;color:${roeColor}">${roeStr}</td>
+        <td style="text-align:right;font-weight:700;color:${ratingColor}">${roeStr}</td>
         <td><span style="font-size:10px;font-weight:700;color:${ratingColor}">${rating}</span></td>
       </tr>`;
     }).join('');
@@ -2321,11 +2320,11 @@ function renderCombinedTable() {
 
 function roeRating(roe) {
   if (roe === null || roe === undefined) return ['—', 'var(--muted)'];
-  if (roe >= 3.0) return ['Excellent', 'var(--asf-green)'];
-  if (roe >= 2.0) return ['Strong',    '#3a7a28'];
-  if (roe >= 1.5) return ['Good',      'var(--asf-blue)'];
-  if (roe >= 1.0) return ['Fair',      'var(--yellow)'];
-  return ['Below Target', 'var(--red)'];
+  if (roe >= 4.0)   return ['Excellent',         'var(--asf-green)'];
+  if (roe >= 3.0)   return ['Strong',            '#3a7a28'];
+  if (roe >= 2.5)   return ['Satisfactory',      'var(--asf-blue)'];
+  if (roe > 1.5)    return ['Needs Improvement', 'var(--yellow)'];
+  return ['Critical', 'var(--red)'];
 }
 
 function renderYTDScoreboard() {
