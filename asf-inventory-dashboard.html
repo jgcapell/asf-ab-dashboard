@@ -430,7 +430,7 @@ async function loadData() {
       const safe = cls.replace(/'/g, "''");
       const rows = await odataGet('DB-On hand inventory summary', {
         '$select': 'InventoryID,InventoryDescription,ItemClass,ItemStatus,SiteOnHand,SiteAvailable,QtyPurchaseOrders,QtySOBackordered,UnitofMeasure',
-        '$filter': `ItemClass eq '${safe}'`
+        '$filter': `ItemClass eq '${safe}' and ItemStatus eq 'Active'`
       });
       doneClasses++;
       setProgress(doneClasses, total, `INVENTORY — ${doneClasses} / ${ALL_CLASSES.length} classes`);
