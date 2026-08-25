@@ -280,6 +280,41 @@
 
   .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 12px; }
 
+  /* Lead Intelligence tab */
+  .li-mode-toggle { display: flex; gap: 8px; }
+  .li-mode-btn { flex: 1; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; text-align: left; transition: all 0.15s; font-family: inherit; }
+  .li-mode-btn:hover { border-color: var(--asf-blue); }
+  .li-mode-btn.active { border-color: var(--asf-navy); background: rgba(91,143,204,0.06); box-shadow: 0 0 0 1px var(--asf-navy) inset; }
+  .li-mode-btn-title { font-size: 12px; font-weight: 700; color: var(--asf-navy); margin-bottom: 3px; }
+  .li-mode-btn-sub { font-size: 10px; color: var(--muted); line-height: 1.4; }
+  .li-search-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .li-radius-input { width: 70px; }
+  .li-account-chip { display: none; background: rgba(91,143,204,0.1); border: 1px solid rgba(91,143,204,0.25); border-radius: 6px; padding: 8px 12px; font-size: 11px; font-weight: 600; color: var(--asf-navy); }
+  .li-bucket-hdr { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--surface2); border-bottom: 1px solid var(--border2); }
+  .li-bucket-title { font-size: 11px; font-weight: 700; color: var(--asf-navy); text-transform: uppercase; letter-spacing: 0.07em; }
+  .li-bucket-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .lead-list { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+  .lead-card { border: 1px solid var(--border2); border-radius: 8px; padding: 12px 14px; background: var(--surface); transition: box-shadow 0.15s; }
+  .lead-card:hover { box-shadow: 0 2px 10px rgba(30,80,128,0.1); }
+  .lead-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .lead-title { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .lead-value { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800; color: var(--asf-navy); white-space: nowrap; }
+  .lead-meta-row { display: flex; gap: 12px; flex-wrap: wrap; font-size: 10px; color: var(--dim); margin-bottom: 8px; font-weight: 500; }
+  .lead-meta-row span { display: flex; align-items: center; gap: 4px; }
+  .lead-desc { font-size: 11px; color: var(--dim); line-height: 1.5; margin-bottom: 8px; }
+  .lead-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+  .lead-tag { font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 99px; background: rgba(107,82,184,0.1); color: var(--purple); border: 1px solid rgba(107,82,184,0.25); }
+  .lead-status { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+  .lead-doc-badge { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+  .doc-available { background: rgba(90,158,69,0.12); color: #3a7a28; border: 1px solid rgba(90,158,69,0.3); }
+  .doc-none { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+  .lead-category-badge { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; background: var(--surface2); color: var(--dim); border: 1px solid var(--border); }
+  .status-design { background: rgba(91,143,204,0.12); color: var(--asf-navy); border: 1px solid rgba(91,143,204,0.3); }
+  .status-bid { background: rgba(196,137,10,0.1); color: #7a5500; border: 1px solid rgba(196,137,10,0.3); }
+  .status-award { background: rgba(90,158,69,0.12); color: #3a7a28; border: 1px solid rgba(90,158,69,0.3); }
+  .lead-link { font-size: 10px; font-weight: 700; color: var(--asf-blue); text-decoration: none; }
+  .lead-link:hover { text-decoration: underline; }
+
   /* ── E.A.T.E.R. Tab ────────────────────────────────────────────────────── */
   .eater-score-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
   .eater-score-col { padding: 14px 16px; border-right: 1px solid var(--border2); }
@@ -597,6 +632,7 @@
     <button class="tab" data-tab="opportunities" onclick="showTab(this)">Activities &amp; Opportunities</button>
     <button class="tab" data-tab="eater" onclick="showTab(this);initEaterTab()">E.A.T.E.R.</button>
     <button class="tab" data-tab="display-tracker" onclick="showTab(this);initDisplayTracker()">Display Tracker</button>
+    <button class="tab" data-tab="leadintel" onclick="showTab(this);initLeadIntelTab()">Lead Intelligence</button>
   </div>
 
   <!-- ═══════════════════════════════════ TAB: SALES OVERVIEW -->
@@ -684,6 +720,33 @@
               <span id="gauge-bhag-target">BHAG: —</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- ── COMBINED SCOREBOARD ── -->
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Rep Scoreboard — YTD vs Budget &amp; ROI (GP/Expense)</span>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span id="roe-loading-msg" style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px">
+              <span class="spin">⟳</span> Loading ROE data…
+            </span>
+            <span id="roe-err-msg" style="display:none;font-size:10px;color:var(--red)"></span>
+            <span class="card-badge" id="ytd-sb-badge">—</span>
+          </div>
+        </div>
+        <div class="card-scroll">
+          <table id="combined-sb-tbl">
+            <thead><tr>
+              <th>Rep</th>
+              <th style="text-align:right">YoY %</th>
+              <th style="text-align:right">% to Budget</th>
+              <th>Progress</th>
+              <th style="text-align:right">ROI (GP/Expense)</th>
+              <th>Rating</th>
+            </tr></thead>
+            <tbody id="combined-sb-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Loading…</td></tr></tbody>
+          </table>
         </div>
       </div>
 
@@ -1345,6 +1408,98 @@
 </div>
   </div>
 
+  <!-- ══════════════════════════════════════ TAB: LEAD INTELLIGENCE -->
+  <div id="pane-leadintel" class="tab-pane">
+    <div class="page">
+
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Lead Intelligence — ConstructConnect</span></div>
+        <div class="card-body" style="font-size:11px;color:var(--dim);line-height:1.6">
+          Surface construction projects sourced live from ConstructConnect. Fill in whichever fields apply and pull current leads — every field is optional, but a Company Name or Zip Code is strongly recommended to keep results manageable.
+        </div>
+      </div>
+
+      <div class="row cols-1">
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Find Leads</span></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
+
+            <div class="row cols-2" style="gap:20px">
+              <div>
+                <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Company Name</label>
+                <div style="font-size:10px;color:var(--muted);margin:2px 0 6px">Optional. Design firms, hospital/school systems, developers — anchors results to a specific company's projects. Note: may not surface every project for a GC/owner that isn't independently registered as a company in ConstructConnect.</div>
+                <input class="ctrl-input" id="li-adv-company" placeholder="e.g. LS3P, Rodgers Builders" style="width:100%">
+                <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">
+                  <div>
+                    <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Zip Code</label>
+                    <div style="margin-top:6px"><input class="ctrl-input" id="li-adv-zip" placeholder="e.g. 28204" style="width:120px"></div>
+                  </div>
+                  <div>
+                    <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Radius (miles)</label>
+                    <div style="margin-top:6px"><input class="ctrl-input li-radius-input" id="li-radius" type="number" value="50" min="5" max="250"></div>
+                  </div>
+                </div>
+                <div style="font-size:10px;color:var(--dim);font-weight:600;margin-top:8px">⚠ If both Company Name and Zip Code are left blank, results are not narrowed by location or company at all. Zip Code is ignored if a Company Name is provided.</div>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Project Description</label>
+                  <div style="font-size:10px;color:var(--muted);margin:2px 0 6px">Optional keyword search against ConstructConnect's project summary text.</div>
+                  <input class="ctrl-input" id="li-adv-desc" placeholder="e.g. hospital renovation" style="width:100%">
+                </div>
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Product Name (search inside spec documents)</label>
+                  <div style="font-size:10px;color:var(--muted);margin:2px 0 6px">Optional. Searches the actual text of uploaded plans/specs — use a specific product or brand name; generic terms can match broadly on large document sets.</div>
+                  <input class="ctrl-input" id="li-adv-docsearch" placeholder="e.g. Shaw Contract, Interface" style="width:100%">
+                </div>
+              </div>
+            </div>
+
+            <div class="row cols-3" style="gap:16px">
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Category</label>
+                  <span><button class="btn-sm" onclick="toggleLiAdvGroup('cat',true)">All</button> <button class="btn-sm" onclick="toggleLiAdvGroup('cat',false)">None</button></span>
+                </div>
+                <div id="li-adv-categories" style="margin-top:6px;max-height:220px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:4px;font-size:11px"></div>
+              </div>
+
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Product Type</label>
+                  <span><button class="btn-sm" onclick="toggleLiAdvGroup('csi',true)">All</button> <button class="btn-sm" onclick="toggleLiAdvGroup('csi',false)">None</button></span>
+                </div>
+                <div id="li-adv-csi" style="margin-top:6px;max-height:220px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:4px;font-size:11px"></div>
+              </div>
+
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <label style="font-size:11px;font-weight:700;color:var(--asf-navy)">Project Stage</label>
+                  <span><button class="btn-sm" onclick="toggleLiAdvGroup('stage',true)">All</button> <button class="btn-sm" onclick="toggleLiAdvGroup('stage',false)">None</button></span>
+                </div>
+                <div style="font-size:10px;color:var(--muted);margin-top:2px">Determines which of the two result buckets below get populated — e.g. deselecting all Bid/VE-Now stages returns only Get Specified results.</div>
+                <div id="li-adv-stage" style="margin-top:6px;max-height:190px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:4px;font-size:11px"></div>
+              </div>
+            </div>
+
+            <div>
+              <button class="hbtn primary" id="li-search-btn" onclick="runLeadSearch()" style="padding:10px 22px;font-size:11px">🔍 FIND LEADS</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div id="li-results-wrap" style="display:none"></div>
+
+      <div id="li-empty" class="card">
+        <div class="card-body"><div class="empty">Fill in the fields above, then run a search to see results.</div></div>
+      </div>
+
+    </div>
+  </div>
+
 </div><!-- /#dashboard -->
 
 <script>
@@ -1373,13 +1528,11 @@ const REP_TARGETS = {
   'Bob Brown':       { sub:'000-25', annualBudget:520000,   annualBhag:589404.35,  budgetCum:[38133.33,76266.66,114399.99,155358.66,196317.33,237276.0,286658.67,336041.34,385424.01,430282.68,475141.35,520000.02], bhagCum:[43222.99,86445.98,129668.97,176094.39,222519.81,268945.23,324919.0,380892.77,436866.54,487712.49,538558.44,589404.39] },
   'Bobby Townsend':  { sub:'000-39', annualBudget:1000000,  annualBhag:1080574.65, budgetCum:[73333.33,146666.66,219999.99,298766.66,377533.33,456300.0,551266.67,646233.34,741200.01,827466.68,913733.35,1000000.02], bhagCum:[79242.14,158484.28,237726.42,322839.68,407952.94,493066.2,595684.77,698303.34,800921.91,894139.48,987357.05,1080574.62] },
   'Jason Beamer':    { sub:'000-44', annualBudget:500000,   annualBhag:628697.98,  budgetCum:[36666.67,73333.34,110000.01,149383.34,188766.67,228150.0,275633.33,323116.66,370599.99,413733.32,456866.65,499999.98], bhagCum:[46104.52,92209.04,138313.56,187834.0,237354.44,286874.88,346580.23,406285.58,465990.93,520226.61,574462.29,628697.97] },
-  'Damon Lockhart':  { sub:'000-36', annualBudget:750000,   annualBhag:1178808.71, budgetCum:[55000.0,110000.0,165000.0,224075.0,283150.0,342225.0,413450.0,484675.0,555900.0,620600.0,685300.0,750000.0], bhagCum:[86445.97,172891.94,259337.91,352188.74,445039.57,537890.4,649837.93,761785.46,873732.99,975424.89,1077116.79,1178808.69] },
   'Derrick Almond':  { sub:'000-33', annualBudget:1075000,  annualBhag:1192564.81, budgetCum:[78833.33,157666.66,236499.99,321174.16,405848.33,490522.5,592611.67,694700.84,796790.01,889526.68,982263.35,1075000.02], bhagCum:[87454.75,174909.5,262364.25,356298.6,450232.95,544167.3,657421.2,770675.1,883929.0,986807.59,1089686.18,1192564.77] },
   'Jennifer Paredes':{ sub:'000-41', annualBudget:750000,   annualBhag:832021.96,  budgetCum:[55000.0,110000.0,165000.0,224075.0,283150.0,342225.0,413450.0,484675.0,555900.0,620600.0,685300.0,750000.0], bhagCum:[61014.94,122029.88,183044.82,248580.42,314116.02,379651.62,458665.97,537680.32,616694.67,688470.43,760246.19,832021.95] },
   'Mitchell Jones':  { sub:'000-35', annualBudget:930000,   annualBhag:982340.59,  budgetCum:[68200.0,136400.0,204600.0,277853.0,351106.0,424359.0,512678.0,600997.0,689316.0,769544.0,849772.0,930000.0], bhagCum:[72038.31,144076.62,216114.93,293490.62,370866.31,448242.0,541531.61,634821.22,728110.83,812854.08,897597.33,982340.58] },
   'Nikki Petriello': { sub:'000-23', annualBudget:1500000,  annualBhag:1664043.92, budgetCum:[110000.0,220000.0,330000.0,448150.0,566300.0,684450.0,826900.0,969350.0,1111800.0,1241200.0,1370600.0,1500000.0], bhagCum:[122029.89,244059.78,366089.67,497160.86,628232.05,759303.24,917331.94,1075360.64,1233389.34,1376940.86,1520492.38,1664043.9] },
   'Sean Mitchell':   { sub:'000-22', annualBudget:5200000,  annualBhag:5402873.25, budgetCum:[381333.33,762666.66,1143999.99,1553586.66,1963173.33,2372760.0,2866586.67,3360413.34,3854240.01,4302826.68,4751413.35,5200000.02], bhagCum:[396210.71,792421.42,1188632.13,1614198.45,2039764.77,2465331.09,2978423.95,3491516.81,4004609.67,4470697.54,4936785.41,5402873.28] },
-  'Tom Goldston':    { sub:'000-27', annualBudget:600000,   annualBhag:687638.41,  budgetCum:[44000.0,88000.0,132000.0,179260.0,226520.0,273780.0,330760.0,387740.0,444720.0,496480.0,548240.0,600000.0], bhagCum:[50426.82,100853.64,151280.46,205443.45,259606.44,313769.43,379072.16,444374.89,509677.62,568997.89,628318.16,687638.43] },
   'Michael McLeod':  { sub:'000-30', annualBudget:250000,   annualBhag:300000.0,   budgetCum:[18333.33,36666.66,54999.99,74691.66,94383.33,114075.0,137816.67,161558.34,185300.01,206866.68,228433.35,250000.02], bhagCum:[22000.0,44000.0,66000.0,89630.0,113260.0,136890.0,165380.0,193870.0,222360.0,248240.0,274120.0,300000.0] },
 };
 
@@ -1394,7 +1547,8 @@ function getTargets(repName) {
 const EXCLUDED_REPS = new Set([
   'Jeremy Diggs', 'Chris Galinetti',
   'Mike Garvey', 'Emily Johnson',
-  'Katie Haynes', 'Jennifer Paredes', 'Zanna Kelly'
+  'Katie Haynes', 'Jennifer Paredes', 'Zanna Kelly',
+  'Tom Goldston', 'Damon Lockhart' // no longer with the company — customer/display data retained, sales metrics excluded
 ]);
 
 const TRAILING_AGO = (() => { const d=new Date(); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); })();
@@ -1488,7 +1642,7 @@ async function resolveUserIdentity() {
         USER.roles = myRows.map(r => (r.RoleName||'').trim()).filter(Boolean);
         // Role-based access — named Acumatica roles, not the old UserType-integer heuristic
         // (which incorrectly treated anything other than exactly 4 as "manager").
-        USER.isManager = USER.roles.includes('ASF Sales Manager');
+        USER.isManager = USER.roles.includes('ASF Sales Manager') || USER.roles.includes('Administrator');
         // ASF Order Entry role → restricted to the Display Tracker tab only, regardless
         // of any other roles also held (see resolveUserIdentity gating in handleCallback).
         USER.isOrderEntryOnly = USER.roles.includes('ASF Order Entry');
@@ -1561,6 +1715,7 @@ function getActiveRepFilter() {
 // Called when manager changes the global rep selector
 function onRepFilterChange() {
   renderOverview();
+  renderYTDScoreboard();
   renderCustomerData();
   renderOpportunities();
   // Also re-render customer item class bars if on customer tab
@@ -1787,9 +1942,13 @@ async function loadData() {
 
 
     renderOverview();
+    renderYTDScoreboard();
     renderCustomerData();
     renderOpportunities();
     addLog('All data loaded.','ok');
+
+    // Fetch GL expense data for ROE scoreboard (async, non-blocking)
+    fetchROEData();
 
     // Also refresh EATER data from KV if the tab has been opened this session
     if (eaterTabInitialized) {
@@ -2104,6 +2263,249 @@ function pill(good, label) {
   const cls = good ? 'pill-green' : 'pill-red';
   const arrow = good ? '▲' : '▼';
   return `<div class="kpi-pill ${cls}">${arrow} ${label}</div>`;
+}
+
+// ─── COMBINED SCOREBOARD (YTD % to Budget + ROE, all reps except Bob Brown) ───
+const SCOREBOARD_EXCLUDED = new Set([...EXCLUDED_REPS, 'Bob Brown']);
+
+// Shared rep data store — YTD data populated by renderYTDScoreboard,
+// ROE data merged in by renderROEScoreboard, then both call renderCombinedTable
+let sbRepData = {}; // keyed by rep name
+
+// Gating: managers always see every rep, regardless of the global rep-filter
+// dropdown (the scoreboard's purpose is rep-to-rep comparison). Non-manager
+// (locked) reps see only their own row in the table body.
+function renderCombinedTable() {
+  const activeRep = getActiveRepFilter();
+  const allRows = Object.values(sbRepData)
+    .filter(r => !SCOREBOARD_EXCLUDED.has(r.name))
+    .sort((a, b) => (b.roe||0) - (a.roe||0));
+
+  const rows = USER.isManager
+    ? allRows
+    : allRows.filter(r => r.name === USER.salespersonName);
+
+  if (!rows.length) {
+    document.getElementById('combined-sb-tbody').innerHTML =
+      `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">No scoreboard data for your account yet.</td></tr>`;
+  } else {
+    document.getElementById('combined-sb-tbody').innerHTML = rows.map(r => {
+      const isMe     = activeRep && r.name === activeRep;
+      const rowBg    = isMe ? 'background:rgba(91,143,204,0.07);font-weight:600' : '';
+      const ahead    = (r.pct||0) >= 100;
+      const pctDisp  = r.pct != null ? r.pct.toFixed(1)+'%' : '—';
+      const pctColor = ahead ? 'color:var(--asf-green)' : 'color:var(--red)';
+      const barPct   = r.pct != null ? Math.min(r.pct, 120) : 0;
+      const barColor = ahead ? '#5a9e45' : '#b83228';
+      const roeStr   = r.roe != null ? r.roe.toFixed(2)+'x' : '—';
+      const [rating, ratingColor] = roeRating(r.roe);
+      const yoyDisp  = r.yoy != null ? (r.yoy >= 0 ? '+' : '') + r.yoy.toFixed(1) + '%' : '—';
+      const yoyColor = r.yoy != null ? (r.yoy >= 0 ? 'color:var(--asf-green)' : 'color:var(--red)') : 'color:var(--muted)';
+      return `<tr style="${rowBg}">
+        <td>${r.name}${isMe?' <span style="font-size:9px;color:var(--asf-blue)">(you)</span>':''}</td>
+        <td style="text-align:right;font-weight:700;${yoyColor}">${yoyDisp}</td>
+        <td style="text-align:right;font-weight:700;${pctColor}">${pctDisp}</td>
+        <td style="width:100px;padding-right:12px">
+          <div style="height:8px;background:#e4ecf5;border-radius:4px;overflow:hidden;position:relative">
+            <div style="height:100%;width:${barPct}%;background:${barColor};border-radius:4px;transition:width 0.8s ease"></div>
+          </div>
+        </td>
+        <td style="text-align:right;font-weight:700;color:${ratingColor}">${roeStr}</td>
+        <td><span style="font-size:10px;font-weight:700;color:${ratingColor}">${rating}</span></td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function roeRating(roe) {
+  if (roe === null || roe === undefined) return ['—', 'var(--muted)'];
+  if (roe >= 4.0)   return ['Excellent',         'var(--asf-green)'];
+  if (roe >= 3.0)   return ['Strong',            '#3a7a28'];
+  if (roe >= 2.5)   return ['Satisfactory',      'var(--asf-blue)'];
+  if (roe > 1.5)    return ['Needs Improvement', 'var(--yellow)'];
+  return ['Critical', 'var(--red)'];
+}
+
+function renderYTDScoreboard() {
+  const fetchYear = String(CUR_YEAR);
+
+  // Determine elapsed fiscal period count (same as renderOverview)
+  const allCurSales = D.sales.filter(r => r._year === fetchYear);
+  const periodsAll  = [...new Set(allCurSales.map(r => (r.FinancialPeriod||'').trim()).filter(p => /^\d{6}$/.test(p)))].sort();
+  const lastPP      = periodsAll.length ? parseInt(periodsAll[periodsAll.length-1].slice(-2)) : 1;
+  const fpIdx       = lastPP - 1; // 0-indexed into budgetCum arrays
+
+  // Calendar month/year label for the badge
+  const lastMonthIdxSB = (lastPP + 9) % 12;
+  const lastCalYearSB  = lastPP <= 2 ? CUR_YEAR - 1 : CUR_YEAR;
+  document.getElementById('ytd-sb-badge').textContent = `through ${MONTHS[lastMonthIdxSB]} ${lastCalYearSB}`;
+
+  // Build per-rep actuals from ALL sales data (no rep filter — scoreboard always shows all)
+  const repActuals = {};
+  allCurSales.forEach(r => {
+    const rep = (r.SalesRep||'').trim();
+    if (!rep || EXCLUDED_REPS.has(rep)) return;
+    repActuals[rep] = (repActuals[rep]||0) + (+r.ExtAmount||0);
+  });
+
+  // Build prior year per-rep actuals (D.priorSales already date-capped to same elapsed period)
+  const priorRepActuals = {};
+  D.priorSales.forEach(r => {
+    const rep = (r.SalesRep||'').trim();
+    if (!rep || SCOREBOARD_EXCLUDED.has(rep)) return;
+    priorRepActuals[rep] = (priorRepActuals[rep]||0) + (+r.ExtAmount||0);
+  });
+
+  // Populate sbRepData with YTD figures (ROE merged in later by mergeROEData)
+  Object.entries(REP_TARGETS)
+    .filter(([name]) => !SCOREBOARD_EXCLUDED.has(name))
+    .forEach(([name, t]) => {
+      const actual = repActuals[name] || 0;
+      const prior  = priorRepActuals[name] || 0;
+      const budget = t.budgetCum[fpIdx] || 0;
+      const pct    = budget > 0 ? (actual / budget) * 100 : null;
+      const yoy    = prior > 0 ? ((actual - prior) / prior) * 100 : null;
+      if (!sbRepData[name]) sbRepData[name] = { name };
+      sbRepData[name].actual = actual;
+      sbRepData[name].prior  = prior;
+      sbRepData[name].budget = budget;
+      sbRepData[name].pct    = pct;
+      sbRepData[name].yoy    = yoy;
+    });
+
+  renderCombinedTable();
+}
+
+// ─── ROE DATA FETCH & MERGE ───────────────────────────────────────────────────
+const SUB_TO_REP = {};
+Object.entries(REP_TARGETS).forEach(([name, t]) => { if (t.sub) SUB_TO_REP[t.sub] = name; });
+
+let roeLoaded = false;
+
+async function fetchROEData() {
+  const loadEl = document.getElementById('roe-loading-msg');
+  const errEl  = document.getElementById('roe-err-msg');
+  loadEl.style.display = 'flex';
+  errEl.style.display  = 'none';
+
+  try {
+    if (USER.isManager) {
+      // Administrator / ASF Sales Manager — full team view via the original GI.
+      addLog(`Fetching GL expense data: trailing 12 fiscal periods (all reps)`);
+      // Soft fetch — consistent with the app's convention for optional/supplementary
+      // data (same pattern as the GC-AttributeValues lookup): logs quietly and returns
+      // [] on failure instead of surfacing the global red error banner.
+      const glRows = await tryFetchSoft('GL Expenses (ROE)', 'GC-ExpenseBySubAccount', {});
+      addLog(`GL expense rows: ${glRows.length}`);
+      mergeROEData(glRows);
+    } else {
+      // Everyone else — GC-ExpensesRepOnly is scoped server-side in Acumatica to the
+      // logged-in user's own account (not just filtered here in JS), and pre-trimmed
+      // to the trailing 12 fiscal periods via a dynamic condition filter on the GI
+      // itself. This is what lets the broader rep role be granted access at all —
+      // the original GI stays Administrator/ASF Sales Manager only.
+      addLog(`Fetching GL expense data: trailing 12 fiscal periods (own account only)`);
+      const glRows = await tryFetchSoft('GL Expenses (ROE) - Own', 'GC-ExpensesRepOnly', {});
+      addLog(`GL expense rows (own): ${glRows.length}`);
+      mergeROEDataSelf(glRows);
+    }
+    loadEl.style.display = 'none';
+    roeLoaded = true;
+
+  } catch(e) {
+    addLog('ROE fetch failed: '+e.message, 'error');
+    loadEl.style.display = 'none';
+    errEl.style.display  = 'block';
+    errEl.textContent    = `⚠ GL expense data unavailable: ${e.message}`;
+  }
+}
+
+// Rep-only path — trusts GC-ExpensesRepOnly's server-side scoping, but verifies it
+// client-side before displaying anything: if any Login besides the current user shows
+// up in the response, the Acumatica-side restriction isn't actually working as
+// intended, and showing a number in that state risks displaying (or blending in)
+// another rep's GP/expense data. Fail closed rather than silently trust the filter.
+function mergeROEDataSelf(glRows) {
+  const me = USER.salespersonName;
+  const myLogin = (USER.username || '').toLowerCase().trim();
+
+  const logins  = [...new Set(glRows.map(r => (r.Login||'').toLowerCase().trim()).filter(Boolean))];
+  const foreign = logins.filter(l => l !== myLogin);
+  if (foreign.length > 0) {
+    addLog(`⚠ GC-ExpensesRepOnly returned login(s) other than "${myLogin}" (${foreign.join(', ')}) — server-side filter may not be scoped correctly. Discarding ROE data for safety.`, 'error');
+    return;
+  }
+
+  let exp = 0;
+  glRows.forEach(r => {
+    exp += (parseFloat(r.GLHistory_tranPtdDebit)||0) - (parseFloat(r.GLHistory_tranPtdCredit)||0);
+  });
+
+  let gp = 0;
+  (D.trailing12rows||[]).forEach(r => {
+    if ((r.SalesRep||'').trim() === me) gp += (+r.ExtProfit||0);
+  });
+
+  if (!sbRepData[me]) sbRepData[me] = { name: me };
+  sbRepData[me].gp  = gp;
+  sbRepData[me].exp = exp;
+  sbRepData[me].roe = exp > 0 ? gp / exp : null;
+
+  renderCombinedTable();
+}
+
+function mergeROEData(glRows) {
+  // Trailing-12-period filtering now happens server-side via the same dynamic
+  // condition filter applied to both GC-ExpenseBySubAccount and GC-ExpensesRepOnly —
+  // no client-side period window computed here, to avoid it silently diverging from
+  // whatever Acumatica considers "trailing 12" (e.g. a timezone/clock difference
+  // between the browser and the server would otherwise cause this filter to quietly
+  // drop periods Acumatica already correctly returned).
+
+  // Subaccount format in OData: "00000" (5 digits, no hyphen)
+  // REP_TARGETS uses "000-##" format — convert for lookup
+  function subToOData(sub) {
+    if (!sub) return null;
+    const digits = sub.replace('-', '');
+    return digits.padStart(5, '0');
+  }
+  const subLookup = {};
+  Object.entries(REP_TARGETS).forEach(([name, t]) => {
+    if (t.sub) subLookup[subToOData(t.sub)] = name;
+  });
+
+  addLog('ROE subLookup: ' + JSON.stringify(subLookup));
+
+  const expByRep = {};
+  glRows.forEach(r => {
+    const sub = (r.Subaccount||'').trim();
+    const rep = subLookup[sub];
+    if (!rep || SCOREBOARD_EXCLUDED.has(rep)) return;
+    const amt = (parseFloat(r.GLHistory_tranPtdDebit)||0) - (parseFloat(r.GLHistory_tranPtdCredit)||0);
+    expByRep[rep] = (expByRep[rep]||0) + amt;
+  });
+
+  addLog(`ROE expense totals: ${JSON.stringify(expByRep)}`);
+
+  const gpByRep = {};
+  (D.trailing12rows||[]).forEach(r => {
+    const rep = (r.SalesRep||'').trim();
+    if (!rep || SCOREBOARD_EXCLUDED.has(rep)) return;
+    gpByRep[rep] = (gpByRep[rep]||0) + (+r.ExtProfit||0);
+  });
+
+  Object.keys(REP_TARGETS)
+    .filter(name => !SCOREBOARD_EXCLUDED.has(name))
+    .forEach(name => {
+      if (!sbRepData[name]) sbRepData[name] = { name };
+      const gp  = gpByRep[name]  || 0;
+      const exp = expByRep[name] || 0;
+      sbRepData[name].gp  = gp;
+      sbRepData[name].exp = exp;
+      sbRepData[name].roe = exp > 0 ? gp / exp : null;
+    });
+
+  renderCombinedTable();
 }
 
 // ─── CUSTOMER SUMMARY ─────────────────────────────────────────────────────────
@@ -2847,6 +3249,392 @@ function showTab(btn) {
   document.getElementById('pane-' + btn.dataset.tab).classList.add('active');
 }
 
+// ─── LEAD INTELLIGENCE TAB ──────────────────────────────────────────────────────
+// runLeadSearch() below calls {workerUrl}/leadintel/search. Contract:
+//
+//   POST {workerUrl}/leadintel/search
+//   Body: { customerName: string, mode: "company" | "territory", radiusMiles: number }
+//
+//   Response when mode === "company":
+//     { account: {name, city, state}, leads: [ ...trimmed project objects... ] }
+//
+//   Response when mode === "territory":
+//     { account: {name, city, state},
+//       getSpecified: [ ...trimmed project objects... ],   // Bucket 1
+//       bidNow:       [ ...trimmed project objects... ] }  // Bucket 2
+//
+// The Worker is responsible for: resolving the Acumatica business account (via
+// CData/OData) to get city/state; for "company" mode, fuzzy-matching that account
+// to ConstructConnect CompanyLeads and pulling ProjectLeads by companyId; for
+// "territory" mode, geocoding the account address and pulling ProjectLeads by
+// radius across the two status buckets. The ConstructConnect API key stays
+// server-side in the Worker — never exposed here. Full field reference, trimmed
+// payload shape, and both query flows are documented in
+// constructconnect-integration-spec.md.
+
+let liInitialized = false;
+let liAccount = null;   // resolved {name, city, state} echoed back by the Worker when a Company Name is provided
+
+function initLeadIntelTab() {
+  if (liInitialized) return;
+  liInitialized = true;
+  renderLiAdvGroups();
+}
+
+// Mirrors the Worker's FLOORING_RELEVANT_CATEGORIES — kept in sync manually.
+const LI_CATEGORY_OPTIONS = [
+  "Educational", "Elderly Care / Assisted Living", "Financial", "Fire / Police",
+  "Hotel / Motel", "Industrial", "Jails / Prisons", "Medical", "Military",
+  "Multi-Residential", "Municipal", "Museum", "Office", "Religious / Funeral",
+  "Residential Subdivision", "Restaurant", "Retail", "Single Family Residential",
+  "Warehouse / Distribution", "Library", "Casino", "Golf Course",
+  "Arenas / Stadiums", "Conference / Convention Centers", "Theaters / Auditoriums",
+  "Transportation Terminals", "Day Care Centers", "Laboratories",
+  "Fitness / Rec Centers", "Clubhouse / Community Centers",
+  "Amusement and Recreation", "Communication", "Manufacturing"
+];
+
+// Mirrors the Worker's FLOORING_CSI_CODES — kept in sync manually.
+const LI_PRODUCT_TYPE_OPTIONS = [
+  { code: "096000", label: "Flooring (General)" },
+  { code: "096219", label: "Laminate Flooring" },
+  { code: "096248", label: "Acoustic Flooring" },
+  { code: "096400", label: "Wood Flooring" },
+  { code: "096433", label: "Laminated Wood Flooring" },
+  { code: "096500", label: "Resilient Flooring" },
+  { code: "096513", label: "Resilient Base & Accessories" },
+  { code: "096516", label: "Resilient Sheet Flooring" },
+  { code: "096519", label: "Resilient Tile Flooring" },
+  { code: "096533", label: "Conductive Resilient Flooring" },
+  { code: "096536", label: "Static-Control Resilient Flooring" },
+  { code: "096566", label: "Resilient Athletic Flooring" },
+  { code: "096726", label: "Quartz Flooring" },
+];
+
+// Mirrors the Worker's two bucket status lists. Order matches project
+// lifecycle: Get Specified stages first, then Bid/VE Now stages.
+const LI_STAGE_OPTIONS = [
+  "Conceptual", "Design", "Final Planning", "Pre-Construction/Negotiated",
+  "Sub-Bidding", "GC Bidding", "Post-Bid"
+];
+
+function renderLiAdvGroups() {
+  document.getElementById('li-adv-categories').innerHTML = LI_CATEGORY_OPTIONS.map(c => `
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+      <input type="checkbox" class="li-adv-cat-cb" value="${c.replace(/"/g,'&quot;')}" checked> ${c}
+    </label>`).join('');
+  document.getElementById('li-adv-csi').innerHTML = LI_PRODUCT_TYPE_OPTIONS.map(p => `
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+      <input type="checkbox" class="li-adv-csi-cb" value="${p.code}" checked> ${p.label}
+    </label>`).join('');
+  document.getElementById('li-adv-stage').innerHTML = LI_STAGE_OPTIONS.map(s => `
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+      <input type="checkbox" class="li-adv-stage-cb" value="${s.replace(/"/g,'&quot;')}" checked> ${s}
+    </label>`).join('');
+}
+
+function toggleLiAdvGroup(group, checked) {
+  const cls = group === 'cat' ? '.li-adv-cat-cb' : group === 'csi' ? '.li-adv-csi-cb' : '.li-adv-stage-cb';
+  document.querySelectorAll(cls).forEach(cb => cb.checked = checked);
+}
+
+async function runLeadSearch() {
+  clearErr();
+  const btn = document.getElementById('li-search-btn');
+  btn.disabled = true; btn.textContent = '⟳ SEARCHING…';
+  document.getElementById('li-empty').style.display = 'none';
+  const wrap = document.getElementById('li-results-wrap');
+  wrap.style.display = 'block';
+  wrap.innerHTML = '<div class="card"><div class="card-body"><div class="empty">Searching ConstructConnect…</div></div></div>';
+
+  try {
+    const body = {};
+    body.radiusMiles = parseInt(document.getElementById('li-radius').value, 10) || 50;
+    body.companyName = document.getElementById('li-adv-company').value.trim() || null;
+    body.zipCode = document.getElementById('li-adv-zip').value.trim() || null;
+    body.projectDescription = document.getElementById('li-adv-desc').value.trim() || null;
+    body.productNameInSpecs = document.getElementById('li-adv-docsearch').value.trim() || null;
+    const checkedCats = [...document.querySelectorAll('.li-adv-cat-cb:checked')].map(cb => cb.value);
+    const checkedCsi  = [...document.querySelectorAll('.li-adv-csi-cb:checked')].map(cb => cb.value);
+    const checkedStages = [...document.querySelectorAll('.li-adv-stage-cb:checked')].map(cb => cb.value);
+    // Only send an override if the rep actually deselected something —
+    // otherwise omit so the Worker applies its own full default list.
+    body.categories = checkedCats.length < LI_CATEGORY_OPTIONS.length ? checkedCats : null;
+    body.productTypes = checkedCsi.length < LI_PRODUCT_TYPE_OPTIONS.length ? checkedCsi : null;
+    body.stages = checkedStages.length < LI_STAGE_OPTIONS.length ? checkedStages : null;
+    const resp = await fetch(`${CONFIG.workerUrl}/leadintel/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.accessToken}` },
+      body: JSON.stringify(body)
+    });
+    if (!resp.ok) {
+      let serverMsg = null;
+      try { serverMsg = (await resp.json()).error; } catch (parseErr) { /* body wasn't JSON */ }
+      if (serverMsg) throw new Error(serverMsg);
+      if (resp.status === 404) throw new Error('Worker returned 404 — /leadintel/search may not be deployed yet.');
+      throw new Error(`Worker returned ${resp.status} with no error detail.`);
+    }
+    const data = await resp.json();
+    liAccount = data.companyMatches || null;
+    renderLiResults(data);
+  } catch (e) {
+    wrap.innerHTML = `<div class="card"><div class="card-body"><div class="empty">⚠ ${e.message}</div></div></div>`;
+    addLog('Lead Intelligence search failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '🔍 FIND LEADS';
+  }
+}
+
+let liRawResults = null;     // last successful search response, kept in memory for client-side filtering
+let liFilterCategory = '';
+let liFilterStatus = '';
+let liFilterCsi = '';
+
+function renderLiResults(data) {
+  liRawResults = data;
+  liFilterCategory = ''; liFilterStatus = ''; liFilterCsi = ''; // reset filters on a fresh search
+  renderLiResultsFiltered();
+}
+
+// Builds the set of filter options actually present in the current results —
+// not a fixed global list — so reps never see an option that would return
+// nothing.
+function collectLiFilterOptions() {
+  const allLeads = [...(liRawResults.getSpecified || []), ...(liRawResults.bidNow || [])];
+  const categories = new Set(), statuses = new Set(), csis = new Set();
+  allLeads.forEach(l => {
+    (l.categories || []).forEach(c => categories.add(c));
+    if (l.projectStatus) statuses.add(l.projectStatus);
+    (l.csiCodesFlooring || []).forEach(c => csis.add(c.replace(/^\d+\s*/,'')));
+  });
+  return { categories: [...categories].sort(), statuses: [...statuses].sort(), csis: [...csis].sort() };
+}
+
+function leadMatchesLiFilters(lead) {
+  if (liFilterCategory && !(lead.categories || []).includes(liFilterCategory)) return false;
+  if (liFilterStatus && lead.projectStatus !== liFilterStatus) return false;
+  if (liFilterCsi && !(lead.csiCodesFlooring || []).some(c => c.replace(/^\d+\s*/,'') === liFilterCsi)) return false;
+  return true;
+}
+
+function onLiFilterChange() {
+  liFilterCategory = document.getElementById('li-filter-category').value;
+  liFilterStatus   = document.getElementById('li-filter-status').value;
+  liFilterCsi      = document.getElementById('li-filter-csi').value;
+  renderLiResultsFiltered();
+}
+
+function clearLiFilters() {
+  liFilterCategory = ''; liFilterStatus = ''; liFilterCsi = '';
+  renderLiResultsFiltered();
+}
+
+function renderLiFilterBar(opts) {
+  const opt = v => `<option value="${v.replace(/"/g,'&quot;')}">${v}</option>`;
+  return `
+    <div class="card" style="margin-bottom:12px">
+      <div class="ctrl-bar">
+        <select class="ctrl-select" id="li-filter-category" onchange="onLiFilterChange()">
+          <option value="">All Categories</option>${opts.categories.map(opt).join('')}
+        </select>
+        <select class="ctrl-select" id="li-filter-status" onchange="onLiFilterChange()">
+          <option value="">All Stages</option>${opts.statuses.map(opt).join('')}
+        </select>
+        <select class="ctrl-select" id="li-filter-csi" onchange="onLiFilterChange()">
+          <option value="">All Flooring Types</option>${opts.csis.map(opt).join('')}
+        </select>
+        <button class="btn-sm" onclick="clearLiFilters()">Clear Filters</button>
+      </div>
+    </div>`;
+}
+
+function renderLiResultsFiltered() {
+  const wrap = document.getElementById('li-results-wrap');
+  if (!liRawResults) return;
+  const opts = collectLiFilterOptions();
+  const acctLine = (liRawResults.companyMatches && liRawResults.companyMatches.length)
+    ? `Matched ${liRawResults.companyMatches.length} company record${liRawResults.companyMatches.length===1?'':'s'}: ` +
+      liRawResults.companyMatches.map(c => `${c.name}${c.city ? ` (${c.city}${c.state ? ', '+c.state : ''})` : ''}`).join('; ')
+    : '';
+
+  const rawSpec = liRawResults.getSpecified || [];
+  const rawBid  = liRawResults.bidNow || [];
+  const spec = rawSpec.filter(leadMatchesLiFilters);
+  const bid  = rawBid.filter(leadMatchesLiFilters);
+  const body =
+    renderLeadBucket('Get Specified — Early Design Phase', 'No bid date yet — opportunity to influence the spec. ' + acctLine, spec, rawSpec.length, liRawResults.getSpecifiedTotal ?? rawSpec.length) +
+    '<div style="height:16px"></div>' +
+    renderLeadBucket('Bid / VE Now — Active or Recent Bidding', 'Active bidding window or recently closed — value engineering opportunity. ' + acctLine, bid, rawBid.length, liRawResults.bidNowTotal ?? rawBid.length);
+
+  wrap.innerHTML = renderLiFilterBar(opts) + body;
+  // Restore selected filter values after the re-render wipes the <select> elements
+  if (liFilterCategory) document.getElementById('li-filter-category').value = liFilterCategory;
+  if (liFilterStatus)   document.getElementById('li-filter-status').value   = liFilterStatus;
+  if (liFilterCsi)      document.getElementById('li-filter-csi').value      = liFilterCsi;
+}
+
+function renderLeadBucket(title, sub, leads, rawCount, total) {
+  const body = leads.length
+    ? `<div class="lead-list">${leads.map(renderLeadCard).join('')}</div>`
+    : `<div class="empty">No matching projects found.</div>`;
+  // Compares the RAW fetched count (before the rep's own category/stage/CSI
+  // filter selections) against the true server-side total — never the
+  // post-filter count, since a rep intentionally narrowing results isn't
+  // "truncation." This surfaces the real page-limit issue that caused a
+  // wider radius search to appear to silently drop previously-visible
+  // projects: they didn't leave the radius, they got pushed off a 150-result
+  // page by other, more-recently-updated projects the wider radius pulled in.
+  const truncated = total > rawCount;
+  return `
+    <div class="card">
+      <div class="li-bucket-hdr">
+        <div>
+          <div class="li-bucket-title">${title}</div>
+          ${sub ? `<div class="li-bucket-sub">${sub}</div>` : ''}
+          ${truncated ? `<div class="li-bucket-sub" style="color:#a15c00;font-weight:700">⚠ Showing ${rawCount} of ${total} total matches — narrow your search (add categories, product types, or a smaller radius) to see the rest.</div>` : ''}
+        </div>
+        <span class="card-badge">${leads.length} result${leads.length===1?'':'s'}</span>
+      </div>
+      ${body}
+    </div>`;
+}
+
+function liStatusPillClass(status) {
+  if (!status) return 'status-design';
+  const s = status.toLowerCase();
+  if (s.includes('bid') || s.includes('award')) return s.includes('award') ? 'status-award' : 'status-bid';
+  return 'status-design';
+}
+
+// Surfaces whether it's worth clicking through to ConstructConnect for
+// plans/specs, so reps aren't digging in only to find nothing uploaded yet.
+// documentCount is the concrete signal (how many document records exist);
+// documentAcquisitionStatus adds nuance when present (e.g. "Drawings Only"
+// vs full "Available") but is often null on early-stage records.
+function renderDocBadge(lead) {
+  const count = lead.documentCount || 0;
+  const status = lead.documentAcquisitionStatus;
+  if (count > 0) {
+    const statusNote = (status && status !== 'Unknown') ? ` · ${status}` : '';
+    return `<span class="lead-doc-badge doc-available">📄 ${count} Doc${count===1?'':'s'}${statusNote}</span>`;
+  }
+  return `<span class="lead-doc-badge doc-none">📄 No Documents Yet</span>`;
+}
+
+let liDescCache = {}; // full descriptions, keyed by card id, for the expand/collapse toggle
+
+function toggleLeadDesc(id) {
+  const span = document.getElementById(id + '-text');
+  const link = document.getElementById(id + '-toggle');
+  if (!span || !link) return;
+  const full = liDescCache[id] || '';
+  const expanded = link.dataset.expanded === '1';
+  if (expanded) {
+    span.textContent = full.slice(0, 280) + '…';
+    link.textContent = 'Show more';
+    link.dataset.expanded = '0';
+  } else {
+    span.textContent = full;
+    link.textContent = 'Show less';
+    link.dataset.expanded = '1';
+  }
+}
+
+function renderLeadCard(lead) {
+  const value = lead.projectValue
+    ? '$' + Number(lead.projectValue).toLocaleString()
+    : (lead.projectValueRange?.[0] || '—');
+  const bidDate   = lead.bidDate   ? new Date(lead.bidDate).toLocaleDateString()   : null;
+  const startDate = lead.startDate ? new Date(lead.startDate).toLocaleDateString() : null;
+  const fullDesc  = (lead.projectDescription || '').replace(/<[^>]*>/g,'').trim();
+  const isLong    = fullDesc.length > 280;
+  const shortDesc = isLong ? fullDesc.slice(0, 280) + '…' : fullDesc;
+  const descId    = 'ld-' + (lead.projectId || Math.random().toString(36).slice(2));
+  if (isLong) liDescCache[descId] = fullDesc;
+  const tags = (lead.csiCodesFlooring || []).map(c => `<span class="lead-tag">${c.replace(/^\d+\s*/,'')}</span>`).join('');
+  return `
+    <div class="lead-card">
+      <div class="lead-card-top">
+        <div class="lead-title">${lead.title || 'Untitled project'}</div>
+        <div class="lead-value">${value}</div>
+      </div>
+      <div class="lead-meta-row">
+        <span class="lead-status ${liStatusPillClass(lead.projectStatus)}">${lead.projectStatus || '—'}</span>
+        ${lead.categories && lead.categories.length ? `<span class="lead-category-badge">${lead.categories.join(', ')}</span>` : ''}
+        ${renderDocBadge(lead)}
+        <span>📍 ${lead.city || '—'}${lead.state ? ', ' + lead.state : ''}</span>
+        ${bidDate ? `<span>📅 Bid: ${bidDate}</span>` : ''}
+        ${startDate ? `<span>🏗 Start: ${startDate}</span>` : ''}
+      </div>
+      ${fullDesc ? `<div class="lead-desc"><span id="${descId}-text">${shortDesc}</span>${isLong ? ` <a class="lead-link" style="cursor:pointer" id="${descId}-toggle" data-expanded="0" onclick="toggleLeadDesc('${descId}')">Show more</a>` : ''}</div>` : ''}
+      ${tags ? `<div class="lead-tags">${tags}</div>` : ''}
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <a class="lead-link" href="${lead.projectUrl}" target="_blank" rel="noopener">View on ConstructConnect →</a>
+        <a class="lead-link" style="cursor:pointer" id="${descId}-contacts-link"
+           onclick="toggleLeadContacts('${descId}', ${lead.projectId}, '${lead.contentType || 'CuratedProject'}', ${lead.packageId ? `'${lead.packageId}'` : 'null'})">👤 View Contacts</a>
+      </div>
+      <div id="${descId}-contacts" style="display:none;margin-top:8px"></div>
+    </div>`;
+}
+
+let liContactsCache = {}; // trimmed contact lists, keyed by card id, loaded on demand
+
+async function toggleLeadContacts(id, projectId, contentType, packageId) {
+  const panel = document.getElementById(id + '-contacts');
+  const link  = document.getElementById(id + '-contacts-link');
+  if (!panel || !link) return;
+
+  const isOpen = panel.style.display !== 'none';
+  if (isOpen) { panel.style.display = 'none'; link.textContent = '👤 View Contacts'; return; }
+
+  if (liContactsCache[id]) {
+    panel.innerHTML = liContactsCache[id];
+    panel.style.display = 'block';
+    link.textContent = '👤 Hide Contacts';
+    return;
+  }
+
+  link.textContent = '⟳ Loading…';
+  try {
+    const params = new URLSearchParams({ projectId, contentType });
+    if (packageId) params.set('packageId', packageId);
+    const resp = await fetch(`${CONFIG.workerUrl}/leadintel/contacts?${params}`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` }
+    });
+    let data;
+    if (!resp.ok) {
+      let msg = `Worker returned ${resp.status}`;
+      try { msg = (await resp.json()).error || msg; } catch (parseErr) { /* not JSON */ }
+      throw new Error(msg);
+    }
+    data = await resp.json();
+    const html = renderContactsList(data.contacts || []);
+    liContactsCache[id] = html;
+    panel.innerHTML = html;
+    panel.style.display = 'block';
+    link.textContent = '👤 Hide Contacts';
+  } catch (e) {
+    panel.innerHTML = `<div style="font-size:10px;color:var(--red)">⚠ ${e.message}</div>`;
+    panel.style.display = 'block';
+    link.textContent = '👤 View Contacts';
+    addLog('Failed to load project contacts: ' + e.message, 'error');
+  }
+}
+
+function renderContactsList(contacts) {
+  if (!contacts.length) {
+    return `<div style="font-size:10px;color:var(--muted);padding:6px 0">No confirmed project contacts listed — try View on ConstructConnect for more detail.</div>`;
+  }
+  return `<div style="display:flex;flex-direction:column;gap:6px">` +
+    contacts.map(c => `
+      <div style="font-size:10px;line-height:1.5;padding:7px 9px;background:var(--surface2);border-radius:6px;border:1px solid var(--border2)">
+        <div style="font-weight:700;color:var(--asf-navy)">${c.contact || '—'} <span style="font-weight:500;color:var(--dim)">— ${c.role || '—'}</span></div>
+        <div style="color:var(--dim)">${c.companyName || ''}${c.city ? ` · ${c.city}${c.state ? ', '+c.state : ''}` : ''}</div>
+        <div style="color:var(--muted);margin-top:2px">${c.phone ? '📞 '+c.phone+'  ' : ''}${c.email ? '✉ '+c.email : ''}</div>
+      </div>`).join('') +
+    `</div>`;
+}
+
 // ─── UI HELPERS ───────────────────────────────────────────────────────────────
 function setLoading(on) {
   const btn=document.getElementById('refresh-btn'), icon=document.getElementById('refresh-icon');
@@ -2941,8 +3729,6 @@ const EATER_SEED = [
     self:{E:6,A:6,T:8,En:7,R:6}, mgr:{E:8,A:8,T:8,En:8,R:7}, cal:{E:7,A:7,T:7,En:7,R:6} },
   { qtr:'Q1-2026', name:'Mitchell Jones', dept:'Residential Sales',
     self:{E:8,A:8,T:8,En:8,R:8}, mgr:{E:7,A:6.5,T:6.5,En:8,R:6}, cal:{E:7,A:6,T:5,En:6,R:6} },
-  { qtr:'Q1-2026', name:'Tom Goldston',   dept:'Residential Sales',
-    self:{E:7,A:7,T:6,En:5,R:6}, mgr:{E:9,A:8,T:8,En:7,R:6}, cal:{E:7,A:6,T:6,En:5,R:5} },
   { qtr:'Q1-2026', name:'Bobby Townsend', dept:'Residential Sales',
     self:{E:7,A:10,T:9,En:6,R:6}, mgr:{E:8,A:8,T:8,En:8,R:6}, cal:{E:7,A:7,T:7,En:6,R:6} },
   { qtr:'Q1-2026', name:'Anthony Deel',   dept:'Residential Sales',
@@ -2952,8 +3738,6 @@ const EATER_SEED = [
     self:{E:9,A:9,T:9,En:8,R:9}, mgr:{E:8,A:9,T:9,En:8,R:9}, cal:{E:8,A:9,T:7,En:7,R:9} },
   { qtr:'Q1-2026', name:'Nikki Petriello',  dept:'Commercial Sales',
     self:{E:8,A:8,T:8,En:9,R:7}, mgr:{E:7,A:9,T:9,En:8,R:7}, cal:{E:6,A:7,T:8,En:6,R:7} },
-  { qtr:'Q1-2026', name:'Damon Lockhart',   dept:'Commercial Sales',
-    self:{E:6,A:5,T:7,En:5,R:3}, mgr:{E:4,A:5,T:8,En:4,R:2}, cal:{E:4,A:5,T:7,En:4,R:3} },
   { qtr:'Q1-2026', name:'Jennifer Paredes', dept:'Commercial Sales',
     self:{E:7,A:9,T:7,En:7,R:5}, mgr:{E:7,A:8,T:8,En:7,R:7}, cal:{E:7,A:7,T:7,En:6,R:5} },
   { qtr:'Q1-2026', name:'Michael McLeod',   dept:'Commercial Sales',
@@ -2970,8 +3754,6 @@ const EATER_SEED = [
     self:{E:8,A:7,T:7,En:8,R:6}, mgr:{E:8,A:8,T:7,En:7,R:7}, cal:{E:8,A:8,T:7,En:7,R:6} },
   { qtr:'Q2-2026', name:'Mitchell Jones', dept:'Residential Sales',
     self:{E:8,A:8,T:7,En:7,R:6}, mgr:{E:7,A:7,T:6,En:6,R:5}, cal:{E:7,A:6,T:6,En:6,R:5} },
-  { qtr:'Q2-2026', name:'Tom Goldston',   dept:'Residential Sales',
-    self:{E:8,A:8,T:8,En:8,R:8}, mgr:{E:7,A:7,T:7,En:7,R:6}, cal:{E:7,A:8,T:7,En:7,R:6} },
   { qtr:'Q2-2026', name:'Bobby Townsend', dept:'Residential Sales',
     self:{E:7,A:8,T:7,En:6,R:7}, mgr:{E:7,A:7,T:7,En:7,R:7}, cal:{E:null,A:null,T:null,En:null,R:null} },
   { qtr:'Q2-2026', name:'Anthony Deel',   dept:'Residential Sales',
@@ -2981,8 +3763,6 @@ const EATER_SEED = [
     self:{E:8,A:8,T:8,En:8,R:7}, mgr:{E:8,A:9,T:9,En:7,R:7}, cal:{E:8,A:9,T:9,En:7,R:7} },
   { qtr:'Q2-2026', name:'Nikki Petriello',  dept:'Commercial Sales',
     self:{E:8,A:8,T:8,En:7,R:7}, mgr:{E:8,A:9,T:8,En:7,R:7}, cal:{E:8,A:9,T:8,En:7,R:8} },
-  { qtr:'Q2-2026', name:'Damon Lockhart',   dept:'Commercial Sales',
-    self:{E:6,A:6,T:6,En:5,R:3}, mgr:{E:6,A:6,T:7,En:5,R:3}, cal:{E:6,A:6,T:6,En:5,R:3} },
   { qtr:'Q2-2026', name:'Jennifer Paredes', dept:'Commercial Sales',
     self:{E:7,A:9,T:7,En:7,R:5}, mgr:{E:7,A:8,T:8,En:7,R:7}, cal:{E:7,A:7,T:7,En:6,R:5} },
   { qtr:'Q2-2026', name:'Michael McLeod',   dept:'Commercial Sales',
@@ -2998,8 +3778,6 @@ const EATER_EMPLOYEES = [
   { name:'Bobby Townsend',  dept:'Residential Sales' },
   { name:'Derrick Almond',  dept:'Residential Sales' },
   { name:'Mitchell Jones',  dept:'Residential Sales' },
-  { name:'Tom Goldston',    dept:'Residential Sales' },
-  { name:'Damon Lockhart',   dept:'Commercial Sales'  },
   { name:'Jason Beamer',    dept:'Commercial Sales'  },
   { name:'Michael McLeod',  dept:'Commercial Sales'  },
   { name:'Nikki Petriello', dept:'Commercial Sales'  },
