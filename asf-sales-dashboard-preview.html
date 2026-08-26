@@ -434,7 +434,9 @@
 
   #pane-display-tracker .progress-panel{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:24px 28px; margin-bottom:20px; box-shadow:var(--shadow); }
   #pane-display-tracker .progress-row{ display:grid; grid-template-columns:220px 1fr 260px; align-items:center; gap:16px; padding:9px 0; border-bottom:1px solid var(--line); }
-  #pane-display-tracker .progress-row:last-child{ border-bottom:none; }
+  #pane-display-tracker .progress-row-wrap:last-child .progress-row{ border-bottom:none; }
+  #pane-display-tracker .progress-row-wrap:not(:last-child){ border-bottom:1px solid var(--line); }
+  #pane-display-tracker .progress-row-wrap .progress-row{ border-bottom:none; }
   #pane-display-tracker .progress-label{ font-size:13px; font-weight:600; color:var(--ink); }
   #pane-display-tracker .progress-track{ display:flex; height:12px; border-radius:99px; overflow:hidden; background:var(--line); }
   #pane-display-tracker .progress-seg{ height:100%; }
@@ -443,6 +445,19 @@
   #pane-display-tracker .progress-seg.not-started{ background:var(--amber-soft); }
   #pane-display-tracker .progress-count{ font-size:12px; color:var(--text-muted); white-space:nowrap; }
   #pane-display-tracker .progress-count strong{ color:var(--ink); font-weight:600; }
+  #pane-display-tracker .progress-sub{ display:flex; align-items:center; gap:14px; font-size:11px; color:var(--text-muted); padding:0 0 10px 236px; margin-top:-4px; }
+  #pane-display-tracker .progress-sub .mismatch-toggle{ background:none; border:none; padding:0; font:inherit; color:var(--asf-blue); font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:3px; }
+  #pane-display-tracker .progress-sub .mismatch-toggle:hover{ text-decoration:underline; }
+  #pane-display-tracker .progress-sub .mismatch-toggle .chevron{ font-size:9px; }
+  #pane-display-tracker .progress-sub .mismatch-none{ color:var(--green); font-weight:600; }
+  #pane-display-tracker .mismatch-panel.hidden{ display:none; }
+  #pane-display-tracker .mismatch-panel{ margin:0 0 14px 236px; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  #pane-display-tracker .mismatch-panel table{ width:100%; border-collapse:collapse; font-size:11.5px; }
+  #pane-display-tracker .mismatch-panel th{ text-align:left; padding:7px 10px; background:var(--surface2); font-weight:700; color:var(--text-muted); text-transform:uppercase; font-size:9.5px; letter-spacing:0.05em; border-bottom:1px solid var(--line); }
+  #pane-display-tracker .mismatch-panel td{ padding:7px 10px; border-top:1px solid var(--line); vertical-align:top; }
+  #pane-display-tracker .mismatch-panel td .cust-id{ font-size:10px; color:var(--text-muted); }
+  #pane-display-tracker .mismatch-panel td em{ color:var(--text-muted); font-style:italic; }
+  #pane-display-tracker .mismatch-panel .mm-empty{ padding:14px; text-align:center; color:var(--text-muted); font-size:11.5px; }
   #pane-display-tracker .progress-legend{ display:flex; gap:16px; margin-top:14px; font-size:11.5px; color:var(--text-muted); }
   #pane-display-tracker .progress-legend span{ display:inline-flex; align-items:center; gap:5px; }
   #pane-display-tracker .progress-legend .sw{ width:9px; height:9px; border-radius:2px; display:inline-block; }
@@ -5029,6 +5044,10 @@ function buildFilters(){
   });
 }
 
+// Populated fresh by renderProgressBars() — mismatch list per display, keyed by name,
+// for the click-to-expand reconciliation panel below each bar.
+let PROGRESS_MISMATCH = {};
+
 function renderProgressBars(){
   const targets = [...new Set(Object.values(RULES.updateMap || {}).flat())];
   const rows = targets.map(display=>{
@@ -5041,18 +5060,53 @@ function renderProgressBars(){
     });
     const notStarted = denom - shipped - scheduled;
     const pct = n => denom ? (n/denom*100) : 0;
-    return { display, denom, shipped, scheduled, notStarted, shippedPct: pct(shipped), scheduledPct: pct(scheduled), notStartedPct: pct(notStarted) };
+
+    // Reconciliation: every customer actually invoiced for this display since the
+    // tracking start date, regardless of whether it's a formally required transition
+    // for them (same "any mapped SKU counts" semantics as fulfillment tracking
+    // elsewhere — a single replacement-board reorder still counts as "received").
+    // Cross-referenced against each customer's current display attribute to surface
+    // accounts whose Acumatica record hasn't been updated to reflect what they
+    // actually got — either still showing a different current display, or never
+    // enrolled in the display program at all.
+    const received = [];
+    RECORDS.forEach(r=>{
+      const line = r.lines.find(l => l.display === display);
+      if (!line) return;
+      const attributeCorrect = r.currentDisplays.some(d => d.name === display);
+      received.push({
+        id: r.id, name: r.name, rep: r.rep,
+        currentDisplayNames: r.currentDisplays.map(d=>d.name),
+        withinRequirement: r.neededDisplays.includes(display),
+        lastReceivedDate: line.date,
+        attributeCorrect
+      });
+    });
+    const totalReceived = received.length;
+    const mismatched = received.filter(c => !c.attributeCorrect);
+    PROGRESS_MISMATCH[display] = mismatched;
+
+    return { display, denom, shipped, scheduled, notStarted, shippedPct: pct(shipped), scheduledPct: pct(scheduled), notStartedPct: pct(notStarted), totalReceived, mismatchCount: mismatched.length };
   });
 
   document.getElementById('progressBars').innerHTML = rows.map(row=>`
-    <div class="progress-row">
-      <div class="progress-label">${row.display}</div>
-      <div class="progress-track" title="${row.shipped} shipped, ${row.scheduled} scheduled, ${row.notStarted} not started">
-        <div class="progress-seg shipped" style="width:${row.shippedPct}%"></div>
-        <div class="progress-seg scheduled" style="width:${row.scheduledPct}%"></div>
-        <div class="progress-seg not-started" style="width:${row.notStartedPct}%"></div>
+    <div class="progress-row-wrap">
+      <div class="progress-row">
+        <div class="progress-label">${row.display}</div>
+        <div class="progress-track" title="${row.shipped} shipped, ${row.scheduled} scheduled, ${row.notStarted} not started">
+          <div class="progress-seg shipped" style="width:${row.shippedPct}%"></div>
+          <div class="progress-seg scheduled" style="width:${row.scheduledPct}%"></div>
+          <div class="progress-seg not-started" style="width:${row.notStartedPct}%"></div>
+        </div>
+        <div class="progress-count"><strong>${row.shipped + row.scheduled}/${row.denom}</strong> in progress or shipped &middot; ${row.notStarted} not started</div>
       </div>
-      <div class="progress-count"><strong>${row.shipped + row.scheduled}/${row.denom}</strong> in progress or shipped &middot; ${row.notStarted} not started</div>
+      <div class="progress-sub">
+        <span><strong>${row.totalReceived}</strong> total customers received this display</span>
+        ${row.mismatchCount
+          ? `<button class="mismatch-toggle" onclick="toggleMismatchPanel(this,'${row.display.replace(/'/g,"\\'")}')"><span class="chevron">&#9656;</span> ${row.mismatchCount} need attribute update</button>`
+          : `<span class="mismatch-none">&#10003; all reflected correctly</span>`}
+      </div>
+      <div class="mismatch-panel hidden"></div>
     </div>
   `).join('') + `
     <div class="progress-legend">
@@ -5061,6 +5115,33 @@ function renderProgressBars(){
       <span><span class="sw" style="background:var(--amber-soft)"></span>Not started</span>
     </div>
   `;
+}
+
+function toggleMismatchPanel(btn, display){
+  const wrap = btn.closest('.progress-row-wrap');
+  const panel = wrap.querySelector('.mismatch-panel');
+  const chevron = btn.querySelector('.chevron');
+  const opening = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden');
+  chevron.innerHTML = opening ? '&#9662;' : '&#9656;';
+  if (!opening) return; // collapsing — leave existing content in place
+
+  const rows = (PROGRESS_MISMATCH[display] || []).slice().sort((a,b)=> a.name.localeCompare(b.name));
+  panel.innerHTML = rows.length ? `
+    <table>
+      <thead><tr>
+        <th>Customer</th><th>Rep</th><th>Current attribute on file</th><th>Expected?</th><th>Last received</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(c => `<tr>
+          <td>${c.name}<br><span class="cust-id">${c.id}</span></td>
+          <td>${c.rep || '—'}</td>
+          <td>${c.currentDisplayNames.length ? c.currentDisplayNames.join(', ') : '<em>Unlisted — no attribute on file</em>'}</td>
+          <td>${c.withinRequirement ? 'Yes' : 'No'}</td>
+          <td>${c.lastReceivedDate || '—'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : `<div class="mm-empty">No accounts to reconcile.</div>`;
 }
 
 function applyFilters(){
