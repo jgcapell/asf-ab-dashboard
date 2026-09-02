@@ -1788,6 +1788,31 @@ async function tryFetch(label, endpoint, params) {
   catch(e) { addLog(`✗ ${label}: ${e.message}`, 'error'); showErr(e.message); return []; }
 }
 
+// Fetches a pre-merged, KV-cached full-fiscal-year InvoicedItems dataset from
+// the Worker's /sales-cache/:year route, instead of pulling the full year
+// live via /odata/InvoicedItems. The live 12-month pull was hitting
+// Cloudflare's ~100s edge timeout (524) on closed fiscal years with a full
+// 12 periods of volume — see the Worker's /sales-cache route for the
+// chunked-pull + KV-cache fix. Row shape matches SALES_COLS exactly, so
+// callers can treat the result identically to a normal odataGet() array.
+async function fetchSalesCache(fiscalYear, { refresh = false } = {}) {
+  const url = new URL(`${CONFIG.workerUrl}/sales-cache/${fiscalYear}`);
+  if (refresh) url.searchParams.set('refresh', 'true');
+  let res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${auth.accessToken}` } });
+  if (res.status === 401 && auth.refreshToken) {
+    await doRefreshToken();
+    res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${auth.accessToken}` } });
+  }
+  if (!res.ok) { const t = await res.text(); throw new Error(`Sales cache ${res.status}: ${t.slice(0,150)}`); }
+  return res.json();
+}
+
+async function tryFetchCache(label, fiscalYear) {
+  addLog(`Fetching ${label}…`);
+  try { const r = await fetchSalesCache(fiscalYear); addLog(`✓ ${label}: ${r.length} rows`, 'ok'); return r; }
+  catch(e) { addLog(`✗ ${label}: ${e.message}`, 'error'); showErr(e.message); return []; }
+}
+
 // Same as tryFetch but for optional/non-critical lookups — logs failure quietly
 // instead of surfacing the red error banner. Used for the attribute-value lookup
 // GI, which may not exist yet in Acumatica or may be mid-setup.
@@ -1836,21 +1861,19 @@ async function loadData() {
     addLog(`Fetching FY${curFyLabel}: ${curStart} → ${todayStr}`);
     addLog(`Fetching FY${priFyLabel} YTD: ${priStart} → ${priEnd}`);
 
-    // Full prior FY end = Oct 31 of (CUR_YEAR-1) — covers the whole prior fiscal year
-    // This fills the trailing 12 gap (Jun–Oct prior year) and also covers prior YTD
-    const priorFyEnd = `${CUR_YEAR - 1}-10-31`;
-
+    // Prior FY is closed and won't change, so it's served from the Worker's
+    // KV-backed /sales-cache route (4 parallel quarterly pulls behind the
+    // scenes on a cache miss) rather than a live 12-month InvoicedItems
+    // query — the live version was hitting Cloudflare's ~100s edge timeout
+    // (524) on years with a full 12 periods of volume. Current FY stays a
+    // live pull since it's still open and growing daily.
     const [curRows, priRows] = await Promise.all([
       tryFetch(`Sales FY${curFyLabel}`, 'InvoicedItems', {
         '$select':  SALES_COLS,
         '$filter':  `InvoiceDate ge datetime'${curStart}T00:00:00' and InvoiceDate le datetime'${todayStr}T23:59:59'`,
         '$orderby': 'InvoiceDate desc',
       }),
-      tryFetch(`Sales FY${priFyLabel} (full year)`, 'InvoicedItems', {
-        '$select':  SALES_COLS,
-        '$filter':  `InvoiceDate ge datetime'${priStart}T00:00:00' and InvoiceDate le datetime'${priorFyEnd}T23:59:59'`,
-        '$orderby': 'InvoiceDate desc',
-      }),
+      tryFetchCache(`Sales FY${priFyLabel} (full year)`, priFyLabel),
     ]);
 
     curRows.forEach(r => { r._year = curFyLabel; r._fyFull = true; });
