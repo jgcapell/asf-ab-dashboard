@@ -603,17 +603,24 @@
   #pane-d10 .d10-group-hdr { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--asf-blue); margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 2px solid var(--border2); }
   #pane-d10 .d10-group-hdr:first-of-type { margin-top: 0; }
 
-  #pane-d10 .d10-table-wrap { overflow-x: auto; border: 1px solid var(--border2); border-radius: 8px; }
+  #pane-d10 .d10-table-wrap { overflow-x: auto; overflow-y: auto; max-height: 440px; border: 1px solid var(--border2); border-radius: 8px; }
   #pane-d10 table.d10-table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
   #pane-d10 table.d10-table th { background: var(--surface2); color: var(--dim); font-weight: 700; text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); font-size: 10px; letter-spacing: 0.03em; text-transform: uppercase; position: sticky; top: 0; }
   #pane-d10 table.d10-table td { padding: 5px 10px; border-bottom: 1px solid var(--border2); color: var(--text); }
   #pane-d10 table.d10-table tr:last-child td { border-bottom: none; }
   #pane-d10 table.d10-table td.d10-rowname { font-weight: 600; color: var(--asf-navy); white-space: nowrap; }
+  #pane-d10 table.d10-table tr.d10-rep-subhdr td { background: var(--surface2); font-weight: 700; color: var(--asf-navy); padding: 8px 10px; border-top: 2px solid var(--border); font-size: 11px; letter-spacing: 0.03em; }
+  #pane-d10 table.d10-table td.d10-metric-label { padding-left: 22px; color: var(--dim); font-weight: 500; white-space: nowrap; }
   #pane-d10 table.d10-table input[type=number], #pane-d10 table.d10-table input[type=text], #pane-d10 table.d10-table input[type=date] { width: 78px; padding: 4px 6px; border: 1px solid var(--border2); border-radius: 4px; font-size: 11px; font-family: inherit; background: var(--surface); color: var(--text); }
   #pane-d10 table.d10-table input:disabled { background: var(--surface2); color: var(--muted); border-color: transparent; cursor: not-allowed; }
   #pane-d10 table.d10-table select { padding: 4px 6px; border: 1px solid var(--border2); border-radius: 4px; font-size: 10px; font-family: inherit; background: var(--surface); color: var(--text); }
   #pane-d10 .d10-goal-cell { display: flex; gap: 4px; align-items: center; }
   #pane-d10 .d10-goal-cell input { width: 60px !important; }
+  #pane-d10 .d10-goal-weekly-hint { font-size: 9px; color: var(--muted); margin-top: 2px; }
+  #pane-d10 table.d10-table td.d10-cell-hit  { background: var(--green-soft); }
+  #pane-d10 table.d10-table td.d10-cell-miss { background: var(--red-soft); }
+  #pane-d10 table.d10-table td.d10-cell-hit  input, #pane-d10 table.d10-table td.d10-cell-miss input { background: transparent; }
+  #pane-d10 .d10-legend-swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
 
   #pane-d10 .d10-status-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; border: none; text-transform: uppercase; }
   #pane-d10 .d10-status-chip.d10-on   { background: var(--green-soft); color: var(--asf-green); }
@@ -1640,7 +1647,11 @@
     <div class="d10-segment-content" id="d10-seg-scorecard">
       <div class="d10-card">
         <div class="d10-card-title">Scorecard</div>
-        <div class="d10-card-sub">Rolling 13-week (90-day) view. Managers/admins can edit any row; reps can edit their own row only.</div>
+        <div class="d10-card-sub">Rolling 13-week (90-day) view, current week first. Managers/admins can edit any row; reps can edit their own row only.
+          <span style="display:inline-block;margin-left:8px"><span class="d10-legend-swatch" style="background:var(--green-soft)"></span>meeting/exceeding goal</span>
+          <span style="display:inline-block;margin-left:8px"><span class="d10-legend-swatch" style="background:var(--red-soft)"></span>below goal</span>
+          &mdash; monthly goals are compared against a weekly-equivalent (&divide;4.33 wks/mo); hover any shaded cell for the math.
+        </div>
         <div id="d10-scorecard-groups"><!-- filled by JS: one .d10-group-hdr + .d10-table-wrap per segment --></div>
       </div>
     </div>
@@ -5692,11 +5703,44 @@ const D10_ROSTER = {
   hybrid:     ['Nikki Petriello','Bobby Townsend','Anthony Deel'],
   commercial: ['Sean Mitchell','Jason Beamer','Michael McLeod'],
 };
-const D10_GROUP_LABELS = { retail:'Retail', hybrid:'Hybrid', commercial:'Commercial' };
+const D10_GROUP_LABELS = { retail:'Residential', hybrid:'Hybrid', commercial:'Commercial' };
 const D10_ALL_PEOPLE = [].concat(D10_ROSTER.retail, D10_ROSTER.hybrid, D10_ROSTER.commercial);
 // Managers are assignable on To-Dos (IDS regularly assigns action items to leadership too)
 // but are NOT part of the Scorecard/Rock Review rosters above.
 const D10_TODO_ASSIGNEES = D10_ALL_PEOPLE.concat(['Phil Branon','Lauren Good','Todd Good','Sherry Kelly']);
+
+// Scorecard metric definitions per group — each rep gets one row per metric below,
+// each with its own Goal + rolling weekly figures. "# of Customer Calls (Commercial)"
+// is split into three call-category rows (End User / A&D / Dealer) rather than one
+// row needing a second input, so it stays consistent with every other metric row.
+const D10_METRICS = {
+  retail: [
+    { key:'calls',           label:'# of Customer Calls' },
+    { key:'builderLeads',    label:'Builder Leads Entered' },
+    { key:'activeCustomers', label:'Active (Buying) Customers' },
+    { key:'activeDisplays',  label:'Active Displays' },
+  ],
+  hybrid: [
+    { key:'callsRetail',        label:'# of Customer Calls (Retail)' },
+    { key:'callsCommEndUser',   label:'# of Customer Calls (Commercial) — End User' },
+    { key:'callsCommAD',        label:'# of Customer Calls (Commercial) — A&D' },
+    { key:'callsCommDealer',    label:'# of Customer Calls (Commercial) — Dealer' },
+    { key:'builderLeads',       label:'Builder Leads Entered' },
+    { key:'activeCustomers',    label:'Active (Buying) Customers' },
+    { key:'activeDisplays',     label:'Active Displays' },
+    { key:'oppClosing90',       label:'Opportunity $$ Closing in 90 Days' },
+    { key:'newLeads',           label:'New Leads Added' },
+    { key:'maxxonPresentations',label:'Maxxon Applicator Presentations' },
+  ],
+  commercial: [
+    { key:'callsCommEndUser',   label:'# of Customer Calls (Commercial) — End User' },
+    { key:'callsCommAD',        label:'# of Customer Calls (Commercial) — A&D' },
+    { key:'callsCommDealer',    label:'# of Customer Calls (Commercial) — Dealer' },
+    { key:'oppClosing90',       label:'Opportunity $$ Closing in 90 Days' },
+    { key:'newLeads',           label:'New Leads Added' },
+    { key:'maxxonPresentations',label:'Maxxon Applicator Presentations' },
+  ],
+};
 
 let d10CurrentSegment    = 'segue';
 let d10Data              = null;  // in-memory data blob: {scorecard, rocks, todos, issues, segue, meetingLog}
@@ -5729,27 +5773,35 @@ function d10GetRollingWeeks() {
 
 // ── Default / seed data ─────────────────────────────────────────────────────
 function d10DefaultData() {
-  const mkRows = (names) => names.map(n => ({ name:n, goalValue:'', goalUnit:'month', weeks:{} }));
+  const mkScorecardRows = (grp) => {
+    const rows = [];
+    D10_ROSTER[grp].forEach(rep => {
+      D10_METRICS[grp].forEach(m => rows.push({ rep, metricKey:m.key, goalValue:'', goalUnit:'week', weeks:{} }));
+    });
+    return rows;
+  };
   return {
-    scorecard: { retail: mkRows(D10_ROSTER.retail), hybrid: mkRows(D10_ROSTER.hybrid), commercial: mkRows(D10_ROSTER.commercial) },
+    scorecard: { retail: mkScorecardRows('retail'), hybrid: mkScorecardRows('hybrid'), commercial: mkScorecardRows('commercial') },
     rocks: D10_ALL_PEOPLE.map(n => ({ id:d10Uid(), person:n, text:'', deadline:'', status:'on-track' })),
     todos: [],
     issues: [],
-    segue: {},   // keyed by Monday-date week key: { attendance:{name:bool}, wins:{name:text} }
+    segue: {},   // keyed by Monday-date week key: { attendance:{name:bool} } — see d10GetSegueWeek
     meetingLog: [],
   };
 }
 
-// Merge saved KV data over the current-roster default shape so a roster change
-// (new hire, departure) never silently drops or corrupts what's already saved.
+// Merge saved KV data over the current-roster/metric shape so a roster or metric-list
+// change (new hire, departure, added metric) never silently drops or corrupts what's
+// already saved. Scorecard rows are keyed by rep+metric since a rep now has several.
 function d10MergeData(saved) {
   const base = d10DefaultData();
   if (!saved || typeof saved !== 'object') return base;
   ['retail','hybrid','commercial'].forEach(grp => {
     const savedRows = (saved.scorecard && saved.scorecard[grp]) || [];
-    const byName = new Map(savedRows.map(r => [r.name, r]));
-    base.scorecard[grp] = base.scorecard[grp].map(r => byName.get(r.name) ? Object.assign({}, r, byName.get(r.name)) : r);
-    savedRows.forEach(r => { if (!base.scorecard[grp].find(x => x.name === r.name)) base.scorecard[grp].push(r); });
+    const rowKey = r => r.rep + '|' + r.metricKey;
+    const byKey = new Map(savedRows.map(r => [rowKey(r), r]));
+    base.scorecard[grp] = base.scorecard[grp].map(r => byKey.has(rowKey(r)) ? Object.assign({}, r, byKey.get(rowKey(r))) : r);
+    savedRows.forEach(r => { if (!base.scorecard[grp].find(x => rowKey(x) === rowKey(r))) base.scorecard[grp].push(r); });
   });
   if (Array.isArray(saved.rocks) && saved.rocks.length) {
     const byPerson = new Map(saved.rocks.map(r => [r.person, r]));
@@ -5927,49 +5979,81 @@ function d10ShowSegment(key) {
 }
 
 // ═══════════════════════════ SCORECARD ═══════════════════════════
+// Each rep now has several metric rows (see D10_METRICS), grouped under a
+// rep sub-header row within their group's table, each with its own Goal.
+function d10FindScorecardRow(grp, rep, metricKey) {
+  return d10Data.scorecard[grp].find(r => r.rep === rep && r.metricKey === metricKey);
+}
+const D10_WEEKS_PER_MONTH = 52 / 12; // ≈4.33 — used only to convert a monthly Goal into a
+                                      // weekly-equivalent for conditional formatting; the
+                                      // Goal value/unit shown to the user is never rewritten.
+// Returns the weekly-equivalent target for a row's Goal, or null if no goal is set.
+function d10WeeklyTarget(row) {
+  if (row.goalValue === '' || row.goalValue === null || row.goalValue === undefined) return null;
+  const g = Number(row.goalValue);
+  if (isNaN(g)) return null;
+  return row.goalUnit === 'month' ? g / D10_WEEKS_PER_MONTH : g;
+}
 function d10RenderScorecard() {
   const weeks = d10GetRollingWeeks();
+  const colCount = 2 + weeks.length;
   document.getElementById('d10-scorecard-groups').innerHTML = ['retail','hybrid','commercial'].map(grp => {
-    const rowsHtml = d10Data.scorecard[grp].map(row => {
-      const canEdit = d10CanEdit(row.name);
-      const nameJs  = row.name.replace(/'/g, "\\'");
-      const weekCells = weeks.map(w => {
-        const val = row.weeks[w.key];
-        return `<td><input type="number" step="any" value="${val===undefined||val===null?'':val}" ${canEdit?'':'disabled'} `
-             + `onchange="d10UpdateWeekCell('${grp}','${nameJs}','${w.key}',this.value)"></td>`;
+    const repBlocks = D10_ROSTER[grp].map(rep => {
+      const canEdit = d10CanEdit(rep);
+      const repJs = rep.replace(/'/g, "\\'");
+      const metricRows = D10_METRICS[grp].map(m => {
+        const row = d10FindScorecardRow(grp, rep, m.key);
+        const target = d10WeeklyTarget(row);
+        const targetTitle = target !== null
+          ? `Weekly target: ${d10Round1(target)}` + (row.goalUnit === 'month' ? ` (from monthly goal of ${row.goalValue}, ÷${d10Round1(D10_WEEKS_PER_MONTH)} wks/mo)` : '')
+          : 'Set a goal to enable meeting/missed shading';
+        const weekCells = weeks.map(w => {
+          const val = row.weeks[w.key];
+          const hasVal = val !== undefined && val !== null;
+          let cellClass = '';
+          if (target !== null && hasVal) cellClass = Number(val) >= target ? 'd10-cell-hit' : 'd10-cell-miss';
+          return `<td class="${cellClass}" title="${targetTitle}"><input type="number" step="any" value="${hasVal?val:''}" ${canEdit?'':'disabled'} `
+               + `onchange="d10UpdateWeekCell('${grp}','${repJs}','${m.key}','${w.key}',this.value)"></td>`;
+        }).join('');
+        const weeklyHint = row.goalUnit === 'month' && target !== null
+          ? `<div class="d10-goal-weekly-hint">&asymp; ${d10Round1(target)}/wk</div>` : '';
+        return `<tr>
+          <td class="d10-metric-label">${d10Escape(m.label)}</td>
+          <td><div class="d10-goal-cell">
+            <input type="number" step="any" value="${row.goalValue===undefined||row.goalValue===null?'':row.goalValue}" ${canEdit?'':'disabled'}
+              onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','value',this.value)">
+            <select ${canEdit?'':'disabled'} onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','unit',this.value)">
+              <option value="week" ${row.goalUnit!=='month'?'selected':''}>/wk</option>
+              <option value="month" ${row.goalUnit==='month'?'selected':''}>/mo</option>
+            </select>
+          </div>${weeklyHint}</td>
+          ${weekCells}
+        </tr>`;
       }).join('');
-      return `<tr>
-        <td class="d10-rowname">${d10Escape(row.name)}</td>
-        <td><div class="d10-goal-cell">
-          <input type="number" step="any" value="${row.goalValue===undefined||row.goalValue===null?'':row.goalValue}" ${canEdit?'':'disabled'}
-            onchange="d10UpdateGoal('${grp}','${nameJs}','value',this.value)">
-          <select ${canEdit?'':'disabled'} onchange="d10UpdateGoal('${grp}','${nameJs}','unit',this.value)">
-            <option value="week" ${row.goalUnit==='week'?'selected':''}>/wk</option>
-            <option value="month" ${row.goalUnit!=='week'?'selected':''}>/mo</option>
-          </select>
-        </div></td>
-        ${weekCells}
-      </tr>`;
+      return `<tr class="d10-rep-subhdr"><td colspan="${colCount}">${d10Escape(rep)}</td></tr>${metricRows}`;
     }).join('');
     return `<div class="d10-group-hdr">${D10_GROUP_LABELS[grp]}</div>
       <div class="d10-table-wrap"><table class="d10-table">
-        <thead><tr><th>Rep</th><th>Goal</th>${weeks.map(w => `<th>Wk ${w.label}</th>`).join('')}</tr></thead>
-        <tbody>${rowsHtml}</tbody>
+        <thead><tr><th>Metric</th><th>Goal</th>${weeks.map(w => `<th>Wk ${w.label}</th>`).join('')}</tr></thead>
+        <tbody>${repBlocks}</tbody>
       </table></div>`;
   }).join('');
 }
-function d10UpdateWeekCell(grp, name, weekKey, value) {
-  const row = d10Data.scorecard[grp].find(r => r.name === name);
-  if (!row || !d10CanEdit(name)) return;
+function d10Round1(n) { return Math.round(n * 10) / 10; }
+function d10UpdateWeekCell(grp, rep, metricKey, weekKey, value) {
+  const row = d10FindScorecardRow(grp, rep, metricKey);
+  if (!row || !d10CanEdit(rep)) return;
   row.weeks[weekKey] = value === '' ? null : Number(value);
   d10SaveData();
+  d10RenderScorecard(); // re-render so the meeting/missed shading updates immediately
 }
-function d10UpdateGoal(grp, name, field, value) {
-  const row = d10Data.scorecard[grp].find(r => r.name === name);
-  if (!row || !d10CanEdit(name)) return;
+function d10UpdateGoal(grp, rep, metricKey, field, value) {
+  const row = d10FindScorecardRow(grp, rep, metricKey);
+  if (!row || !d10CanEdit(rep)) return;
   if (field === 'value') row.goalValue = value === '' ? '' : Number(value);
   else row.goalUnit = value;
   d10SaveData();
+  d10RenderScorecard(); // goal changed — every week cell's shading in this row depends on it
 }
 
 // ═══════════════════════════ ROCK REVIEW ═══════════════════════════
