@@ -567,6 +567,81 @@
     #pane-display-tracker .hero{ grid-template-columns:1fr; }
     #pane-display-tracker thead th:nth-child(3), #pane-display-tracker tbody td:nth-child(3){ display:none; }
   }
+  /* ═══════════════════════════════ D10 TAB ═══════════════════════════════ */
+  #pane-d10 .d10-wrap { max-width: 1400px; margin: 0 auto; padding: 20px 24px 60px; }
+
+  /* Timer bar — sticky so it stays visible while scrolling any segment's content */
+  #pane-d10 .d10-timerbar { position: sticky; top: 0; z-index: 20; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); padding: 14px 20px; margin-bottom: 18px; }
+  #pane-d10 .d10-timer-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  #pane-d10 .d10-clock { font-family: 'Syne', sans-serif; font-size: 34px; font-weight: 800; color: var(--asf-navy); letter-spacing: 0.02em; min-width: 110px; }
+  #pane-d10 .d10-clock.d10-warn { color: var(--orange); }
+  #pane-d10 .d10-clock.d10-over { color: var(--red); }
+  #pane-d10 .d10-timer-meta { font-size: 10px; color: var(--muted); letter-spacing: 0.06em; font-weight: 600; text-transform: uppercase; }
+  #pane-d10 .d10-timer-btns { display: flex; gap: 8px; margin-left: auto; }
+  #pane-d10 .d10-tbtn { padding: 7px 16px; border-radius: 6px; font-size: 11px; font-family: inherit; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--dim); transition: all .15s; }
+  #pane-d10 .d10-tbtn:hover { background: var(--border2); }
+  #pane-d10 .d10-tbtn.d10-start { background: var(--asf-green); border-color: var(--asf-green); color: #fff; }
+  #pane-d10 .d10-tbtn.d10-start:hover { background: #4c8639; }
+  #pane-d10 .d10-tbtn.d10-pause { background: var(--yellow); border-color: var(--yellow); color: #fff; }
+  #pane-d10 .d10-tbtn.d10-end { background: var(--red); border-color: var(--red); color: #fff; }
+  #pane-d10 .d10-sync-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background: var(--asf-green); margin-right:5px; vertical-align:middle; }
+
+  /* Segment progress bar */
+  #pane-d10 .d10-segbar { display: flex; gap: 3px; margin-top: 12px; height: 26px; border-radius: 6px; overflow: hidden; }
+  #pane-d10 .d10-seg-block { position: relative; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--surface2); border: 1px solid var(--border2); cursor: pointer; transition: all .15s; }
+  #pane-d10 .d10-seg-block:hover { background: var(--border2); }
+  #pane-d10 .d10-seg-block.d10-seg-active { background: var(--asf-navy); color: #fff; border-color: var(--asf-navy); }
+  #pane-d10 .d10-seg-block.d10-seg-onschedule:not(.d10-seg-active) { box-shadow: inset 0 0 0 2px var(--asf-blue); color: var(--asf-navy); }
+  #pane-d10 .d10-seg-block.d10-seg-done { background: rgba(90,158,69,0.14); color: var(--asf-green); }
+
+  /* Segment content panes */
+  #pane-d10 .d10-segment-content { display: none; }
+  #pane-d10 .d10-segment-content.d10-active { display: block; }
+  #pane-d10 .d10-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 18px; }
+  #pane-d10 .d10-card-title { font-size: 13px; font-weight: 700; color: var(--asf-navy); margin-bottom: 4px; }
+  #pane-d10 .d10-card-sub { font-size: 11px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+  #pane-d10 .d10-group-hdr { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--asf-blue); margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 2px solid var(--border2); }
+  #pane-d10 .d10-group-hdr:first-of-type { margin-top: 0; }
+
+  #pane-d10 .d10-table-wrap { overflow-x: auto; border: 1px solid var(--border2); border-radius: 8px; }
+  #pane-d10 table.d10-table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+  #pane-d10 table.d10-table th { background: var(--surface2); color: var(--dim); font-weight: 700; text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); font-size: 10px; letter-spacing: 0.03em; text-transform: uppercase; position: sticky; top: 0; }
+  #pane-d10 table.d10-table td { padding: 5px 10px; border-bottom: 1px solid var(--border2); color: var(--text); }
+  #pane-d10 table.d10-table tr:last-child td { border-bottom: none; }
+  #pane-d10 table.d10-table td.d10-rowname { font-weight: 600; color: var(--asf-navy); white-space: nowrap; }
+  #pane-d10 table.d10-table input[type=number], #pane-d10 table.d10-table input[type=text], #pane-d10 table.d10-table input[type=date] { width: 78px; padding: 4px 6px; border: 1px solid var(--border2); border-radius: 4px; font-size: 11px; font-family: inherit; background: var(--surface); color: var(--text); }
+  #pane-d10 table.d10-table input:disabled { background: var(--surface2); color: var(--muted); border-color: transparent; cursor: not-allowed; }
+  #pane-d10 table.d10-table select { padding: 4px 6px; border: 1px solid var(--border2); border-radius: 4px; font-size: 10px; font-family: inherit; background: var(--surface); color: var(--text); }
+  #pane-d10 .d10-goal-cell { display: flex; gap: 4px; align-items: center; }
+  #pane-d10 .d10-goal-cell input { width: 60px !important; }
+
+  #pane-d10 .d10-status-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; border: none; text-transform: uppercase; }
+  #pane-d10 .d10-status-chip.d10-on   { background: var(--green-soft); color: var(--asf-green); }
+  #pane-d10 .d10-status-chip.d10-off  { background: var(--red-soft); color: var(--red); }
+
+  #pane-d10 .d10-ids-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 900px) { #pane-d10 .d10-ids-grid { grid-template-columns: 1fr; } }
+  #pane-d10 .d10-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  #pane-d10 .d10-litem { background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 12px; }
+  #pane-d10 .d10-litem-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  #pane-d10 .d10-litem-text { font-size: 12px; color: var(--text); font-weight: 500; line-height: 1.4; flex: 1; }
+  #pane-d10 .d10-litem-text.d10-resolved, #pane-d10 .d10-litem-text.d10-done { text-decoration: line-through; color: var(--muted); }
+  #pane-d10 .d10-litem-meta { font-size: 10px; color: var(--muted); margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap; }
+  #pane-d10 .d10-litem-link { font-size: 10px; color: var(--asf-blue); font-weight: 600; margin-top: 5px; }
+  #pane-d10 .d10-x { background: none; border: none; color: var(--muted); font-size: 15px; cursor: pointer; line-height: 1; padding: 2px 4px; }
+  #pane-d10 .d10-x:hover { color: var(--red); }
+  #pane-d10 .d10-check { width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; margin-top: 1px; }
+
+  #pane-d10 .d10-addform { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border2); }
+  #pane-d10 .d10-addform input[type=text] { flex: 1; min-width: 160px; padding: 7px 10px; border: 1px solid var(--border2); border-radius: 6px; font-size: 12px; font-family: inherit; }
+  #pane-d10 .d10-addform select, #pane-d10 .d10-addform input[type=date] { padding: 7px 8px; border: 1px solid var(--border2); border-radius: 6px; font-size: 11px; font-family: inherit; background: var(--surface); }
+  #pane-d10 .d10-addbtn { padding: 7px 16px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; border: none; background: var(--asf-navy); color: #fff; cursor: pointer; }
+  #pane-d10 .d10-addbtn:hover { background: #174068; }
+
+  #pane-d10 .d10-recap-card { border-left: 3px solid var(--asf-blue); }
+  #pane-d10 .d10-segue-notes { width: 100%; min-height: 90px; padding: 10px; border: 1px solid var(--border2); border-radius: 8px; font-family: inherit; font-size: 12px; resize: vertical; }
+  #pane-d10 .d10-rating-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  #pane-d10 .d10-locked-note { font-size: 10px; color: var(--muted); font-style: italic; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -648,6 +723,7 @@
     <button class="tab" data-tab="eater" onclick="showTab(this);initEaterTab()">E.A.T.E.R.</button>
     <button class="tab" data-tab="display-tracker" onclick="showTab(this);initDisplayTracker()">Display Tracker</button>
     <button class="tab" data-tab="leadintel" onclick="showTab(this);initLeadIntelTab()">Lead Intelligence</button>
+    <button class="tab" data-tab="d10" onclick="showTab(this);initD10Tab()">D10</button>
   </div>
 
   <!-- ═══════════════════════════════════ TAB: SALES OVERVIEW -->
@@ -1516,6 +1592,115 @@
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════ TAB: D10 -->
+  <div id="pane-d10" class="tab-pane">
+  <div class="d10-wrap">
+
+    <div class="d10-timerbar">
+      <div class="d10-timer-row">
+        <div>
+          <div class="d10-clock" id="d10-clock">45:00</div>
+          <div class="d10-timer-meta" id="d10-timer-meta"><span class="d10-sync-dot"></span>Not started</div>
+        </div>
+        <div class="d10-timer-btns">
+          <button class="d10-tbtn d10-start" id="d10-btn-start" onclick="d10Start()">Start</button>
+          <button class="d10-tbtn d10-pause" id="d10-btn-pause" onclick="d10Pause()" style="display:none">Pause</button>
+          <button class="d10-tbtn" id="d10-btn-reset" onclick="d10Reset()">Reset</button>
+          <button class="d10-tbtn d10-end" id="d10-btn-end" onclick="d10EndMeeting()">End Meeting</button>
+        </div>
+      </div>
+      <div class="d10-segbar" id="d10-segbar"><!-- filled by JS --></div>
+    </div>
+
+    <!-- SEGUE -->
+    <div class="d10-segment-content" id="d10-seg-segue">
+      <div class="d10-card">
+        <div class="d10-card-title">Segue</div>
+        <div class="d10-card-sub">Personal and business good news &mdash; quick round the room before diving in.</div>
+        <textarea class="d10-segue-notes" id="d10-segue-notes" placeholder="Good news, headlines, anything worth a mention before diving in&hellip;" onblur="d10SaveSegueNotes()"></textarea>
+      </div>
+    </div>
+
+    <!-- SCORECARD -->
+    <div class="d10-segment-content" id="d10-seg-scorecard">
+      <div class="d10-card">
+        <div class="d10-card-title">Scorecard</div>
+        <div class="d10-card-sub">Rolling 13-week (90-day) view. Managers/admins can edit any row; reps can edit their own row only.</div>
+        <div id="d10-scorecard-groups"><!-- filled by JS: one .d10-group-hdr + .d10-table-wrap per segment --></div>
+      </div>
+    </div>
+
+    <!-- ROCK REVIEW -->
+    <div class="d10-segment-content" id="d10-seg-rocks">
+      <div class="d10-card">
+        <div class="d10-card-title">Rock Review</div>
+        <div class="d10-card-sub">One 90-day Rock per person. Click a status chip to toggle On-Track / Off-Track.</div>
+        <div id="d10-rocks-groups"><!-- filled by JS --></div>
+      </div>
+    </div>
+
+    <!-- IDS -->
+    <div class="d10-segment-content" id="d10-seg-ids">
+      <div class="d10-card">
+        <div class="d10-card-title">IDS &mdash; Identify, Discuss, Solve</div>
+        <div class="d10-card-sub">Raise issues on the left; assign To-Dos on the right. Link a To-Do back to the issue that raised it.</div>
+        <div class="d10-ids-grid">
+          <div>
+            <div class="d10-group-hdr">Issues</div>
+            <div class="d10-list" id="d10-issues-list"></div>
+            <div class="d10-addform">
+              <input type="text" id="d10-new-issue-text" placeholder="New issue&hellip;">
+              <input type="text" id="d10-new-issue-owner" placeholder="Raised by (optional)" style="max-width:140px">
+              <button class="d10-addbtn" onclick="d10AddIssue()">Add Issue</button>
+            </div>
+          </div>
+          <div>
+            <div class="d10-group-hdr">To-Dos</div>
+            <div class="d10-list" id="d10-todos-list"></div>
+            <div class="d10-addform">
+              <input type="text" id="d10-new-todo-text" placeholder="New to-do&hellip;">
+              <select id="d10-new-todo-person"></select>
+              <select id="d10-new-todo-cadence">
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Bi-weekly</option>
+              </select>
+              <input type="date" id="d10-new-todo-due">
+              <select id="d10-new-todo-issue"><option value="">No linked issue</option></select>
+              <button class="d10-addbtn" onclick="d10AddTodo()">Add To-Do</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONCLUDE -->
+    <div class="d10-segment-content" id="d10-seg-conclude">
+      <div class="d10-card d10-recap-card">
+        <div class="d10-card-title">Conclude</div>
+        <div class="d10-card-sub">Recap of what came out of this meeting, plus a quick close-out rating.</div>
+        <div class="d10-group-hdr">To-Dos created this meeting</div>
+        <div class="d10-list" id="d10-recap-todos"></div>
+        <div class="d10-group-hdr">Off-Track Rocks</div>
+        <div class="d10-list" id="d10-recap-rocks"></div>
+        <div class="d10-group-hdr">Meeting Rating</div>
+        <div class="d10-rating-row">
+          <select id="d10-rating-select">
+            <option value="">Rate 1&ndash;10</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+          <input type="text" id="d10-rating-note" placeholder="Optional note" style="flex:1;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;font-family:inherit;font-size:12px">
+          <button class="d10-addbtn" onclick="d10SaveRating()">Save Rating</button>
+        </div>
+        <div id="d10-rating-history" class="d10-locked-note"></div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
 </div><!-- /#dashboard -->
 
 <script>
@@ -1788,6 +1973,31 @@ async function tryFetch(label, endpoint, params) {
   catch(e) { addLog(`✗ ${label}: ${e.message}`, 'error'); showErr(e.message); return []; }
 }
 
+// Fetches a pre-merged, KV-cached full-fiscal-year InvoicedItems dataset from
+// the Worker's /sales-cache/:year route, instead of pulling the full year
+// live via /odata/InvoicedItems. The live 12-month pull was hitting
+// Cloudflare's ~100s edge timeout (524) on closed fiscal years with a full
+// 12 periods of volume — see the Worker's /sales-cache route for the
+// chunked-pull + KV-cache fix. Row shape matches SALES_COLS exactly, so
+// callers can treat the result identically to a normal odataGet() array.
+async function fetchSalesCache(fiscalYear, { refresh = false } = {}) {
+  const url = new URL(`${CONFIG.workerUrl}/sales-cache/${fiscalYear}`);
+  if (refresh) url.searchParams.set('refresh', 'true');
+  let res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${auth.accessToken}` } });
+  if (res.status === 401 && auth.refreshToken) {
+    await doRefreshToken();
+    res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${auth.accessToken}` } });
+  }
+  if (!res.ok) { const t = await res.text(); throw new Error(`Sales cache ${res.status}: ${t.slice(0,150)}`); }
+  return res.json();
+}
+
+async function tryFetchCache(label, fiscalYear) {
+  addLog(`Fetching ${label}…`);
+  try { const r = await fetchSalesCache(fiscalYear); addLog(`✓ ${label}: ${r.length} rows`, 'ok'); return r; }
+  catch(e) { addLog(`✗ ${label}: ${e.message}`, 'error'); showErr(e.message); return []; }
+}
+
 // Same as tryFetch but for optional/non-critical lookups — logs failure quietly
 // instead of surfacing the red error banner. Used for the attribute-value lookup
 // GI, which may not exist yet in Acumatica or may be mid-setup.
@@ -1836,21 +2046,19 @@ async function loadData() {
     addLog(`Fetching FY${curFyLabel}: ${curStart} → ${todayStr}`);
     addLog(`Fetching FY${priFyLabel} YTD: ${priStart} → ${priEnd}`);
 
-    // Full prior FY end = Oct 31 of (CUR_YEAR-1) — covers the whole prior fiscal year
-    // This fills the trailing 12 gap (Jun–Oct prior year) and also covers prior YTD
-    const priorFyEnd = `${CUR_YEAR - 1}-10-31`;
-
+    // Prior FY is closed and won't change, so it's served from the Worker's
+    // KV-backed /sales-cache route (4 parallel quarterly pulls behind the
+    // scenes on a cache miss) rather than a live 12-month InvoicedItems
+    // query — the live version was hitting Cloudflare's ~100s edge timeout
+    // (524) on years with a full 12 periods of volume. Current FY stays a
+    // live pull since it's still open and growing daily.
     const [curRows, priRows] = await Promise.all([
       tryFetch(`Sales FY${curFyLabel}`, 'InvoicedItems', {
         '$select':  SALES_COLS,
         '$filter':  `InvoiceDate ge datetime'${curStart}T00:00:00' and InvoiceDate le datetime'${todayStr}T23:59:59'`,
         '$orderby': 'InvoiceDate desc',
       }),
-      tryFetch(`Sales FY${priFyLabel} (full year)`, 'InvoicedItems', {
-        '$select':  SALES_COLS,
-        '$filter':  `InvoiceDate ge datetime'${priStart}T00:00:00' and InvoiceDate le datetime'${priorFyEnd}T23:59:59'`,
-        '$orderby': 'InvoiceDate desc',
-      }),
+      tryFetchCache(`Sales FY${priFyLabel} (full year)`, priFyLabel),
     ]);
 
     curRows.forEach(r => { r._year = curFyLabel; r._fyFull = true; });
@@ -5441,6 +5649,545 @@ function detailHtml(r){
   `;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// D10 TAB — Level-10-style weekly meeting: shared countdown timer, Scorecard,
+// Rock Review, and IDS (Issues/To-Dos). All shared state lives in the D10_KV
+// Cloudflare KV namespace via /d10-data (scorecard+rocks+todos+issues) and
+// /d10-timer (the running clock), mirroring the EATER_KV GET/PUT pattern.
+// ═══════════════════════════════════════════════════════════════════════════
+const D10_KV_URL    = CONFIG.workerUrl + '/d10-data';
+const D10_TIMER_URL = CONFIG.workerUrl + '/d10-timer';
+const D10_LS_DATA   = 'asf-d10-data-cache';
+const D10_LS_TIMER  = 'asf-d10-timer-cache';
+
+const D10_TOTAL_SECONDS = 45 * 60;
+const D10_SEGMENTS = [
+  { key:'segue',     label:'Segue',       minutes:5  },
+  { key:'scorecard', label:'Scorecard',   minutes:5  },
+  { key:'rocks',     label:'Rock Review', minutes:5  },
+  { key:'ids',       label:'IDS',         minutes:25 },
+  { key:'conclude',  label:'Conclude',    minutes:5  },
+];
+(function() { let acc = 0; D10_SEGMENTS.forEach(seg => { seg.startSec = acc; acc += seg.minutes * 60; seg.endSec = acc; }); })();
+
+const D10_ROSTER = {
+  retail:     ['Derrick Almond','Austin Jones','Mitchell Jones'],
+  hybrid:     ['Nikki Petriello','Bobby Townsend','Anthony Deel'],
+  commercial: ['Sean Mitchell','Jason Beamer','Michael McLeod'],
+};
+const D10_GROUP_LABELS = { retail:'Retail', hybrid:'Hybrid', commercial:'Commercial' };
+const D10_ALL_PEOPLE = [].concat(D10_ROSTER.retail, D10_ROSTER.hybrid, D10_ROSTER.commercial);
+// Managers are assignable on To-Dos (IDS regularly assigns action items to leadership too)
+// but are NOT part of the Scorecard/Rock Review rosters above.
+const D10_TODO_ASSIGNEES = D10_ALL_PEOPLE.concat(['Phil Branon','Lauren Good','Todd Good','Sherry Kelly']);
+
+let d10CurrentSegment    = 'segue';
+let d10Data              = null;  // in-memory data blob: {scorecard, rocks, todos, issues, segueNotes, meetingLog}
+let d10Timer             = null;  // in-memory timer state
+let d10TickInterval      = null;
+let d10TimerPollInterval = null;
+let d10DataPollInterval  = null;
+let d10LastDataFingerprint  = null;
+let d10LastTimerFingerprint = null;
+
+function d10Uid() { return 'd10-' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function d10Escape(s) { return (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function d10Truncate(s,n) { return s && s.length>n ? s.slice(0,n)+'…' : (s||''); }
+
+// ── Rolling 90-day columns: most recent 13 Monday-start weeks, including the current week ──
+function d10GetRollingWeeks() {
+  const weeks = [];
+  const now = new Date();
+  const dow = now.getDay(); // 0=Sun..6=Sat
+  const diffToMonday = (dow === 0 ? -6 : 1 - dow);
+  const thisMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+  for (let i = 12; i >= 0; i--) {
+    const d = new Date(thisMonday);
+    d.setDate(d.getDate() - i*7);
+    weeks.push({ key: d.toISOString().slice(0,10), label: (d.getMonth()+1) + '/' + d.getDate() });
+  }
+  return weeks; // oldest column ages out on its own each week since this is computed from "now", not stored
+}
+
+// ── Default / seed data ─────────────────────────────────────────────────────
+function d10DefaultData() {
+  const mkRows = (names) => names.map(n => ({ name:n, goalValue:'', goalUnit:'month', weeks:{} }));
+  return {
+    scorecard: { retail: mkRows(D10_ROSTER.retail), hybrid: mkRows(D10_ROSTER.hybrid), commercial: mkRows(D10_ROSTER.commercial) },
+    rocks: D10_ALL_PEOPLE.map(n => ({ id:d10Uid(), person:n, text:'', deadline:'', status:'on-track' })),
+    todos: [],
+    issues: [],
+    segueNotes: '',
+    meetingLog: [],
+  };
+}
+
+// Merge saved KV data over the current-roster default shape so a roster change
+// (new hire, departure) never silently drops or corrupts what's already saved.
+function d10MergeData(saved) {
+  const base = d10DefaultData();
+  if (!saved || typeof saved !== 'object') return base;
+  ['retail','hybrid','commercial'].forEach(grp => {
+    const savedRows = (saved.scorecard && saved.scorecard[grp]) || [];
+    const byName = new Map(savedRows.map(r => [r.name, r]));
+    base.scorecard[grp] = base.scorecard[grp].map(r => byName.get(r.name) ? Object.assign({}, r, byName.get(r.name)) : r);
+    savedRows.forEach(r => { if (!base.scorecard[grp].find(x => x.name === r.name)) base.scorecard[grp].push(r); });
+  });
+  if (Array.isArray(saved.rocks) && saved.rocks.length) {
+    const byPerson = new Map(saved.rocks.map(r => [r.person, r]));
+    base.rocks = base.rocks.map(r => byPerson.get(r.person) ? Object.assign({}, r, byPerson.get(r.person)) : r);
+    saved.rocks.forEach(r => { if (!base.rocks.find(x => x.person === r.person)) base.rocks.push(r); });
+  }
+  base.todos      = Array.isArray(saved.todos) ? saved.todos : [];
+  base.issues     = Array.isArray(saved.issues) ? saved.issues : [];
+  base.segueNotes = saved.segueNotes || '';
+  base.meetingLog = Array.isArray(saved.meetingLog) ? saved.meetingLog : [];
+  return base;
+}
+
+async function d10LoadData() {
+  try {
+    const resp = await fetch(D10_KV_URL, { headers: { Authorization: `Bearer ${auth.accessToken}` } });
+    if (!resp.ok) throw new Error('KV fetch failed: ' + resp.status);
+    const text = await resp.text();
+    d10LastDataFingerprint = text;
+    const saved = JSON.parse(text);
+    try { localStorage.setItem(D10_LS_DATA, text); } catch(e) {}
+    d10Data = d10MergeData(saved);
+  } catch(e) {
+    console.warn('D10 data load failed, using localStorage cache:', e.message);
+    try { d10Data = d10MergeData(JSON.parse(localStorage.getItem(D10_LS_DATA) || 'null')); }
+    catch(e2) { d10Data = d10DefaultData(); }
+  }
+  return d10Data;
+}
+
+async function d10SaveData() {
+  const text = JSON.stringify(d10Data);
+  d10LastDataFingerprint = text;
+  try { localStorage.setItem(D10_LS_DATA, text); } catch(e) {}
+  try {
+    const resp = await fetch(D10_KV_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.accessToken}` },
+      body: text,
+    });
+    if (!resp.ok) throw new Error('KV save failed: ' + resp.status);
+  } catch(e) { console.warn('D10 data save failed, preserved in localStorage:', e.message); }
+}
+
+// ── Permissions — managers/admins edit everything; reps edit only their own row ──
+function d10CanEdit(personName) {
+  return USER.isManager || (!!USER.salespersonName && USER.salespersonName === personName);
+}
+
+// ═══════════════════════════ TIMER ═══════════════════════════
+function d10DefaultTimer() {
+  return { status:'idle', elapsedAtLastEvent:0, runningSince:null, sessionStartedAt:null, updatedAt:Date.now(), updatedBy:USER.salespersonName||USER.displayName||'' };
+}
+
+async function d10LoadTimer() {
+  try {
+    const resp = await fetch(D10_TIMER_URL, { headers: { Authorization: `Bearer ${auth.accessToken}` } });
+    if (!resp.ok) throw new Error('Timer fetch failed: ' + resp.status);
+    const text = await resp.text();
+    d10LastTimerFingerprint = text;
+    const saved = JSON.parse(text);
+    try { localStorage.setItem(D10_LS_TIMER, text); } catch(e) {}
+    d10Timer = saved || d10DefaultTimer();
+  } catch(e) {
+    console.warn('D10 timer load failed, using localStorage cache:', e.message);
+    try { d10Timer = JSON.parse(localStorage.getItem(D10_LS_TIMER) || 'null') || d10DefaultTimer(); }
+    catch(e2) { d10Timer = d10DefaultTimer(); }
+  }
+  return d10Timer;
+}
+
+async function d10SaveTimer() {
+  d10Timer.updatedAt = Date.now();
+  d10Timer.updatedBy = USER.salespersonName || USER.displayName || '';
+  const text = JSON.stringify(d10Timer);
+  d10LastTimerFingerprint = text;
+  try { localStorage.setItem(D10_LS_TIMER, text); } catch(e) {}
+  try {
+    const resp = await fetch(D10_TIMER_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.accessToken}` },
+      body: text,
+    });
+    if (!resp.ok) throw new Error('Timer save failed: ' + resp.status);
+  } catch(e) { console.warn('D10 timer save failed, preserved in localStorage:', e.message); }
+}
+
+// Elapsed is derived from wall-clock timestamps (not a running client-side counter),
+// so every device converges on the same value regardless of when it last polled.
+function d10ElapsedSeconds() {
+  if (!d10Timer) return 0;
+  let el = d10Timer.elapsedAtLastEvent || 0;
+  if (d10Timer.status === 'running' && d10Timer.runningSince) el += (Date.now() - d10Timer.runningSince) / 1000;
+  return Math.max(0, el);
+}
+
+function d10SegmentForElapsed(elapsed) {
+  for (const seg of D10_SEGMENTS) if (elapsed < seg.endSec) return seg.key;
+  return D10_SEGMENTS[D10_SEGMENTS.length-1].key;
+}
+
+async function d10Start() {
+  if (!d10Timer) d10Timer = d10DefaultTimer();
+  if (d10Timer.status === 'running') return;
+  if (d10Timer.status === 'idle' && (d10Timer.elapsedAtLastEvent||0) === 0) d10Timer.sessionStartedAt = Date.now();
+  d10Timer.status = 'running';
+  d10Timer.runningSince = Date.now();
+  await d10SaveTimer();
+  d10RenderTimer();
+}
+async function d10Pause() {
+  if (!d10Timer || d10Timer.status !== 'running') return;
+  d10Timer.elapsedAtLastEvent = d10ElapsedSeconds();
+  d10Timer.status = 'paused';
+  d10Timer.runningSince = null;
+  await d10SaveTimer();
+  d10RenderTimer();
+}
+async function d10Reset() {
+  if (!confirm('Reset the meeting clock to 45:00? This is shared with everyone in the meeting.')) return;
+  d10Timer.status = 'idle';
+  d10Timer.elapsedAtLastEvent = 0;
+  d10Timer.runningSince = null;
+  await d10SaveTimer();
+  d10RenderTimer();
+}
+async function d10EndMeeting() {
+  if (!confirm('End this D10 meeting? The clock resets to 45:00 for next time.')) return;
+  d10Timer.status = 'idle';
+  d10Timer.elapsedAtLastEvent = 0;
+  d10Timer.runningSince = null;
+  await d10SaveTimer();
+  d10RenderTimer();
+  d10RenderConclude(); // recap stays visible after the reset so the room can still see it
+}
+
+function d10Fmt(sec) {
+  sec = Math.max(0, Math.round(sec));
+  return String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0');
+}
+
+function d10RenderTimer() {
+  if (!d10Timer) return;
+  const elapsed   = d10ElapsedSeconds();
+  const remaining = D10_TOTAL_SECONDS - elapsed;
+  const clockEl = document.getElementById('d10-clock');
+  if (!clockEl) return;
+  clockEl.textContent = (remaining < 0 ? '-' : '') + d10Fmt(Math.abs(remaining));
+  clockEl.className = 'd10-clock' + (remaining <= 0 ? ' d10-over' : remaining <= 300 ? ' d10-warn' : '');
+
+  const statusLabel = d10Timer.status === 'running' ? 'Running' : d10Timer.status === 'paused' ? 'Paused' : 'Not started';
+  document.getElementById('d10-timer-meta').innerHTML =
+    '<span class="d10-sync-dot"></span>' + statusLabel + (d10Timer.updatedBy ? ' &middot; last touched by ' + d10Escape(d10Timer.updatedBy) : '');
+
+  document.getElementById('d10-btn-start').style.display = d10Timer.status === 'running' ? 'none' : 'inline-block';
+  document.getElementById('d10-btn-pause').style.display = d10Timer.status === 'running' ? 'inline-block' : 'none';
+
+  const curSeg = d10SegmentForElapsed(elapsed);
+  document.getElementById('d10-segbar').innerHTML = D10_SEGMENTS.map(seg => {
+    const width      = (seg.minutes / 45 * 100).toFixed(2) + '%';
+    const done       = elapsed >= seg.endSec;
+    const onSchedule = seg.key === curSeg;
+    const isActive   = seg.key === d10CurrentSegment;
+    return `<div class="d10-seg-block${isActive?' d10-seg-active':''}${onSchedule?' d10-seg-onschedule':''}${done?' d10-seg-done':''}" `
+         + `style="width:${width}" onclick="d10ShowSegment('${seg.key}')" title="${seg.label} — ${seg.minutes} min">${seg.label}</div>`;
+  }).join('');
+}
+
+function d10ShowSegment(key) {
+  d10CurrentSegment = key;
+  document.querySelectorAll('#pane-d10 .d10-segment-content').forEach(el => el.classList.remove('d10-active'));
+  document.getElementById('d10-seg-' + key).classList.add('d10-active');
+  d10RenderTimer();
+  if (key === 'conclude') d10RenderConclude();
+}
+
+// ═══════════════════════════ SCORECARD ═══════════════════════════
+function d10RenderScorecard() {
+  const weeks = d10GetRollingWeeks();
+  document.getElementById('d10-scorecard-groups').innerHTML = ['retail','hybrid','commercial'].map(grp => {
+    const rowsHtml = d10Data.scorecard[grp].map(row => {
+      const canEdit = d10CanEdit(row.name);
+      const nameJs  = row.name.replace(/'/g, "\\'");
+      const weekCells = weeks.map(w => {
+        const val = row.weeks[w.key];
+        return `<td><input type="number" step="any" value="${val===undefined||val===null?'':val}" ${canEdit?'':'disabled'} `
+             + `onchange="d10UpdateWeekCell('${grp}','${nameJs}','${w.key}',this.value)"></td>`;
+      }).join('');
+      return `<tr>
+        <td class="d10-rowname">${d10Escape(row.name)}</td>
+        <td><div class="d10-goal-cell">
+          <input type="number" step="any" value="${row.goalValue===undefined||row.goalValue===null?'':row.goalValue}" ${canEdit?'':'disabled'}
+            onchange="d10UpdateGoal('${grp}','${nameJs}','value',this.value)">
+          <select ${canEdit?'':'disabled'} onchange="d10UpdateGoal('${grp}','${nameJs}','unit',this.value)">
+            <option value="week" ${row.goalUnit==='week'?'selected':''}>/wk</option>
+            <option value="month" ${row.goalUnit!=='week'?'selected':''}>/mo</option>
+          </select>
+        </div></td>
+        ${weekCells}
+      </tr>`;
+    }).join('');
+    return `<div class="d10-group-hdr">${D10_GROUP_LABELS[grp]}</div>
+      <div class="d10-table-wrap"><table class="d10-table">
+        <thead><tr><th>Rep</th><th>Goal</th>${weeks.map(w => `<th>Wk ${w.label}</th>`).join('')}</tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table></div>`;
+  }).join('');
+}
+function d10UpdateWeekCell(grp, name, weekKey, value) {
+  const row = d10Data.scorecard[grp].find(r => r.name === name);
+  if (!row || !d10CanEdit(name)) return;
+  row.weeks[weekKey] = value === '' ? null : Number(value);
+  d10SaveData();
+}
+function d10UpdateGoal(grp, name, field, value) {
+  const row = d10Data.scorecard[grp].find(r => r.name === name);
+  if (!row || !d10CanEdit(name)) return;
+  if (field === 'value') row.goalValue = value === '' ? '' : Number(value);
+  else row.goalUnit = value;
+  d10SaveData();
+}
+
+// ═══════════════════════════ ROCK REVIEW ═══════════════════════════
+function d10RenderRocks() {
+  document.getElementById('d10-rocks-groups').innerHTML = ['retail','hybrid','commercial'].map(grp => {
+    const rows = D10_ROSTER[grp].map(name => {
+      let r = d10Data.rocks.find(x => x.person === name);
+      if (!r) { r = { id:d10Uid(), person:name, text:'', deadline:'', status:'on-track' }; d10Data.rocks.push(r); }
+      return r;
+    });
+    const rowsHtml = rows.map(r => {
+      const canEdit = d10CanEdit(r.person);
+      return `<tr>
+        <td class="d10-rowname">${d10Escape(r.person)}</td>
+        <td><input type="text" style="width:280px" value="${d10Escape(r.text)}" placeholder="90-day rock…" ${canEdit?'':'disabled'}
+          onchange="d10UpdateRock('${r.id}','text',this.value)"></td>
+        <td><input type="date" value="${r.deadline||''}" ${canEdit?'':'disabled'} onchange="d10UpdateRock('${r.id}','deadline',this.value)"></td>
+        <td><button class="d10-status-chip ${r.status==='off-track'?'d10-off':'d10-on'}" ${canEdit?'':'disabled'}
+          onclick="d10ToggleRockStatus('${r.id}')">${r.status==='off-track'?'Off-Track':'On-Track'}</button></td>
+      </tr>`;
+    }).join('');
+    return `<div class="d10-group-hdr">${D10_GROUP_LABELS[grp]}</div>
+      <div class="d10-table-wrap"><table class="d10-table">
+        <thead><tr><th>Person</th><th>Rock (90-day)</th><th>Deadline</th><th>Status</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table></div>`;
+  }).join('');
+}
+function d10UpdateRock(id, field, value) {
+  const r = d10Data.rocks.find(x => x.id === id);
+  if (!r || !d10CanEdit(r.person)) return;
+  r[field] = value;
+  d10SaveData();
+}
+function d10ToggleRockStatus(id) {
+  const r = d10Data.rocks.find(x => x.id === id);
+  if (!r || !d10CanEdit(r.person)) return;
+  r.status = r.status === 'off-track' ? 'on-track' : 'off-track';
+  d10SaveData();
+  d10RenderRocks();
+}
+
+// ═══════════════════════════ IDS: ISSUES & TO-DOS ═══════════════════════════
+function d10RenderIssuesTodoOptions() {
+  const sel = document.getElementById('d10-new-todo-issue');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">No linked issue</option>' +
+    d10Data.issues.filter(i => !i.resolved).map(i => `<option value="${i.id}">${d10Escape(d10Truncate(i.text,50))}</option>`).join('');
+  sel.value = cur;
+}
+function d10RenderIssues() {
+  const host = document.getElementById('d10-issues-list');
+  if (!d10Data.issues.length) { host.innerHTML = '<div class="d10-locked-note">No issues raised yet.</div>'; return; }
+  host.innerHTML = d10Data.issues.slice().reverse().map(i => {
+    const linkedTodos = d10Data.todos.filter(t => t.linkedIssueId === i.id);
+    return `<div class="d10-litem">
+      <div class="d10-litem-top">
+        <input type="checkbox" class="d10-check" ${i.resolved?'checked':''} onchange="d10ToggleIssueResolved('${i.id}')" title="Mark resolved">
+        <div class="d10-litem-text ${i.resolved?'d10-resolved':''}">${d10Escape(i.text)}</div>
+        <button class="d10-x" onclick="d10DeleteIssue('${i.id}')" title="Delete">&times;</button>
+      </div>
+      <div class="d10-litem-meta">${i.owner ? 'Raised by ' + d10Escape(i.owner) : ''}</div>
+      ${linkedTodos.length ? `<div class="d10-litem-link">&#8618; ${linkedTodos.length} linked to-do${linkedTodos.length>1?'s':''}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+function d10AddIssue() {
+  const textEl = document.getElementById('d10-new-issue-text');
+  const ownerEl = document.getElementById('d10-new-issue-owner');
+  const text = textEl.value.trim();
+  if (!text) return;
+  d10Data.issues.push({ id:d10Uid(), text, owner: ownerEl.value.trim(), resolved:false, createdAt: Date.now() });
+  textEl.value=''; ownerEl.value='';
+  d10SaveData(); d10RenderIssues(); d10RenderIssuesTodoOptions();
+}
+function d10ToggleIssueResolved(id) {
+  const i = d10Data.issues.find(x => x.id === id); if (!i) return;
+  i.resolved = !i.resolved;
+  d10SaveData(); d10RenderIssues(); d10RenderIssuesTodoOptions();
+}
+function d10DeleteIssue(id) {
+  if (!confirm('Delete this issue?')) return;
+  d10Data.issues = d10Data.issues.filter(x => x.id !== id);
+  d10Data.todos.forEach(t => { if (t.linkedIssueId === id) t.linkedIssueId = null; }); // unlink, don't delete, its to-dos
+  d10SaveData(); d10RenderIssues(); d10RenderTodos(); d10RenderIssuesTodoOptions();
+}
+
+function d10RenderTodos() {
+  const host = document.getElementById('d10-todos-list');
+  if (!d10Data.todos.length) { host.innerHTML = '<div class="d10-locked-note">No to-dos yet.</div>'; return; }
+  host.innerHTML = d10Data.todos.slice().reverse().map(t => {
+    const issue = t.linkedIssueId ? d10Data.issues.find(i => i.id === t.linkedIssueId) : null;
+    const canEdit = d10CanEdit(t.person);
+    return `<div class="d10-litem">
+      <div class="d10-litem-top">
+        <input type="checkbox" class="d10-check" ${t.done?'checked':''} ${canEdit?'':'disabled'} onchange="d10ToggleTodoDone('${t.id}')">
+        <div class="d10-litem-text ${t.done?'d10-done':''}">${d10Escape(t.text)}</div>
+        <button class="d10-x" onclick="d10DeleteTodo('${t.id}')" title="Delete">&times;</button>
+      </div>
+      <div class="d10-litem-meta">
+        <span>${d10Escape(t.person)}</span>
+        <span>${t.cadence === 'biweekly' ? 'Bi-weekly' : 'Weekly'}</span>
+        ${t.dueDate ? `<span>Due ${t.dueDate}</span>` : ''}
+      </div>
+      ${issue ? `<div class="d10-litem-link">&#8617; from issue: ${d10Escape(d10Truncate(issue.text,60))}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+function d10AddTodo() {
+  const textEl    = document.getElementById('d10-new-todo-text');
+  const personEl  = document.getElementById('d10-new-todo-person');
+  const cadenceEl = document.getElementById('d10-new-todo-cadence');
+  const dueEl     = document.getElementById('d10-new-todo-due');
+  const issueEl   = document.getElementById('d10-new-todo-issue');
+  const text = textEl.value.trim();
+  if (!text) return;
+  d10Data.todos.push({
+    id: d10Uid(), text, person: personEl.value, cadence: cadenceEl.value,
+    dueDate: dueEl.value || '', linkedIssueId: issueEl.value || null, done:false, createdAt: Date.now(),
+  });
+  textEl.value=''; dueEl.value=''; issueEl.value='';
+  d10SaveData(); d10RenderTodos(); d10RenderIssues();
+}
+function d10ToggleTodoDone(id) {
+  const t = d10Data.todos.find(x => x.id === id); if (!t) return;
+  t.done = !t.done;
+  d10SaveData(); d10RenderTodos();
+}
+function d10DeleteTodo(id) {
+  if (!confirm('Delete this to-do?')) return;
+  d10Data.todos = d10Data.todos.filter(x => x.id !== id);
+  d10SaveData(); d10RenderTodos(); d10RenderIssues();
+}
+function d10PopulateTodoPersonSelect() {
+  const sel = document.getElementById('d10-new-todo-person');
+  const cur = sel.value;
+  sel.innerHTML = D10_TODO_ASSIGNEES.map(n => `<option value="${d10Escape(n)}">${d10Escape(n)}</option>`).join('');
+  if (D10_TODO_ASSIGNEES.includes(cur)) sel.value = cur;
+}
+
+// ═══════════════════════════ SEGUE & CONCLUDE ═══════════════════════════
+function d10SaveSegueNotes() {
+  d10Data.segueNotes = document.getElementById('d10-segue-notes').value;
+  d10SaveData();
+}
+function d10RenderConclude() {
+  const sessionStart = (d10Timer && d10Timer.sessionStartedAt) || 0;
+  const newTodos = d10Data.todos.filter(t => (t.createdAt||0) >= sessionStart);
+  document.getElementById('d10-recap-todos').innerHTML = newTodos.length
+    ? newTodos.map(t => `<div class="d10-litem"><div class="d10-litem-text">${d10Escape(t.text)}</div>`
+        + `<div class="d10-litem-meta"><span>${d10Escape(t.person)}</span>${t.dueDate?'<span>Due '+t.dueDate+'</span>':''}</div></div>`).join('')
+    : '<div class="d10-locked-note">No to-dos created yet this meeting.</div>';
+
+  const offTrack = d10Data.rocks.filter(r => r.status === 'off-track');
+  document.getElementById('d10-recap-rocks').innerHTML = offTrack.length
+    ? offTrack.map(r => `<div class="d10-litem"><div class="d10-litem-text">${d10Escape(r.person)}: ${d10Escape(r.text||'(no rock set)')}</div></div>`).join('')
+    : '<div class="d10-locked-note">No off-track rocks.</div>';
+
+  const hist = d10Data.meetingLog.slice(-5).reverse();
+  document.getElementById('d10-rating-history').textContent = hist.length
+    ? 'Recent ratings: ' + hist.map(h => h.rating + (h.date ? ' (' + new Date(h.date).toLocaleDateString() + ')' : '')).join(', ')
+    : '';
+}
+function d10SaveRating() {
+  const sel = document.getElementById('d10-rating-select');
+  const noteEl = document.getElementById('d10-rating-note');
+  if (!sel.value) return;
+  d10Data.meetingLog.push({ rating: Number(sel.value), note: noteEl.value.trim(), date: Date.now(), by: USER.salespersonName || USER.displayName || '' });
+  sel.value=''; noteEl.value='';
+  d10SaveData(); d10RenderConclude();
+}
+
+// ═══════════════════════════ INIT & BACKGROUND SYNC ═══════════════════════════
+let d10Initialized = false;
+async function initD10Tab() {
+  if (d10Initialized) { d10RenderAll(); d10StartPolling(); return; }
+  d10Initialized = true;
+  await Promise.all([d10LoadData(), d10LoadTimer()]);
+  d10PopulateTodoPersonSelect();
+  d10RenderIssuesTodoOptions();
+  d10RenderAll();
+  d10ShowSegment('segue');
+  d10StartPolling();
+}
+function d10RenderAll() {
+  document.getElementById('d10-segue-notes').value = d10Data.segueNotes || '';
+  d10RenderScorecard();
+  d10RenderRocks();
+  d10RenderIssues();
+  d10RenderTodos();
+  d10RenderTimer();
+  d10RenderConclude();
+}
+function d10StartPolling() {
+  if (!d10TickInterval) {
+    // Local 1s tick just repaints from wall-clock math — no drift, no network call
+    d10TickInterval = setInterval(() => {
+      if (document.getElementById('pane-d10')?.classList.contains('active')) d10RenderTimer();
+    }, 1000);
+  }
+  if (!d10TimerPollInterval) {
+    // Resync the shared clock every 3s so Start/Pause/Reset from any device shows up quickly
+    d10TimerPollInterval = setInterval(async () => {
+      if (!document.getElementById('pane-d10')?.classList.contains('active')) return;
+      if (!auth.accessToken) return;
+      try {
+        const resp = await fetch(D10_TIMER_URL, { headers: { Authorization: `Bearer ${auth.accessToken}` } });
+        if (!resp.ok) return;
+        const text = await resp.text();
+        if (text === d10LastTimerFingerprint) return;
+        d10LastTimerFingerprint = text;
+        const saved = JSON.parse(text);
+        if (saved) { d10Timer = saved; d10RenderTimer(); }
+      } catch(e) { /* silent — network blip, retry next interval */ }
+    }, 3000);
+  }
+  if (!d10DataPollInterval) {
+    // Slower resync for Scorecard/Rocks/Issues/To-Dos; skipped while someone is actively typing
+    d10DataPollInterval = setInterval(async () => {
+      if (!document.getElementById('pane-d10')?.classList.contains('active')) return;
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
+      if (!auth.accessToken) return;
+      try {
+        const resp = await fetch(D10_KV_URL, { headers: { Authorization: `Bearer ${auth.accessToken}` } });
+        if (!resp.ok) return;
+        const text = await resp.text();
+        if (text === d10LastDataFingerprint) return;
+        d10LastDataFingerprint = text;
+        d10Data = d10MergeData(JSON.parse(text));
+        d10RenderAll();
+        d10RenderIssuesTodoOptions();
+      } catch(e) { /* silent — network blip, retry next interval */ }
+    }, 15000);
+  }
+}
 </script>
 </body>
 </html>
