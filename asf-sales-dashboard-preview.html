@@ -639,9 +639,13 @@
   #pane-d10 .d10-addbtn:hover { background: #174068; }
 
   #pane-d10 .d10-recap-card { border-left: 3px solid var(--asf-blue); }
-  #pane-d10 .d10-segue-notes { width: 100%; min-height: 90px; padding: 10px; border: 1px solid var(--border2); border-radius: 8px; font-family: inherit; font-size: 12px; resize: vertical; }
   #pane-d10 .d10-rating-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
   #pane-d10 .d10-locked-note { font-size: 10px; color: var(--muted); font-style: italic; margin-top: 4px; }
+
+  #pane-d10 .d10-speaker-box { margin-top: 16px; padding: 20px; border-radius: 10px; background: var(--surface2); border: 1px dashed var(--border); text-align: center; }
+  #pane-d10 .d10-speaker-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  #pane-d10 .d10-speaker-name { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--asf-navy); margin-bottom: 14px; min-height: 30px; }
+  #pane-d10 .d10-speaker-btns { display: flex; justify-content: center; gap: 10px; }
 </style>
 </head>
 <body>
@@ -1616,8 +1620,19 @@
     <div class="d10-segment-content" id="d10-seg-segue">
       <div class="d10-card">
         <div class="d10-card-title">Segue</div>
-        <div class="d10-card-sub">Personal and business good news &mdash; quick round the room before diving in.</div>
-        <textarea class="d10-segue-notes" id="d10-segue-notes" placeholder="Good news, headlines, anything worth a mention before diving in&hellip;" onblur="d10SaveSegueNotes()"></textarea>
+        <div class="d10-card-sub" id="d10-segue-week-label">Mark who&rsquo;s here, then run the room for one win each &mdash; nothing here is saved.</div>
+        <div class="d10-table-wrap"><table class="d10-table">
+          <thead><tr><th>Present</th><th>Rep</th></tr></thead>
+          <tbody id="d10-segue-tbody"></tbody>
+        </table></div>
+        <div class="d10-speaker-box">
+          <div class="d10-speaker-label">Now Speaking</div>
+          <div class="d10-speaker-name" id="d10-speaker-name">Mark attendance above to start the round.</div>
+          <div class="d10-speaker-btns">
+            <button class="d10-tbtn" onclick="d10PrevSpeaker()">&larr; Prev</button>
+            <button class="d10-tbtn d10-start" onclick="d10NextSpeaker()">Next &rarr;</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1683,7 +1698,9 @@
         <div class="d10-group-hdr">Off-Track Rocks</div>
         <div class="d10-list" id="d10-recap-rocks"></div>
         <div class="d10-group-hdr">Meeting Rating</div>
+        <div class="d10-card-sub" style="margin-bottom:8px">Anyone who attended can log their own score &mdash; pick your name and rate.</div>
         <div class="d10-rating-row">
+          <select id="d10-rating-person"></select>
           <select id="d10-rating-select">
             <option value="">Rate 1&ndash;10</option>
             <option value="1">1</option><option value="2">2</option><option value="3">3</option>
@@ -1694,7 +1711,7 @@
           <input type="text" id="d10-rating-note" placeholder="Optional note" style="flex:1;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;font-family:inherit;font-size:12px">
           <button class="d10-addbtn" onclick="d10SaveRating()">Save Rating</button>
         </div>
-        <div id="d10-rating-history" class="d10-locked-note"></div>
+        <div class="d10-list" id="d10-rating-list" style="margin-top:12px"></div>
       </div>
     </div>
 
@@ -5682,7 +5699,7 @@ const D10_ALL_PEOPLE = [].concat(D10_ROSTER.retail, D10_ROSTER.hybrid, D10_ROSTE
 const D10_TODO_ASSIGNEES = D10_ALL_PEOPLE.concat(['Phil Branon','Lauren Good','Todd Good','Sherry Kelly']);
 
 let d10CurrentSegment    = 'segue';
-let d10Data              = null;  // in-memory data blob: {scorecard, rocks, todos, issues, segueNotes, meetingLog}
+let d10Data              = null;  // in-memory data blob: {scorecard, rocks, todos, issues, segue, meetingLog}
 let d10Timer             = null;  // in-memory timer state
 let d10TickInterval      = null;
 let d10TimerPollInterval = null;
@@ -5694,14 +5711,15 @@ function d10Uid() { return 'd10-' + Date.now().toString(36) + Math.random().toSt
 function d10Escape(s) { return (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function d10Truncate(s,n) { return s && s.length>n ? s.slice(0,n)+'…' : (s||''); }
 
-// ── Rolling 90-day columns: most recent 13 Monday-start weeks, including the current week ──
+// ── Rolling 90-day columns: most recent 13 Monday-start weeks, current week FIRST ──
+// (index 0 = this week; older weeks age out to the right as the table renders left-to-right)
 function d10GetRollingWeeks() {
   const weeks = [];
   const now = new Date();
   const dow = now.getDay(); // 0=Sun..6=Sat
   const diffToMonday = (dow === 0 ? -6 : 1 - dow);
   const thisMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
-  for (let i = 12; i >= 0; i--) {
+  for (let i = 0; i <= 12; i++) {
     const d = new Date(thisMonday);
     d.setDate(d.getDate() - i*7);
     weeks.push({ key: d.toISOString().slice(0,10), label: (d.getMonth()+1) + '/' + d.getDate() });
@@ -5717,7 +5735,7 @@ function d10DefaultData() {
     rocks: D10_ALL_PEOPLE.map(n => ({ id:d10Uid(), person:n, text:'', deadline:'', status:'on-track' })),
     todos: [],
     issues: [],
-    segueNotes: '',
+    segue: {},   // keyed by Monday-date week key: { attendance:{name:bool}, wins:{name:text} }
     meetingLog: [],
   };
 }
@@ -5740,7 +5758,7 @@ function d10MergeData(saved) {
   }
   base.todos      = Array.isArray(saved.todos) ? saved.todos : [];
   base.issues     = Array.isArray(saved.issues) ? saved.issues : [];
-  base.segueNotes = saved.segueNotes || '';
+  base.segue      = (saved.segue && typeof saved.segue === 'object') ? saved.segue : {};
   base.meetingLog = Array.isArray(saved.meetingLog) ? saved.meetingLog : [];
   return base;
 }
@@ -6093,9 +6111,66 @@ function d10PopulateTodoPersonSelect() {
 }
 
 // ═══════════════════════════ SEGUE & CONCLUDE ═══════════════════════════
-function d10SaveSegueNotes() {
-  d10Data.segueNotes = document.getElementById('d10-segue-notes').value;
+// Segue tracks attendance only (saved to KV, same Monday-start week as the
+// Scorecard). The "who's speaking" round for one win each is intentionally
+// NOT saved anywhere — it's just a live prompt (d10SpeakerIdx is a plain
+// in-memory variable) to keep the room moving through present reps in order.
+function d10CurrentWeekKey() {
+  return d10GetRollingWeeks()[0].key; // index 0 is now the current week
+}
+function d10GetSegueWeek() {
+  const wk = d10CurrentWeekKey();
+  if (!d10Data.segue[wk]) d10Data.segue[wk] = { attendance:{} };
+  return d10Data.segue[wk];
+}
+function d10RenderSegue() {
+  const wk = d10CurrentWeekKey();
+  const wkDate = new Date(wk + 'T00:00:00');
+  const label = document.getElementById('d10-segue-week-label');
+  if (label) label.textContent = `Week of ${wkDate.getMonth()+1}/${wkDate.getDate()} — mark who's here, then run the room for one win each — nothing here is saved.`;
+  const seg = d10GetSegueWeek();
+  document.getElementById('d10-segue-tbody').innerHTML = D10_ALL_PEOPLE.map(name => {
+    const present = !!seg.attendance[name];
+    const nameJs = name.replace(/'/g, "\\'");
+    return `<tr>
+      <td><input type="checkbox" class="d10-check" ${present?'checked':''} onchange="d10ToggleAttendance('${nameJs}',this.checked)"></td>
+      <td class="d10-rowname">${d10Escape(name)}</td>
+    </tr>`;
+  }).join('');
+  d10RenderSpeakerPrompt();
+}
+function d10ToggleAttendance(name, checked) {
+  const seg = d10GetSegueWeek();
+  seg.attendance[name] = checked;
   d10SaveData();
+  d10RenderSpeakerPrompt(); // present list changed — refresh the speaking order
+}
+
+// ── Speaker prompt: cycles through PRESENT reps only, purely client-side ──
+let d10SpeakerIdx = 0;
+function d10PresentReps() {
+  const seg = d10GetSegueWeek();
+  return D10_ALL_PEOPLE.filter(n => seg.attendance[n]);
+}
+function d10RenderSpeakerPrompt() {
+  const el = document.getElementById('d10-speaker-name');
+  if (!el) return;
+  const present = d10PresentReps();
+  if (!present.length) { el.textContent = 'Mark attendance above to start the round.'; return; }
+  if (d10SpeakerIdx >= present.length) d10SpeakerIdx = 0;
+  el.textContent = present[d10SpeakerIdx];
+}
+function d10NextSpeaker() {
+  const present = d10PresentReps();
+  if (!present.length) return;
+  d10SpeakerIdx = (d10SpeakerIdx + 1) % present.length;
+  d10RenderSpeakerPrompt();
+}
+function d10PrevSpeaker() {
+  const present = d10PresentReps();
+  if (!present.length) return;
+  d10SpeakerIdx = (d10SpeakerIdx - 1 + present.length) % present.length;
+  d10RenderSpeakerPrompt();
 }
 function d10RenderConclude() {
   const sessionStart = (d10Timer && d10Timer.sessionStartedAt) || 0;
@@ -6110,23 +6185,66 @@ function d10RenderConclude() {
     ? offTrack.map(r => `<div class="d10-litem"><div class="d10-litem-text">${d10Escape(r.person)}: ${d10Escape(r.text||'(no rock set)')}</div></div>`).join('')
     : '<div class="d10-locked-note">No off-track rocks.</div>';
 
-  const hist = d10Data.meetingLog.slice(-5).reverse();
-  document.getElementById('d10-rating-history').textContent = hist.length
-    ? 'Recent ratings: ' + hist.map(h => h.rating + (h.date ? ' (' + new Date(h.date).toLocaleDateString() + ')' : '')).join(', ')
-    : '';
+  d10PopulateRatingPersonSelect();
+  const sessionRatings = d10Data.meetingLog.filter(h => (h.date||0) >= sessionStart);
+  const listHost = document.getElementById('d10-rating-list');
+  if (!sessionRatings.length) {
+    listHost.innerHTML = '<div class="d10-locked-note">No ratings logged yet this meeting.</div>';
+  } else {
+    const avg = (sessionRatings.reduce((s,h) => s + h.rating, 0) / sessionRatings.length).toFixed(1);
+    listHost.innerHTML =
+      `<div class="d10-locked-note" style="font-style:normal;font-weight:700;color:var(--asf-navy);margin-bottom:6px">Average: ${avg}/10 (${sessionRatings.length} rating${sessionRatings.length>1?'s':''})</div>`
+      + sessionRatings.slice().reverse().map(h =>
+          `<div class="d10-litem"><div class="d10-litem-top"><div class="d10-litem-text">${d10Escape(h.person||'—')}: ${h.rating}/10</div></div>`
+          + `${h.note ? '<div class="d10-litem-meta">'+d10Escape(h.note)+'</div>' : ''}</div>`
+        ).join('');
+  }
+}
+// Candidates default to this week's PRESENT reps (from Segue attendance) plus the
+// core Sales Management roster, since either group might be in the room; falls
+// back to the full To-Do assignee list if attendance hasn't been marked yet.
+function d10RatingCandidates() {
+  const present = d10PresentReps();
+  const managers = ['Phil Branon','Lauren Good','Todd Good','Sherry Kelly'];
+  const combined = present.length ? present.concat(managers) : D10_TODO_ASSIGNEES;
+  return combined.filter((v,i,a) => a.indexOf(v) === i);
+}
+function d10PopulateRatingPersonSelect() {
+  const sel = document.getElementById('d10-rating-person');
+  if (!sel) return;
+  const cur = sel.value;
+  const candidates = d10RatingCandidates();
+  sel.innerHTML = '<option value="">Who&rsquo;s rating?</option>' + candidates.map(n => `<option value="${d10Escape(n)}">${d10Escape(n)}</option>`).join('');
+  sel.value = candidates.includes(cur) ? cur : '';
 }
 function d10SaveRating() {
-  const sel = document.getElementById('d10-rating-select');
-  const noteEl = document.getElementById('d10-rating-note');
-  if (!sel.value) return;
-  d10Data.meetingLog.push({ rating: Number(sel.value), note: noteEl.value.trim(), date: Date.now(), by: USER.salespersonName || USER.displayName || '' });
-  sel.value=''; noteEl.value='';
+  const personEl = document.getElementById('d10-rating-person');
+  const sel       = document.getElementById('d10-rating-select');
+  const noteEl    = document.getElementById('d10-rating-note');
+  if (!personEl.value || !sel.value) return;
+  d10Data.meetingLog.push({ person: personEl.value, rating: Number(sel.value), note: noteEl.value.trim(), date: Date.now(), by: USER.salespersonName || USER.displayName || '' });
+  personEl.value=''; sel.value=''; noteEl.value='';
   d10SaveData(); d10RenderConclude();
 }
 
 // ═══════════════════════════ INIT & BACKGROUND SYNC ═══════════════════════════
+// Guards against a race on first render: nav-tabs become clickable as soon as
+// showDashboard() runs, but USER.isManager/salespersonName aren't populated
+// until the GC-CurrentUser role lookup in resolveUserIdentity() resolves a
+// moment later. Clicking straight into D10 before that finishes would render
+// every Scorecard/Rock cell as locked (canEdit false-by-default) and nothing
+// would ever re-check it afterward. Waiting here (usually 0ms — identity is
+// resolved before dashboard load finishes in the normal flow) closes that gap.
+async function d10WaitForUserIdentity(maxWaitMs = 4000) {
+  const start = Date.now();
+  while (USER.salespersonName === null && (Date.now() - start) < maxWaitMs) {
+    await new Promise(r => setTimeout(r, 150));
+  }
+}
+
 let d10Initialized = false;
 async function initD10Tab() {
+  await d10WaitForUserIdentity();
   if (d10Initialized) { d10RenderAll(); d10StartPolling(); return; }
   d10Initialized = true;
   await Promise.all([d10LoadData(), d10LoadTimer()]);
@@ -6137,7 +6255,7 @@ async function initD10Tab() {
   d10StartPolling();
 }
 function d10RenderAll() {
-  document.getElementById('d10-segue-notes').value = d10Data.segueNotes || '';
+  d10RenderSegue();
   d10RenderScorecard();
   d10RenderRocks();
   d10RenderIssues();
