@@ -710,11 +710,19 @@
     <!-- SCORECARD -->
     <div class="d10-segment-content" id="d10-seg-scorecard">
       <div class="d10-card">
-        <div class="d10-card-title">Scorecard</div>
+        <div class="d10-card-title" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span>Scorecard</span>
+          <span style="display:flex;align-items:center;gap:8px">
+            <!-- Hidden by default; d10RenderAll() shows this only for managers/execs once identity resolves -->
+            <button class="d10-tbtn" id="d10-sync-btn" onclick="d10SyncFromAcumatica()" style="display:none">&#8635; Sync from Acumatica</button>
+            <span id="d10-sync-status" style="font-size:10px;color:var(--muted);font-style:italic"></span>
+          </span>
+        </div>
         <div class="d10-card-sub">Rolling 13-week (90-day) view, current week first. Managers/admins can edit any row; staff can edit their own row only.
           <span style="display:inline-block;margin-left:8px"><span class="d10-legend-swatch" style="background:var(--green-soft)"></span>meeting/exceeding goal</span>
           <span style="display:inline-block;margin-left:8px"><span class="d10-legend-swatch" style="background:var(--red-soft)"></span>below goal</span>
           &mdash; monthly goals are compared against a weekly-equivalent (&divide;4.33 wks/mo); hover any shaded cell for the math.
+          <br>&#8635; <strong># of Orders Entered</strong> auto-syncs from Acumatica (overwrites manual edits to that row on every sync).
         </div>
         <div id="d10-scorecard-groups"><!-- filled by JS: one .d10-group-hdr + .d10-table-wrap per group --></div>
       </div>
@@ -2399,6 +2407,8 @@ async function initD10Tab() {
   d10StartPolling();
 }
 function d10RenderAll() {
+  const syncBtn = document.getElementById('d10-sync-btn');
+  if (syncBtn) syncBtn.style.display = isManager() ? 'inline-block' : 'none';
   d10RenderSegue();
   d10RenderScorecard();
   d10RenderRocks();
@@ -2406,6 +2416,36 @@ function d10RenderAll() {
   d10RenderTodos();
   d10RenderTimer();
   d10RenderConclude();
+}
+
+// Manual trigger for the Worker's /ops-d10-sync route (the same logic also
+// runs on a Cloudflare Cron Trigger server-side — see asf-dashboard-worker.js).
+// Pulls "# of Orders Entered" from Acumatica (via CData) for the full rolling
+// 13-week window and always overwrites those cells, so any manual edits to
+// that one metric row won't survive the next sync (by design — see the note
+// under the Scorecard header).
+async function d10SyncFromAcumatica() {
+  const btn    = document.getElementById('d10-sync-btn');
+  const status = document.getElementById('d10-sync-status');
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  status.textContent = 'Syncing…';
+  try {
+    const resp = await fetch(`${CONFIG.workerUrl}/ops-d10-sync`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    });
+    const result = await resp.json();
+    if (!resp.ok || result.error) throw new Error(result.error || `Sync failed (${resp.status})`);
+    status.textContent = `Synced ${result.ordersMatched} orders just now`;
+    await d10LoadData();     // pick up what the Worker just wrote to KV
+    d10RenderScorecard();
+  } catch (e) {
+    status.textContent = 'Sync failed: ' + e.message;
+    console.warn('Ops D10 Acumatica sync failed:', e.message);
+  } finally {
+    btn.disabled = false;
+  }
 }
 function d10StartPolling() {
   if (!d10TickInterval) {
