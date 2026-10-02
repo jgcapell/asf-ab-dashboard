@@ -719,9 +719,9 @@
           </span>
         </div>
         <div class="d10-card-sub">Rolling 13-week (90-day) view, current week first. Managers/admins can edit any row; staff can edit their own row only.
-          <span style="display:inline-block;margin-left:8px"><span class="d10-legend-swatch" style="background:var(--green-soft)"></span>meeting/exceeding goal</span>
-          <span style="display:inline-block;margin-left:8px"><span class="d10-legend-swatch" style="background:var(--red-soft)"></span>below goal</span>
-          &mdash; monthly goals are compared against a weekly-equivalent (&divide;4.33 wks/mo); hover any shaded cell for the math.
+          <span style="display:inline-block;margin-left:8px"><span class="d10-legend-swatch" style="background:var(--green-soft)"></span>hits the goal</span>
+          <span style="display:inline-block;margin-left:8px"><span class="d10-legend-swatch" style="background:var(--red-soft)"></span>misses the goal</span>
+          &mdash; the &ge;/&le;/= selector next to each Goal sets which direction counts as a hit (e.g. &le; for a metric where lower is better, like errors); monthly goals are compared against a weekly-equivalent (&divide;4.33 wks/mo); hover any shaded cell for the math.
           <br>&#8635; <strong># of Orders Entered</strong> auto-syncs from Acumatica (overwrites manual edits to that row on every sync).
         </div>
         <div id="d10-scorecard-groups"><!-- filled by JS: one .d10-group-hdr + .d10-table-wrap per group --></div>
@@ -1809,10 +1809,15 @@ const D10_ATTENDEES = D10_ALL_PEOPLE.concat(D10_MANAGERS);
 const D10_TODO_ASSIGNEES = D10_ATTENDEES;
 
 // Scorecard metric definitions per group — each person gets one row per metric.
+// defaultOp sets which direction counts as "hitting" the goal for a NEW row of
+// that metric (editable per-row afterward via the Goal cell's operator select):
+//   '>=' — at or above goal is good (more is better, e.g. orders entered)
+//   '<=' — at or below goal is good (less is better, e.g. error counts)
+//   '='  — must match goal exactly
 const D10_METRICS = {
   customerService: [
-    { key:'ordersEntered',    label:'# of Orders Entered' },
-    { key:'orderEntryErrors', label:'Order Entry Errors' },
+    { key:'ordersEntered',    label:'# of Orders Entered', defaultOp:'>=' },
+    { key:'orderEntryErrors', label:'Order Entry Errors',  defaultOp:'<=' },
   ],
 };
 
@@ -1849,7 +1854,7 @@ function d10DefaultData() {
   const mkScorecardRows = (grp) => {
     const rows = [];
     D10_ROSTER[grp].forEach(rep => {
-      D10_METRICS[grp].forEach(m => rows.push({ rep, metricKey:m.key, goalValue:'', goalUnit:'week', weeks:{} }));
+      D10_METRICS[grp].forEach(m => rows.push({ rep, metricKey:m.key, goalValue:'', goalUnit:'week', goalOp:m.defaultOp || '>=', weeks:{} }));
     });
     return rows;
   };
@@ -2073,23 +2078,34 @@ function d10RenderScorecard() {
       const repJs = rep.replace(/'/g, "\\'");
       const metricRows = D10_METRICS[grp].map(m => {
         const row = d10FindScorecardRow(grp, rep, m.key);
+        const op = row.goalOp || '>=';
+        const opWord = op === '<=' ? 'at or below' : op === '=' ? 'equal to' : 'at or above';
         const target = d10WeeklyTarget(row);
         const targetTitle = target !== null
-          ? `Weekly target: ${d10Round1(target)}` + (row.goalUnit === 'month' ? ` (from monthly goal of ${row.goalValue}, ÷${d10Round1(D10_WEEKS_PER_MONTH)} wks/mo)` : '')
-          : 'Set a goal to enable meeting/missed shading';
+          ? `Weekly target: ${opWord} ${d10Round1(target)}` + (row.goalUnit === 'month' ? ` (from monthly goal of ${row.goalValue}, ÷${d10Round1(D10_WEEKS_PER_MONTH)} wks/mo)` : '')
+          : 'Set a goal and direction to enable hit/miss shading';
         const weekCells = weeks.map(w => {
           const val = row.weeks[w.key];
           const hasVal = val !== undefined && val !== null;
           let cellClass = '';
-          if (target !== null && hasVal) cellClass = Number(val) >= target ? 'd10-cell-hit' : 'd10-cell-miss';
+          if (target !== null && hasVal) {
+            const v = Number(val);
+            const hit = op === '<=' ? v <= target : op === '=' ? v === target : v >= target;
+            cellClass = hit ? 'd10-cell-hit' : 'd10-cell-miss';
+          }
           return `<td class="${cellClass}" title="${targetTitle}"><input type="number" step="any" value="${hasVal?val:''}" ${canEdit?'':'disabled'} `
                + `onchange="d10UpdateWeekCell('${grp}','${repJs}','${m.key}','${w.key}',this.value)"></td>`;
         }).join('');
         const weeklyHint = row.goalUnit === 'month' && target !== null
-          ? `<div class="d10-goal-weekly-hint">&asymp; ${d10Round1(target)}/wk</div>` : '';
+          ? `<div class="d10-goal-weekly-hint">&asymp; ${opWord} ${d10Round1(target)}/wk</div>` : '';
         return `<tr>
           <td class="d10-metric-label">${d10Escape(m.label)}</td>
           <td><div class="d10-goal-cell">
+            <select ${canEdit?'':'disabled'} title="Which direction counts as hitting the goal" onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','op',this.value)">
+              <option value=">=" ${op==='>='?'selected':''}>&ge;</option>
+              <option value="<=" ${op==='<='?'selected':''}>&le;</option>
+              <option value="=" ${op==='='?'selected':''}>=</option>
+            </select>
             <input type="number" step="any" value="${row.goalValue===undefined||row.goalValue===null?'':row.goalValue}" ${canEdit?'':'disabled'}
               onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','value',this.value)">
             <select ${canEdit?'':'disabled'} onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','unit',this.value)">
@@ -2121,6 +2137,7 @@ function d10UpdateGoal(grp, rep, metricKey, field, value) {
   const row = d10FindScorecardRow(grp, rep, metricKey);
   if (!row || !d10CanEdit(rep)) return;
   if (field === 'value') row.goalValue = value === '' ? '' : Number(value);
+  else if (field === 'op') row.goalOp = value; // '>=' | '<=' | '='
   else row.goalUnit = value;
   d10SaveData();
   d10RenderScorecard(); // goal changed — every week cell's shading in this row depends on it
