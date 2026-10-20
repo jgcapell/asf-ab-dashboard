@@ -202,6 +202,74 @@
   /* Trailing 12 sub-table */
   .t12-subtable { margin-top: 16px; border-top: 1px solid var(--border2); }
 
+  /* ── CRM calendar (Activities & Opportunities tab) ── */
+  #pane-opportunities .crm-toolbar { display:flex; align-items:center; gap:8px; padding:10px 16px; border-bottom:1px solid var(--border2); flex-wrap:wrap; }
+  #pane-opportunities .crm-nav { width:28px; height:28px; border:1px solid var(--border); background:var(--surface); border-radius:6px; color:var(--asf-navy); font-size:14px; cursor:pointer; line-height:1; }
+  #pane-opportunities .crm-nav:hover { background:var(--surface2); }
+  #pane-opportunities .crm-cal-label { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--asf-navy); min-width:160px; text-align:center; }
+  #pane-opportunities .crm-today-btn { border:1px solid var(--border); background:var(--surface); color:var(--dim); border-radius:6px; padding:5px 10px; font:inherit; font-size:11px; font-weight:600; cursor:pointer; }
+  #pane-opportunities .crm-toolbar .crm-spacer { flex:1; }
+  #pane-opportunities .crm-weekdays { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); background:var(--surface2); border-bottom:1px solid var(--border2); }
+  #pane-opportunities .crm-weekdays div { padding:6px 8px; font-size:10px; font-weight:700; color:var(--muted); letter-spacing:0.06em; }
+  #crm-cal-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
+  .crm-day { min-height:104px; min-width:0; border-right:1px solid var(--border2); border-bottom:1px solid var(--border2); padding:4px 5px 6px; display:flex; flex-direction:column; gap:2px; cursor:pointer; }
+  .crm-day:nth-child(7n) { border-right:none; }
+  .crm-day:hover { background:var(--surface2); }
+  .crm-day.crm-other { background:#fafbfd; }
+  .crm-day.crm-other .crm-day-num { color:var(--border); }
+  .crm-day-num { font-size:11px; font-weight:600; color:var(--dim); align-self:flex-start; padding:0 5px; line-height:18px; border-radius:9px; }
+  .crm-day.crm-today .crm-day-num { background:var(--asf-navy); color:#fff; }
+  .crm-item { display:flex; align-items:center; gap:4px; width:100%; min-width:0; border:none; text-align:left; font:inherit; font-size:10.5px; line-height:1.35; padding:2px 5px; border-radius:4px; cursor:pointer; white-space:nowrap; overflow:hidden; }
+  .crm-item:focus-visible, .crm-more:focus-visible, .crm-nav:focus-visible { outline:2px solid var(--asf-blue); outline-offset:1px; }
+  .crm-ev { background:rgba(91,143,204,0.14); color:var(--asf-navy); border-left:3px solid var(--asf-blue); }
+  .crm-ev:hover { background:rgba(91,143,204,0.24); }
+  .crm-tk { background:transparent; color:var(--dim); }
+  .crm-tk:hover { background:var(--border2); }
+  .crm-done { opacity:0.55; }
+  .crm-done .crm-sum { text-decoration:line-through; }
+  .crm-overdue { color:var(--red); font-weight:600; }
+  .crm-time { font-weight:700; flex:none; }
+  .crm-glyph { flex:none; }
+  .crm-sum { overflow:hidden; text-overflow:ellipsis; }
+  .crm-more { border:none; background:none; color:var(--asf-blue); font:inherit; font-size:10px; font-weight:700; text-align:left; padding:1px 5px; cursor:pointer; }
+  .crm-cal-msg { grid-column:1/-1; padding:40px; text-align:center; color:var(--muted); font-size:12px; }
+  .crm-modal-bg { position:fixed; inset:0; background:rgba(20,40,64,0.45); z-index:9000; display:none; align-items:center; justify-content:center; padding:16px; }
+  .crm-modal-bg.open { display:flex; }
+  .crm-modal { background:var(--surface); border-radius:10px; width:min(480px,100%); max-height:90vh; overflow:auto; box-shadow:0 12px 40px rgba(20,40,64,0.28); }
+  .crm-modal-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border2); }
+  .crm-modal-hdr h3 { font-size:14px; font-weight:700; color:var(--asf-navy); margin:0; }
+  .crm-x { border:none; background:none; font-size:20px; color:var(--muted); cursor:pointer; line-height:1; }
+  .crm-modal-body { padding:16px 18px; display:flex; flex-direction:column; gap:12px; }
+  .crm-modal-foot { display:flex; gap:8px; justify-content:flex-end; padding:12px 18px; border-top:1px solid var(--border2); background:var(--surface2); }
+  .crm-field { display:flex; flex-direction:column; gap:4px; min-width:0; }
+  .crm-field label { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:0.05em; }
+  .crm-in { width:100%; box-sizing:border-box; padding:7px 9px; border:1px solid var(--border); border-radius:6px; font:inherit; font-size:12px; color:var(--text); background:var(--surface); }
+  .crm-in:focus { outline:none; border-color:var(--asf-blue); box-shadow:0 0 0 2px rgba(91,143,204,0.2); }
+  textarea.crm-in { min-height:64px; resize:vertical; }
+  .crm-row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .crm-row3 { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:10px; }
+  .crm-seg { display:inline-flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; align-self:flex-start; }
+  .crm-seg button { border:none; background:var(--surface); color:var(--dim); font:inherit; font-size:11px; font-weight:600; padding:6px 14px; cursor:pointer; }
+  .crm-seg button.on { background:var(--asf-navy); color:#fff; }
+  .crm-check { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--dim); }
+  .crm-err { display:none; background:var(--red-soft); color:var(--red); border-radius:6px; padding:8px 10px; font-size:11.5px; font-weight:600; }
+  .crm-hint { font-size:10.5px; color:var(--muted); }
+  .crm-btn-ghost { padding:6px 14px; border-radius:6px; font:inherit; font-size:11px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--dim); }
+  .crm-btn-danger { padding:6px 14px; border-radius:6px; font:inherit; font-size:11px; font-weight:600; cursor:pointer; border:1px solid rgba(184,50,40,0.35); background:var(--surface); color:var(--red); }
+  .crm-btn-ghost:disabled, .crm-btn-danger:disabled, .crm-modal-foot .btn-sm:disabled { opacity:0.5; cursor:wait; }
+  .crm-detail-row { display:flex; gap:10px; font-size:12px; }
+  .crm-detail-row span:first-child { width:78px; flex:none; color:var(--muted); font-size:10.5px; font-weight:700; padding-top:1px; }
+  .crm-detail-row span:last-child { color:var(--text); }
+  .crm-day-list { display:flex; flex-direction:column; gap:4px; }
+  .crm-day-list .crm-item { font-size:12px; padding:5px 8px; }
+  #crm-toast { position:fixed; right:20px; bottom:20px; z-index:9100; background:var(--asf-navy); color:#fff; font-size:12px; font-weight:600; padding:10px 14px; border-radius:8px; box-shadow:0 6px 20px rgba(20,40,64,0.3); display:none; max-width:360px; }
+  #crm-toast.err { background:var(--red); }
+  @media (max-width: 760px) {
+    .crm-day { min-height:68px; padding:3px; }
+    .crm-time { display:none; }
+    .crm-row2, .crm-row3 { grid-template-columns:1fr; }
+  }
+
   /* Scrollbar */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
 
@@ -731,7 +799,7 @@
   <div id="nav-tabs" style="display:flex">
     <button class="tab active" data-tab="overview" onclick="showTab(this)">Sales Overview</button>
     <button class="tab" data-tab="customers" onclick="showTab(this)">Customer Summary</button>
-    <button class="tab" data-tab="opportunities" onclick="showTab(this)">Activities &amp; Opportunities</button>
+    <button class="tab" data-tab="opportunities" onclick="showTab(this);initCrmCalendar()">Activities &amp; Opportunities</button>
     <button class="tab" data-tab="eater" onclick="showTab(this);initEaterTab()">E.A.T.E.R.</button>
     <button class="tab" data-tab="display-tracker" onclick="showTab(this);initDisplayTracker()">Display Tracker</button>
     <button class="tab" data-tab="leadintel" onclick="showTab(this);initLeadIntelTab()">Lead Intelligence</button>
@@ -1010,6 +1078,22 @@
   <div id="pane-opportunities" class="tab-pane">
     <div class="page">
 
+      <!-- Calendar: Acumatica events + tasks (GC-GraphSync), create/edit/complete/cancel as the signed-in rep -->
+      <div class="card" id="crm-cal-card">
+        <div class="card-hdr"><span class="card-title">Calendar</span><span class="card-badge" id="crm-cal-badge"></span></div>
+        <div class="crm-toolbar">
+          <button type="button" class="crm-nav" onclick="crmShiftMonth(-1)" aria-label="Previous month">&#8249;</button>
+          <div class="crm-cal-label" id="crm-cal-label">—</div>
+          <button type="button" class="crm-nav" onclick="crmShiftMonth(1)" aria-label="Next month">&#8250;</button>
+          <button type="button" class="crm-today-btn" onclick="crmGoToday()">Today</button>
+          <div class="crm-spacer"></div>
+          <button type="button" class="btn-sm" onclick="openCrmForm({type:'Event'})">+ Event</button>
+          <button type="button" class="btn-sm" onclick="openCrmForm({type:'Task'})">+ Task</button>
+        </div>
+        <div class="crm-weekdays"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+        <div id="crm-cal-grid"><div class="crm-cal-msg">Loading calendar…</div></div>
+      </div>
+
       <!-- KPI row -->
       <div class="row cols-4">
         <div class="card">
@@ -1021,8 +1105,8 @@
           <div class="card-body"><div class="kpi-val" id="opp-kpi-weighted" style="color:var(--asf-green)">—</div><div class="kpi-sub">probability-adjusted</div></div>
         </div>
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Activities (±7 Days)</span></div>
-          <div class="card-body"><div class="kpi-val" id="act-kpi-7d" style="color:var(--asf-navy)">—</div><div class="kpi-sub" id="act-kpi-7d-sub">logged interactions</div></div>
+          <div class="card-hdr"><span class="card-title">Events (Next 7 Days)</span></div>
+          <div class="card-body"><div class="kpi-val" id="act-kpi-7d" style="color:var(--asf-navy)">—</div><div class="kpi-sub" id="act-kpi-7d-sub">scheduled events</div></div>
         </div>
         <div class="card">
           <div class="card-hdr"><span class="card-title">Tasks Due (Next 7 Days)</span></div>
@@ -1030,10 +1114,10 @@
         </div>
       </div>
 
-      <!-- Activities last 7 days + Tasks due next 7 days -->
+      <!-- Events next 7 days + Tasks due next 7 days -->
       <div class="row cols-2">
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Activities — Last &amp; Next 7 Days</span><span class="card-badge" id="act-7d-badge"></span></div>
+          <div class="card-hdr"><span class="card-title">Events — Next 7 Days</span><span class="card-badge" id="act-7d-badge"></span></div>
           <div class="card-scroll" style="max-height:320px">
             <div id="act-7d-feed" style="padding:10px 14px"></div>
           </div>
@@ -1104,6 +1188,12 @@
     </div>
   </div>
 
+
+  <!-- CRM calendar modal + toast (shared by create / edit / detail views) -->
+  <div class="crm-modal-bg" id="crm-modal-bg" onclick="if(event.target===this)crmCloseModal()">
+    <div class="crm-modal" role="dialog" aria-modal="true" aria-labelledby="crm-modal-title" id="crm-modal"></div>
+  </div>
+  <div id="crm-toast" role="status" aria-live="polite"></div>
 
   <!-- ══════════════════════════════════════ TAB: E.A.T.E.R. -->
   <div id="pane-eater" class="tab-pane">
@@ -3313,14 +3403,9 @@ function renderOpportunities() {
   document.getElementById('opp-kpi-sub').textContent = `${oppRows.length} open deals`;
   document.getElementById('opp-kpi-weighted').textContent = fmtKpi(weighted);
 
-  // ── Activity KPIs — window covers past 7 days AND next 7 days
-  //     (StartDate on activities is a scheduled date, can be past or future)
-  const next7ForAct = new Date(today); next7ForAct.setDate(today.getDate() + 7);
-  const acts7d = D.activities.filter(r =>
-    r.StartDate && new Date(r.StartDate) >= ago7 && new Date(r.StartDate) <= next7ForAct
-    && ownerMatchesRep(r.OwnerName||ownerName(r.Owner), activeRep));
-  document.getElementById('act-kpi-7d').textContent = acts7d.length;
-  document.getElementById('act-kpi-7d-sub').textContent = '±7 days';
+  // ── Events (next 7 days) KPI + feed come from the calendar's GC-GraphSync data
+  renderCrmEvents7d();
+  if (crmInitialized) renderCrmCalendar();
 
   // ── Task KPIs
   // EP-Tasks.Owner is already a full name string — direct match works
@@ -3340,23 +3425,6 @@ function renderOpportunities() {
     const pct=(v/stageMax)*100;
     return `<div class="bar-row"><div class="bar-lbl">${s}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${SCOLORS[i%SCOLORS.length]}">${pct>22?`<span class="bar-fill-lbl">${fmtK(v)}</span>`:''}</div></div>${pct<=22?`<div class="bar-val-out">${fmtK(v)}</div>`:''}</div>`;
   }).join('');
-
-  // ── Activities last 7 days feed
-  // Sort by StartDate ascending so upcoming appear at top after past
-  acts7d.sort((a,b) => new Date(a.StartDate) - new Date(b.StartDate));
-  document.getElementById('act-7d-badge').textContent = acts7d.length + ' activities';
-  document.getElementById('act-7d-feed').innerHTML = acts7d.length
-    ? acts7d.map(r => `
-        <div style="padding:9px 0;border-bottom:1px solid var(--border2)">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
-            <span style="font-weight:700;font-size:12px;color:var(--asf-navy)">${r.AccountName||'—'}</span>
-            ${r.RelatedEntityType?`<span class="badge b-dim">${r.RelatedEntityType}</span>`:''}
-            <span style="margin-left:auto;font-size:10px;color:var(--muted)">${fmtDate(r.StartDate)}</span>
-          </div>
-          <div style="font-size:11px;color:var(--dim)">${r.Summary||r.Description||'No summary'}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px">Owner: ${r.OwnerName||'—'}</div>
-        </div>`).join('')
-    : '<div class="empty">No activities in the last 7 days.</div>';
 
   // ── Tasks due next 7 days feed
   document.getElementById('task-7d-badge').textContent = tasks7d.length + ' tasks';
@@ -3394,6 +3462,429 @@ function renderOpportunities() {
     document.getElementById('opp-rep-filter').style.display = 'none';
   }
   renderOppTable();
+}
+
+// ─── CRM CALENDAR (Activities & Opportunities tab) ──────────────────────────
+// Month calendar of Acumatica Events and Tasks from GC-GraphSync, lazy-loaded
+// on the first click of this tab. Create / edit / complete / cancel go through
+// the dashboard Worker's /crm/* routes, which forward the rep's own Acumatica
+// token — records are created as the rep, and owner-only actions (cancelling
+// an event) work on the rep's own items. Changes reach Outlook / To Do through
+// the separate calendar sync within ~5 minutes for reps who connected Outlook.
+let crmInitialized = false;
+const CRM = { items: [], loaded: false, error: null, month: null };
+
+// Acumatica stores a time zone on each event; send the rep's own zone so the
+// Acumatica event form opens in local time instead of GMT.
+const CRM_ACU_TZ = {
+  'America/New_York':    '(GMT-05:00) Eastern Time (US & Canada)',
+  'America/Detroit':     '(GMT-05:00) Eastern Time (US & Canada)',
+  'America/Chicago':     '(GMT-06:00) Central Time (US & Canada)',
+  'America/Denver':      '(GMT-07:00) Mountain Time (US & Canada)',
+  'America/Los_Angeles': '(GMT-08:00) Pacific Time (US & Canada)',
+};
+function crmAcuTimeZone() {
+  return CRM_ACU_TZ[Intl.DateTimeFormat().resolvedOptions().timeZone] || CRM_ACU_TZ['America/New_York'];
+}
+
+function crmEsc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+// GC-GraphSync times are true UTC; treat a value without an offset as UTC.
+function crmUtc(s) {
+  if (!s) return null;
+  const str = String(s);
+  const d = new Date(/[zZ]$|[+-]\d\d:?\d\d$/.test(str) ? str : str + 'Z');
+  return isNaN(d) ? null : d;
+}
+function crmDayKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function crmFmtDay(key) {
+  return new Date(key + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+}
+function crmFmtTime(d) {
+  return d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+}
+function crmTimeInput(d) {
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function crmNormalize(r) {
+  const type   = r.ActivityType === 'Event' ? 'Event' : 'Task';
+  const allDay = r.AllDay === true || r.AllDay === 'true';
+  const start  = crmUtc(r.StartDate), end = crmUtc(r.EndDate);
+  // Date-only values (task due dates, all-day events) are stored as midnight:
+  // use the date part as-is so they never shift a day.
+  const dueKey = r.EndDate ? String(r.EndDate).slice(0, 10) : null;
+  let dayKey = dueKey;
+  if (type === 'Event') dayKey = allDay ? String(r.StartDate || '').slice(0, 10) || null : (start ? crmDayKey(start) : null);
+  return {
+    id: r.NoteID, type, allDay, start, end, dayKey, dueKey,
+    summary:    (r.Summary || '').trim() || '(no summary)',
+    status:     r.Status || '',
+    location:   (r.Location || '').trim(),
+    owner:      (r.OwnerName || '').trim(),
+    ownerEmail: (r.OwnerEmail || '').trim().toLowerCase(),
+    account:    (r.AccountName || '').trim(),
+    category:   (r.Category || '').trim(),
+    showAs:     (r.ShowAs || '').trim(),
+  };
+}
+
+function initCrmCalendar() {
+  if (crmInitialized) { renderCrmCalendar(); return; }
+  crmInitialized = true;
+  const n = new Date();
+  CRM.month = new Date(n.getFullYear(), n.getMonth(), 1);
+  renderCrmCalendar();
+  loadCrmItems();
+}
+
+async function loadCrmItems() {
+  try {
+    const rows = await odataGet('GC-GraphSync', {});
+    CRM.items  = rows.map(crmNormalize).filter(i => i.id);
+    CRM.loaded = true;
+    CRM.error  = null;
+    addLog(`✓ Calendar: ${CRM.items.length} events/tasks`, 'ok');
+  } catch (e) {
+    CRM.error = e.message;
+    addLog(`✗ Calendar: ${e.message}`, 'error');
+  }
+  renderCrmCalendar();
+  renderCrmEvents7d();
+}
+
+// Canceled items are hidden; the rep selector scopes the calendar like the rest of the tab.
+function crmVisibleItems() {
+  const rep = getActiveRepFilter();
+  return CRM.items.filter(i => i.status !== 'Canceled' && ownerMatchesRep(i.owner, rep));
+}
+
+function crmSort(a, b) {
+  const rank = i => (i.type === 'Task' || i.allDay) ? 0 : 1;
+  if (rank(a) !== rank(b)) return rank(a) - rank(b);
+  return (a.start?.getTime() || 0) - (b.start?.getTime() || 0);
+}
+
+function crmPill(i, todayKey) {
+  const done    = i.status === 'Completed';
+  const overdue = i.type === 'Task' && !done && i.dueKey && i.dueKey < todayKey;
+  const time    = (i.type === 'Event' && !i.allDay && i.start)
+    ? crmFmtTime(i.start).replace(':00', '').replace(' ', '').toLowerCase() : '';
+  const glyph   = i.type === 'Task' ? (done ? '☑' : '☐') : '';
+  const cls     = ['crm-item', i.type === 'Event' ? 'crm-ev' : 'crm-tk', done ? 'crm-done' : '', overdue ? 'crm-overdue' : ''].join(' ');
+  return `<button type="button" class="${cls}" title="${crmEsc(i.summary + (i.account ? ' — ' + i.account : ''))}" onclick="event.stopPropagation();openCrmDetail('${i.id}')">`
+    + (glyph ? `<span class="crm-glyph">${glyph}</span>` : '')
+    + (time ? `<span class="crm-time">${time}</span>` : '')
+    + `<span class="crm-sum">${crmEsc(i.summary)}</span></button>`;
+}
+
+function renderCrmCalendar() {
+  const grid = document.getElementById('crm-cal-grid');
+  if (!grid || !CRM.month) return;
+  const m = CRM.month;
+  document.getElementById('crm-cal-label').textContent = m.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+  const rep = getActiveRepFilter();
+  document.getElementById('crm-cal-badge').textContent = rep || 'All reps';
+  if (CRM.error)   { grid.innerHTML = `<div class="crm-cal-msg">The calendar couldn't load: ${crmEsc(CRM.error)}</div>`; return; }
+  if (!CRM.loaded) { grid.innerHTML = '<div class="crm-cal-msg">Loading calendar…</div>'; return; }
+
+  const byDay = {};
+  crmVisibleItems().forEach(i => { if (i.dayKey) (byDay[i.dayKey] = byDay[i.dayKey] || []).push(i); });
+  const first     = new Date(m.getFullYear(), m.getMonth(), 1);
+  const daysInMon = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+  const weeks     = Math.ceil((first.getDay() + daysInMon) / 7);
+  const gridStart = new Date(first); gridStart.setDate(1 - first.getDay());
+  const todayKey  = crmDayKey(new Date());
+
+  let html = '';
+  for (let n = 0; n < weeks * 7; n++) {
+    const day   = new Date(gridStart); day.setDate(gridStart.getDate() + n);
+    const key   = crmDayKey(day);
+    const items = (byDay[key] || []).sort(crmSort);
+    const cls   = ['crm-day', day.getMonth() !== m.getMonth() ? 'crm-other' : '', key === todayKey ? 'crm-today' : ''].join(' ');
+    html += `<div class="${cls}" onclick="openCrmForm({type:'Event',date:'${key}'})" title="Add an event on ${crmFmtDay(key)}">`
+      + `<span class="crm-day-num">${day.getDate()}</span>`
+      + items.slice(0, 3).map(i => crmPill(i, todayKey)).join('')
+      + (items.length > 3 ? `<button type="button" class="crm-more" onclick="event.stopPropagation();openCrmDay('${key}')">+${items.length - 3} more</button>` : '')
+      + `</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function crmShiftMonth(delta) {
+  CRM.month = new Date(CRM.month.getFullYear(), CRM.month.getMonth() + delta, 1);
+  renderCrmCalendar();
+}
+function crmGoToday() {
+  const n = new Date();
+  CRM.month = new Date(n.getFullYear(), n.getMonth(), 1);
+  renderCrmCalendar();
+}
+
+// Events — Next 7 Days card + KPI tile (same data as the calendar)
+function renderCrmEvents7d() {
+  const feed  = document.getElementById('act-7d-feed');
+  const kpi   = document.getElementById('act-kpi-7d');
+  const badge = document.getElementById('act-7d-badge');
+  if (!feed) return;
+  if (!CRM.loaded) {
+    kpi.textContent = '—'; badge.textContent = '';
+    feed.innerHTML = `<div class="empty">${CRM.error ? 'Events are unavailable right now.' : 'Loading events…'}</div>`;
+    return;
+  }
+  const now = new Date(), until = new Date(now); until.setDate(until.getDate() + 7);
+  const evs = crmVisibleItems().filter(i => {
+    if (i.type !== 'Event' || i.status === 'Completed' || !i.start) return false;
+    const endsAt = i.allDay ? new Date(i.dayKey + 'T23:59:59') : (i.end || i.start);
+    return endsAt >= now && i.start <= until;
+  }).sort((a, b) => a.start - b.start);
+  kpi.textContent   = evs.length;
+  badge.textContent = evs.length + ' events';
+  feed.innerHTML = evs.length ? evs.map(i => `
+    <div style="padding:9px 0;border-bottom:1px solid var(--border2);cursor:pointer" onclick="openCrmDetail('${i.id}')">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+        <span style="font-weight:700;font-size:12px;color:var(--asf-navy)">${crmEsc(i.account || i.summary)}</span>
+        ${i.category ? `<span class="badge b-dim">${crmEsc(i.category)}</span>` : ''}
+        <span style="margin-left:auto;font-size:10px;color:var(--muted)">${crmFmtDay(i.dayKey)}${i.allDay ? ' · All day' : ' · ' + crmFmtTime(i.start)}</span>
+      </div>
+      <div style="font-size:11px;color:var(--dim)">${crmEsc(i.summary)}${i.location ? ' · ' + crmEsc(i.location) : ''}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">Owner: ${crmEsc(i.owner || '—')}</div>
+    </div>`).join('')
+    : '<div class="empty">No events in the next 7 days.</div>';
+}
+
+// ── Modal plumbing ──
+function crmOpenModal(html) {
+  document.getElementById('crm-modal').innerHTML = html;
+  document.getElementById('crm-modal-bg').classList.add('open');
+  const first = document.querySelector('#crm-modal input, #crm-modal button.btn-sm');
+  if (first) first.focus();
+}
+function crmCloseModal() {
+  document.getElementById('crm-modal-bg').classList.remove('open');
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('crm-modal-bg')?.classList.contains('open')) crmCloseModal();
+});
+function crmToast(msg, isErr) {
+  const t = document.getElementById('crm-toast');
+  t.textContent = msg; t.className = isErr ? 'err' : ''; t.style.display = 'block';
+  clearTimeout(crmToast._t);
+  crmToast._t = setTimeout(() => { t.style.display = 'none'; }, isErr ? 7000 : 4000);
+}
+function crmModalHdr(title) {
+  return `<div class="crm-modal-hdr"><h3 id="crm-modal-title">${crmEsc(title)}</h3><button type="button" class="crm-x" onclick="crmCloseModal()" aria-label="Close">×</button></div>`;
+}
+
+// ── Detail view ──
+function openCrmDetail(id) {
+  const i = CRM.items.find(x => x.id === id);
+  if (!i) return;
+  const mine = !!i.ownerEmail && i.ownerEmail === (USER.email || '').toLowerCase();
+  const open = i.status !== 'Completed' && i.status !== 'Canceled';
+  const when = i.type === 'Task'
+    ? (i.dueKey ? 'Due ' + crmFmtDay(i.dueKey) : 'No due date')
+    : (i.allDay ? crmFmtDay(i.dayKey) + ' · All day'
+                : `${crmFmtDay(i.dayKey)} · ${crmFmtTime(i.start)}${i.end ? '–' + crmFmtTime(i.end) : ''}`);
+  const row = (k, v) => v ? `<div class="crm-detail-row"><span>${k}</span><span>${crmEsc(v)}</span></div>` : '';
+  const actions = (mine && open)
+    ? `<button type="button" class="crm-btn-danger" onclick="crmAction('${i.id}','cancel')">Cancel ${i.type.toLowerCase()}</button>
+       <button type="button" class="crm-btn-ghost" onclick="openCrmForm({id:'${i.id}'})">Edit</button>
+       <button type="button" class="btn-sm" onclick="crmAction('${i.id}','complete')">Mark complete</button>`
+    : `<button type="button" class="crm-btn-ghost" onclick="crmCloseModal()">Close</button>`;
+  crmOpenModal(crmModalHdr(i.type === 'Task' ? 'Task' : 'Event') + `
+    <div class="crm-modal-body">
+      <div style="font-size:14px;font-weight:700;color:var(--text)">${crmEsc(i.summary)}</div>
+      ${row('When', when)}${row('Account', i.account)}${row('Location', i.location)}
+      ${row('Category', i.category)}${row('Owner', i.owner)}${row('Status', i.status)}
+      ${!mine ? '<div class="crm-hint">Only the owner can change this item.</div>' : ''}
+      <div class="crm-err" id="crm-form-err"></div>
+    </div>
+    <div class="crm-modal-foot">${actions}</div>`);
+}
+
+// ── Day list ("+N more") ──
+function openCrmDay(key) {
+  const todayKey = crmDayKey(new Date());
+  const items = crmVisibleItems().filter(i => i.dayKey === key).sort(crmSort);
+  crmOpenModal(crmModalHdr(crmFmtDay(key)) + `
+    <div class="crm-modal-body"><div class="crm-day-list">${items.map(i => crmPill(i, todayKey)).join('')}</div></div>
+    <div class="crm-modal-foot">
+      <button type="button" class="crm-btn-ghost" onclick="openCrmForm({type:'Task',date:'${key}'})">+ Task</button>
+      <button type="button" class="btn-sm" onclick="openCrmForm({type:'Event',date:'${key}'})">+ Event</button>
+    </div>`);
+}
+
+// ── Create / edit form ──
+function crmAccountOptions() {
+  const names = new Set();
+  (D.sales || []).forEach(r => { const n = (r.CustomerName || '').trim(); if (n) names.add(n); });
+  (D.activities || []).forEach(r => { const n = (r.AccountName || '').trim(); if (n) names.add(n); });
+  CRM.items.forEach(i => { if (i.account) names.add(i.account); });
+  return [...names].sort((a, b) => a.localeCompare(b)).map(n => `<option value="${crmEsc(n)}"></option>`).join('');
+}
+function crmCategoryOptions() {
+  const cats = new Set(CRM.items.map(i => i.category).filter(Boolean));
+  return [...cats].sort().map(c => `<option value="${crmEsc(c)}"></option>`).join('');
+}
+
+function openCrmForm(opts = {}) {
+  const edit = opts.id ? CRM.items.find(x => x.id === opts.id) : null;
+  const type = edit ? edit.type : (opts.type || 'Event');
+  const date = opts.date || crmDayKey(new Date());
+  const v = {
+    summary:  edit?.summary || '',
+    account:  edit?.account || '',
+    date:     edit ? (edit.dayKey || date) : date,
+    t1:       edit?.start && !edit.allDay ? crmTimeInput(edit.start) : '09:00',
+    t2:       edit?.end && !edit.allDay ? crmTimeInput(edit.end) : '09:30',
+    allDay:   !!edit?.allDay,
+    location: edit?.location || '',
+    showAs:   edit?.showAs || 'Busy',
+    category: edit?.category || '',
+    due:      edit ? (edit.dueKey || date) : date,
+  };
+  const showAsOpts = ['Busy', 'Free', 'Tentative', 'Out of Office']
+    .map(o => `<option${o === v.showAs ? ' selected' : ''}>${o}</option>`).join('');
+  crmOpenModal(crmModalHdr(edit ? `Edit ${type.toLowerCase()}` : `New ${type.toLowerCase()}`) + `
+    <div class="crm-modal-body" id="crm-form" data-type="${type}" data-id="${edit ? edit.id : ''}">
+      ${edit ? '' : `<div class="crm-seg" role="group" aria-label="Item type">
+        <button type="button" class="${type === 'Event' ? 'on' : ''}" onclick="crmSetType('Event')">Event</button>
+        <button type="button" class="${type === 'Task' ? 'on' : ''}" onclick="crmSetType('Task')">Task</button></div>`}
+      <div class="crm-field"><label for="crm-f-summary">Summary</label>
+        <input class="crm-in" id="crm-f-summary" maxlength="255" value="${crmEsc(v.summary)}" placeholder="${type === 'Event' ? 'e.g. Showroom visit' : 'e.g. Send samples'}"></div>
+      <div class="crm-field"><label for="crm-f-account">Account</label>
+        <input class="crm-in" id="crm-f-account" list="crm-acct-list" value="${crmEsc(v.account)}" placeholder="Start typing a customer or account name">
+        <datalist id="crm-acct-list">${crmAccountOptions()}</datalist></div>
+      <div id="crm-ev-fields" style="display:${type === 'Event' ? 'flex' : 'none'};flex-direction:column;gap:12px">
+        <div class="crm-row3">
+          <div class="crm-field"><label for="crm-f-date">Date</label><input class="crm-in" type="date" id="crm-f-date" value="${v.date}"></div>
+          <div class="crm-field"><label for="crm-f-t1">Start</label><input class="crm-in" type="time" id="crm-f-t1" value="${v.t1}"${v.allDay ? ' disabled' : ''}></div>
+          <div class="crm-field"><label for="crm-f-t2">End</label><input class="crm-in" type="time" id="crm-f-t2" value="${v.t2}"${v.allDay ? ' disabled' : ''}></div>
+        </div>
+        <label class="crm-check"><input type="checkbox" id="crm-f-allday"${v.allDay ? ' checked' : ''} onchange="document.getElementById('crm-f-t1').disabled=this.checked;document.getElementById('crm-f-t2').disabled=this.checked"> All day</label>
+        <div class="crm-row2">
+          <div class="crm-field"><label for="crm-f-location">Location</label><input class="crm-in" id="crm-f-location" value="${crmEsc(v.location)}"></div>
+          <div class="crm-field"><label for="crm-f-showas">Show as</label><select class="crm-in" id="crm-f-showas">${showAsOpts}</select></div>
+        </div>
+      </div>
+      <div id="crm-tk-fields" style="display:${type === 'Task' ? 'flex' : 'none'};flex-direction:column;gap:12px">
+        <div class="crm-field"><label for="crm-f-due">Due date</label><input class="crm-in" type="date" id="crm-f-due" value="${v.due}"></div>
+      </div>
+      <div class="crm-field"><label for="crm-f-category">Category</label>
+        <input class="crm-in" id="crm-f-category" list="crm-cat-list" value="${crmEsc(v.category)}" placeholder="Optional">
+        <datalist id="crm-cat-list">${crmCategoryOptions()}</datalist></div>
+      <div class="crm-field"><label for="crm-f-notes">Notes</label>
+        <textarea class="crm-in" id="crm-f-notes" placeholder="${edit ? 'Leave blank to keep the existing notes' : 'Optional'}"></textarea></div>
+      <div class="crm-err" id="crm-form-err"></div>
+      <div class="crm-hint">Saves to Acumatica as you. If you've connected Outlook, it appears there within about 5 minutes.</div>
+    </div>
+    <div class="crm-modal-foot">
+      <button type="button" class="crm-btn-ghost" onclick="crmCloseModal()">Discard</button>
+      <button type="button" class="btn-sm" id="crm-save-btn" onclick="saveCrmForm()">${edit ? 'Save changes' : 'Save ' + type.toLowerCase()}</button>
+    </div>`);
+  document.getElementById('crm-f-summary').focus();
+}
+
+function crmSetType(type) {
+  const f = document.getElementById('crm-form');
+  f.dataset.type = type;
+  f.querySelectorAll('.crm-seg button').forEach(b => b.classList.toggle('on', b.textContent === type));
+  document.getElementById('crm-ev-fields').style.display = type === 'Event' ? 'flex' : 'none';
+  document.getElementById('crm-tk-fields').style.display = type === 'Task' ? 'flex' : 'none';
+  document.getElementById('crm-modal-title').textContent = 'New ' + type.toLowerCase();
+  document.getElementById('crm-save-btn').textContent = 'Save ' + type.toLowerCase();
+  // Carry the chosen day across: Event date ↔ Task due date
+  if (type === 'Task') document.getElementById('crm-f-due').value = document.getElementById('crm-f-date').value;
+  else document.getElementById('crm-f-date').value = document.getElementById('crm-f-due').value;
+}
+
+async function crmApi(method, path, body) {
+  const call = () => fetch(CONFIG.workerUrl + path, {
+    method,
+    headers: { Authorization: `Bearer ${auth.accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  let res = await call();
+  if (res.status === 401 && auth.refreshToken) { await doRefreshToken(); res = await call(); }
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || j.error) throw new Error(j.error || `Request failed (${res.status})`);
+  return j;
+}
+
+function crmShowErr(msg) {
+  const e = document.getElementById('crm-form-err');
+  if (!e) { crmToast(msg, true); return; }
+  e.textContent = msg; e.style.display = msg ? 'block' : 'none';
+}
+
+async function saveCrmForm() {
+  const f    = document.getElementById('crm-form');
+  const type = f.dataset.type;
+  const id   = f.dataset.id || undefined;
+  const val  = x => document.getElementById(x).value.trim();
+  const summary = val('crm-f-summary');
+  if (!summary) { crmShowErr('Add a summary.'); return; }
+  const notes = val('crm-f-notes');
+  const common = {
+    id, summary,
+    account:  val('crm-f-account'),
+    category: val('crm-f-category'),
+    notes:    (id && !notes) ? undefined : notes,   // blank on edit = keep existing notes
+  };
+  let path, body;
+  if (type === 'Event') {
+    const d = val('crm-f-date');
+    if (!d) { crmShowErr('Pick a date.'); return; }
+    const allDay = document.getElementById('crm-f-allday').checked;
+    let start, end;
+    if (allDay) { start = `${d}T00:00:00Z`; end = `${d}T00:00:00Z`; }
+    else {
+      const s = new Date(`${d}T${val('crm-f-t1')}`), e = new Date(`${d}T${val('crm-f-t2')}`);
+      if (isNaN(s) || isNaN(e)) { crmShowErr('Enter a start and end time.'); return; }
+      if (e <= s) { crmShowErr('The end time must be after the start time.'); return; }
+      start = s.toISOString(); end = e.toISOString();
+    }
+    path = '/crm/event';
+    body = { ...common, start, end, allDay, location: val('crm-f-location'),
+             showAs: document.getElementById('crm-f-showas').value, timeZone: crmAcuTimeZone() };
+  } else {
+    const due = val('crm-f-due');
+    if (!due) { crmShowErr('Pick a due date.'); return; }
+    const today = crmDayKey(new Date());
+    path = '/crm/task';
+    body = { ...common, dueDate: due, startDate: id ? undefined : (due < today ? due : today) };
+  }
+  const btn = document.getElementById('crm-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…'; crmShowErr('');
+  try {
+    await crmApi('PUT', path, body);
+    crmCloseModal();
+    crmToast(`${type} saved to Acumatica.`);
+    await loadCrmItems();
+  } catch (e) {
+    crmShowErr(e.message);
+    btn.disabled = false; btn.textContent = id ? 'Save changes' : 'Save ' + type.toLowerCase();
+  }
+}
+
+async function crmAction(id, action) {
+  const i = CRM.items.find(x => x.id === id);
+  if (!i) return;
+  if (action === 'cancel' && !confirm(`Cancel "${i.summary}" in Acumatica?`)) return;
+  document.querySelectorAll('#crm-modal .crm-modal-foot button').forEach(b => { b.disabled = true; });
+  try {
+    await crmApi('POST', '/crm/action', { entity: i.type, action, id });
+    crmCloseModal();
+    crmToast(`${i.type} ${action === 'cancel' ? 'canceled' : 'completed'}.`);
+    await loadCrmItems();
+  } catch (e) {
+    crmShowErr(e.message);
+    document.querySelectorAll('#crm-modal .crm-modal-foot button').forEach(b => { b.disabled = false; });
+  }
 }
 
 // ─── CUSTOMERS WITH NO ACTIVITY IN LAST 120 DAYS (inactive customers) ──────────
