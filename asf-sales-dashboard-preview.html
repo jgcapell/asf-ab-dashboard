@@ -700,6 +700,7 @@
           <div class="user-badge-role" id="user-badge-role">—</div>
         </div>
       </div>
+      <button class="hbtn" onclick="connectOutlook()" title="Send your Acumatica tasks and events to Outlook and To Do">CONNECT OUTLOOK</button>
       <button class="hbtn" onclick="printDashboard()">PRINT / PDF</button>
       <button class="hbtn" onclick="toggleLog()">DEBUG LOG</button>
       <span id="sync-indicator" style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:600;letter-spacing:0.06em;margin-right:4px">● Live</span>
@@ -1739,6 +1740,7 @@ const CONFIG = {
   scopes:       'api offline_access openid profile email',
   redirectUri:  window.location.origin + window.location.pathname,
   workerUrl:    'https://asf-inventory-dashboard.greg-capell.workers.dev',
+  calendarSyncUrl: 'https://asf-graph-smoketest.greg-capell.workers.dev', // Acumatica → Outlook sync Worker
 };
 
 // ─── BUDGET / BHAG DATA (from 2025-2026_Budget_BHAG.xlsx) ────────────────────
@@ -1914,6 +1916,14 @@ async function resolveUserIdentity() {
   updateUserBadge();
 }
 
+
+// Opens Microsoft sign-in for the Acumatica → Outlook sync in a new tab.
+// login_hint pre-selects the rep's ASF account on Microsoft's sign-in page.
+function connectOutlook() {
+  const url = new URL(CONFIG.calendarSyncUrl + '/auth/login');
+  if (USER.email) url.searchParams.set('hint', USER.email);
+  window.open(url.toString(), '_blank', 'noopener');
+}
 
 function updateUserBadge() {
   document.getElementById('user-badge').style.display = 'flex';
