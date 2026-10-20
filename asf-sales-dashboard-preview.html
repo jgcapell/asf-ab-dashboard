@@ -2297,6 +2297,7 @@ async function loadData() {
     renderYTDScoreboard();
     renderCustomerData();
     renderOpportunities();
+    if (crmInitialized) loadCrmItems();   // REFRESH also reloads the calendar
     addLog('All data loaded.','ok');
 
     // Fetch GL expense data for ROE scoreboard (async, non-blocking)
@@ -3541,9 +3542,22 @@ function initCrmCalendar() {
   loadCrmItems();
 }
 
+// Acumatica OData caps an unpaged GI read at 500 rows and drops the rest
+// silently — GC-GraphSync is past that, so newer items went missing. Page
+// explicitly with $top/$skip (same approach as the Display Tracker fetch).
+async function crmFetchAll() {
+  const pageSize = 1000, rows = [];
+  for (let skip = 0; skip < 50000; skip += pageSize) {
+    const page = await odataGet('GC-GraphSync', { '$top': String(pageSize), '$skip': String(skip) });
+    rows.push(...page);
+    if (page.length < pageSize) break;
+  }
+  return rows;
+}
+
 async function loadCrmItems() {
   try {
-    const rows = await odataGet('GC-GraphSync', {});
+    const rows = await crmFetchAll();
     CRM.items  = rows.map(crmNormalize).filter(i => i.id);
     CRM.loaded = true;
     CRM.error  = null;
