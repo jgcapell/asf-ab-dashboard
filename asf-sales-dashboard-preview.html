@@ -3473,7 +3473,7 @@ function renderOpportunities() {
 // an event) work on the rep's own items. Changes reach Outlook / To Do through
 // the separate calendar sync within ~5 minutes for reps who connected Outlook.
 let crmInitialized = false;
-const CRM = { items: [], loaded: false, error: null, month: null };
+const CRM = { items: [], categories: [], loaded: false, error: null, month: null };
 
 // Acumatica stores a time zone on each event; send the rep's own zone so the
 // Acumatica event form opens in local time instead of GMT.
@@ -3557,8 +3557,13 @@ async function crmFetchAll() {
 
 async function loadCrmItems() {
   try {
-    const rows = await crmFetchAll();
+    const [rows, cats] = await Promise.all([
+      crmFetchAll(),
+      // Full Acumatica category list; optional — falls back to categories already in use
+      odataGet('GC-ActivityCategories', {}).catch(e => { addLog(`⚠ Categories: ${e.message}`, 'warn'); return []; }),
+    ]);
     CRM.items  = rows.map(crmNormalize).filter(i => i.id);
+    CRM.categories = cats.map(c => String(c.Description || '').trim()).filter(Boolean);
     CRM.loaded = true;
     CRM.error  = null;
     addLog(`✓ Calendar: ${CRM.items.length} events/tasks`, 'ok');
@@ -3740,9 +3745,13 @@ function crmAccountOptions() {
   CRM.items.forEach(i => { if (i.account) names.add(i.account); });
   return [...names].sort((a, b) => a.localeCompare(b)).map(n => `<option value="${crmEsc(n)}"></option>`).join('');
 }
-function crmCategoryOptions() {
-  const cats = new Set(CRM.items.map(i => i.category).filter(Boolean));
-  return [...cats].sort().map(c => `<option value="${crmEsc(c)}"></option>`).join('');
+// Dropdown options: Acumatica's full category list (GC-ActivityCategories), plus the item's
+// current category if it isn't in that list, so editing never silently drops it.
+function crmCategoryOptions(current) {
+  const cats = new Set(CRM.categories.length ? CRM.categories : CRM.items.map(i => i.category).filter(Boolean));
+  if (current) cats.add(current);
+  return '<option value="">(none)</option>' + [...cats].sort((a, b) => a.localeCompare(b))
+    .map(c => `<option value="${crmEsc(c)}"${c === current ? ' selected' : ''}>${crmEsc(c)}</option>`).join('');
 }
 
 function openCrmForm(opts = {}) {
@@ -3789,8 +3798,7 @@ function openCrmForm(opts = {}) {
         <div class="crm-field"><label for="crm-f-due">Due date</label><input class="crm-in" type="date" id="crm-f-due" value="${v.due}"></div>
       </div>
       <div class="crm-field"><label for="crm-f-category">Category</label>
-        <input class="crm-in" id="crm-f-category" list="crm-cat-list" value="${crmEsc(v.category)}" placeholder="Optional">
-        <datalist id="crm-cat-list">${crmCategoryOptions()}</datalist></div>
+        <select class="crm-in" id="crm-f-category">${crmCategoryOptions(v.category)}</select></div>
       <div class="crm-field"><label for="crm-f-notes">Notes</label>
         <textarea class="crm-in" id="crm-f-notes" placeholder="${edit ? 'Leave blank to keep the existing notes' : 'Optional'}"></textarea></div>
       <div class="crm-err" id="crm-form-err"></div>
