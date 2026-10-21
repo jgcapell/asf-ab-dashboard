@@ -228,6 +228,8 @@
   .crm-done { opacity:0.55; }
   .crm-done .crm-sum { text-decoration:line-through; }
   .crm-overdue { color:var(--red); font-weight:600; }
+  .crm-flag { background:var(--yellow-soft, #fff4d6); color:#8a5a00; border-left:3px solid #e0a100; }
+  .crm-flag-banner { background:var(--yellow-soft, #fff4d6); color:#7a4f00; border-radius:6px; padding:9px 11px; font-size:11.5px; line-height:1.45; }
   .crm-time { font-weight:700; flex:none; }
   .crm-glyph { flex:none; }
   .crm-sum { overflow:hidden; text-overflow:ellipsis; }
@@ -3511,6 +3513,13 @@ function crmTimeInput(d) {
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
+// Items whose Outlook / To Do copy was deleted get one of these prefixes from the sync
+const CRM_FLAG_RE = /^\[(Canceled in Outlook|Deleted in To Do)\]\s*/;
+function crmFlagOf(summary) {
+  const m = CRM_FLAG_RE.exec(summary || '');
+  return m ? m[1] : null;
+}
+
 function crmNormalize(r) {
   const type   = r.ActivityType === 'Event' ? 'Event' : 'Task';
   const allDay = r.AllDay === true || r.AllDay === 'true';
@@ -3523,6 +3532,7 @@ function crmNormalize(r) {
   return {
     id: r.NoteID, type, allDay, start, end, dayKey, dueKey,
     summary:    (r.Summary || '').trim() || '(no summary)',
+    flag:       crmFlagOf((r.Summary || '').trim()),
     status:     r.Status || '',
     location:   (r.Location || '').trim(),
     owner:      (r.OwnerName || '').trim(),
@@ -3593,7 +3603,7 @@ function crmPill(i, todayKey) {
   const time    = (i.type === 'Event' && !i.allDay && i.start)
     ? crmFmtTime(i.start).replace(':00', '').replace(' ', '').toLowerCase() : '';
   const glyph   = i.type === 'Task' ? (done ? '☑' : '☐') : '';
-  const cls     = ['crm-item', i.type === 'Event' ? 'crm-ev' : 'crm-tk', done ? 'crm-done' : '', overdue ? 'crm-overdue' : ''].join(' ');
+  const cls     = ['crm-item', i.type === 'Event' ? 'crm-ev' : 'crm-tk', done ? 'crm-done' : '', overdue ? 'crm-overdue' : '', i.flag ? 'crm-flag' : ''].join(' ');
   return `<button type="button" class="${cls}" title="${crmEsc(i.summary + (i.account ? ' — ' + i.account : ''))}" onclick="event.stopPropagation();openCrmDetail('${i.id}')">`
     + (glyph ? `<span class="crm-glyph">${glyph}</span>` : '')
     + (time ? `<span class="crm-time">${time}</span>` : '')
@@ -3709,14 +3719,20 @@ function openCrmDetail(id) {
     : (i.allDay ? crmFmtDay(i.dayKey) + ' · All day'
                 : `${crmFmtDay(i.dayKey)} · ${crmFmtTime(i.start)}${i.end ? '–' + crmFmtTime(i.end) : ''}`);
   const row = (k, v) => v ? `<div class="crm-detail-row"><span>${k}</span><span>${crmEsc(v)}</span></div>` : '';
-  const actions = (mine && open)
+  const flagBanner = i.flag ? `<div class="crm-flag-banner"><b>${crmEsc(i.flag)}.</b> This ${i.type.toLowerCase()} was ${i.type === 'Event' ? 'deleted or canceled in Outlook' : 'deleted from Microsoft To Do'}. ${mine ? (i.type === 'Event' ? 'Cancel it here to close it in Acumatica, or keep it to put it back on your calendar.' : 'Complete or cancel it here, or keep it to put it back in To Do.') : 'The owner can confirm or keep it.'}</div>` : '';
+  const actions = (mine && open && i.flag)
+    ? `<button type="button" class="crm-btn-ghost" onclick="crmKeepFlagged('${i.id}')">Keep it</button>
+       ${i.type === 'Task' ? `<button type="button" class="crm-btn-ghost" onclick="crmAction('${i.id}','complete')">Mark complete</button>` : ''}
+       <button type="button" class="crm-btn-danger" onclick="crmAction('${i.id}','cancel')">Confirm cancel</button>`
+    : (mine && open)
     ? `<button type="button" class="crm-btn-danger" onclick="crmAction('${i.id}','cancel')">Cancel ${i.type.toLowerCase()}</button>
        <button type="button" class="crm-btn-ghost" onclick="openCrmForm({id:'${i.id}'})">Edit</button>
        <button type="button" class="btn-sm" onclick="crmAction('${i.id}','complete')">Mark complete</button>`
     : `<button type="button" class="crm-btn-ghost" onclick="crmCloseModal()">Close</button>`;
   crmOpenModal(crmModalHdr(i.type === 'Task' ? 'Task' : 'Event') + `
     <div class="crm-modal-body">
-      <div style="font-size:14px;font-weight:700;color:var(--text)">${crmEsc(i.summary)}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text)">${crmEsc(i.flag ? i.summary.replace(CRM_FLAG_RE, '') : i.summary)}</div>
+      ${flagBanner}
       ${row('When', when)}${row('Account', i.account)}${row('Location', i.location)}
       ${row('Category', i.category)}${row('Owner', i.owner)}${row('Status', i.status)}
       ${!mine ? '<div class="crm-hint">Only the owner can change this item.</div>' : ''}
@@ -3890,6 +3906,31 @@ async function saveCrmForm() {
   } catch (e) {
     crmShowErr(e.message);
     btn.disabled = false; btn.textContent = id ? 'Save changes' : 'Save ' + type.toLowerCase();
+  }
+}
+
+// "Keep it": removes the flag prefix (and restores Busy for events); the sync then puts the
+// item back in the rep's Outlook / To Do on its next run.
+async function crmKeepFlagged(id) {
+  const i = CRM.items.find(x => x.id === id);
+  if (!i || !i.flag) return;
+  const summary = i.summary.replace(CRM_FLAG_RE, '');
+  document.querySelectorAll('#crm-modal .crm-modal-foot button').forEach(b => { b.disabled = true; });
+  try {
+    if (i.type === 'Event') {
+      const start = i.allDay ? `${i.dayKey}T00:00:00Z` : i.start.toISOString();
+      const end   = i.allDay ? `${i.dayKey}T00:00:00Z` : (i.end || i.start).toISOString();
+      await crmApi('PUT', '/crm/event', { id, summary, start, end, allDay: i.allDay, location: i.location,
+        showAs: 'Busy', category: i.category, timeZone: crmAcuTimeZone() });
+    } else {
+      await crmApi('PUT', '/crm/task', { id, summary, dueDate: i.dueKey || crmDayKey(new Date()), category: i.category });
+    }
+    crmCloseModal();
+    crmToast(`Kept — it will be back in ${i.type === 'Event' ? 'Outlook' : 'To Do'} within about 5 minutes.`);
+    await loadCrmItems();
+  } catch (e) {
+    crmShowErr(e.message);
+    document.querySelectorAll('#crm-modal .crm-modal-foot button').forEach(b => { b.disabled = false; });
   }
 }
 
