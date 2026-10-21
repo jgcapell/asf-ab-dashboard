@@ -1878,7 +1878,11 @@ const TRAILING_AGO = (() => { const d=new Date(); d.setFullYear(d.getFullYear()-
 const CUR_YEAR = new Date().getFullYear();
 
 // ─── AUTH & USER IDENTITY ────────────────────────────────────────────────────
+// auth.refreshToken holds the Worker SESSION ID (not an Acumatica refresh token): the
+// dashboard Worker keeps each rep's Acumatica key server-side, encrypted, and the browser
+// only ever receives short-lived access tokens. Sessions expire after 7 days without use.
 let auth = { accessToken: null, refreshToken: null };
+const SESSION_LS_KEY = 'asf_sales_session';
 
 // Current user context — resolved after login
 let USER = {
@@ -1904,16 +1908,25 @@ async function handleCallback(code, state) {
   if (state !== sessionStorage.getItem('oauth_state')) { showLoginErr('OAuth state mismatch. Please try again.'); return; }
   setLoadTxt('Signing you in…');
   try {
-    // 1. Exchange code for tokens
-    const resp = await fetch(`${CONFIG.workerUrl}/token`, {
-      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: CONFIG.redirectUri, client_id: CONFIG.clientId }),
+    // 1. Exchange the code through the Worker, which keeps the Acumatica key and
+    //    returns a session ID + access token
+    const resp = await fetch(`${CONFIG.workerUrl}/session/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, redirect_uri: CONFIG.redirectUri, client_id: CONFIG.clientId }),
     });
-    if (!resp.ok) throw new Error(`Token exchange failed (${resp.status})`);
-    const t = await resp.json();
-    auth.accessToken = t.access_token; auth.refreshToken = t.refresh_token;
+    const t = await resp.json().catch(() => ({}));
+    if (!resp.ok || !t.access_token) throw new Error(`Sign-in failed (${t.error || resp.status})`);
+    auth.accessToken = t.access_token; auth.refreshToken = t.session;
+    try { localStorage.setItem(SESSION_LS_KEY, t.session); } catch (e) {}
 
     window.history.replaceState({}, '', window.location.pathname);
+    await afterSignIn();
+  } catch(e) { showLoginErr(e.message); }
+}
+
+// Shared by a fresh sign-in and by resuming a saved 7-day session on page load
+async function afterSignIn() {
+  try {
     showDashboard();
 
     // 2. Resolve identity and load data in parallel
@@ -2056,15 +2069,19 @@ function onRepFilterChange() {
 
 
 async function doRefreshToken() {
-  const resp = await fetch(`${CONFIG.workerUrl}/token`, {
-    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: auth.refreshToken, client_id: CONFIG.clientId }),
+  const resp = await fetch(`${CONFIG.workerUrl}/session/refresh`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session: auth.refreshToken }),
   });
   if (!resp.ok) { logout(); throw new Error('Session expired.'); }
-  const t = await resp.json(); auth.accessToken = t.access_token; auth.refreshToken = t.refresh_token || auth.refreshToken;
+  const t = await resp.json(); auth.accessToken = t.access_token;
 }
 
 function logout() {
+  // Ends this browser's session; the Worker keeps the stored key so background calendar sync continues
+  const sess = auth.refreshToken;
+  if (sess) fetch(`${CONFIG.workerUrl}/session/logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session: sess }) }).catch(() => {});
+  try { localStorage.removeItem(SESSION_LS_KEY); } catch (e) {}
   stopBackgroundSync();
   lastKVFingerprint = null;
   auth = { accessToken: null, refreshToken: null };
@@ -5223,6 +5240,15 @@ function eaterRenderAll() {
   const code=p.get('code'), state=p.get('state'), error=p.get('error');
   if(error) { showLoginErr('Login error: '+(p.get('error_description')||error)); return; }
   if(code && state) { await handleCallback(code,state); return; }
+  // Resume a saved session (7 days without use before it expires)
+  let saved = null;
+  try { saved = localStorage.getItem(SESSION_LS_KEY); } catch (e) {}
+  if (saved) {
+    auth.refreshToken = saved;
+    setLoadTxt('Signing you in…');
+    try { await doRefreshToken(); await afterSignIn(); return; }
+    catch (e) { /* expired or revoked: fall through to the sign-in screen */ }
+  }
   hideOverlay(); document.getElementById('login-screen').style.display='flex';
 })();
 
