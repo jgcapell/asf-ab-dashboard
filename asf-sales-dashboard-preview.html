@@ -686,7 +686,11 @@
   #pane-d10 table.d10-table select { padding: 4px 6px; border: 1px solid var(--border2); border-radius: 4px; font-size: 10px; font-family: inherit; background: var(--surface); color: var(--text); }
   #pane-d10 .d10-goal-cell { display: flex; gap: 4px; align-items: center; }
   #pane-d10 .d10-goal-cell input { width: 60px !important; }
+  #pane-d10 .d10-goal-cell select.d10-goal-op { width: 42px; padding-left: 4px; padding-right: 2px; }
   #pane-d10 .d10-goal-weekly-hint { font-size: 9px; color: var(--muted); margin-top: 2px; }
+  #pane-d10 .d10-auto-tag { display: inline-block; font-size: 8.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--asf-blue); background: rgba(91,143,204,0.12); border-radius: 3px; padding: 1px 4px; vertical-align: middle; }
+  #pane-d10 .d10-auto-note { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 11px; color: var(--muted); margin: 0 0 10px; }
+  #pane-d10 .d10-auto-btn { border: 1px solid var(--border); background: var(--surface); color: var(--dim); border-radius: 5px; padding: 3px 9px; font: inherit; font-size: 10.5px; font-weight: 600; cursor: pointer; }
   #pane-d10 table.d10-table td.d10-cell-hit  { background: var(--green-soft); }
   #pane-d10 table.d10-table td.d10-cell-miss { background: var(--red-soft); }
   #pane-d10 table.d10-table td.d10-cell-hit  input, #pane-d10 table.d10-table td.d10-cell-miss input { background: transparent; }
@@ -1847,8 +1851,6 @@ const BHAG_CUM   = BHAG_MONTHLY.reduce((acc,v,i)   => { acc.push((acc[i-1]||0)+v
 // Per-rep annual budget + BHAG, distributed by seasonal weights
 const REP_TARGETS = {
   'Anthony Deel':    { sub:'000-24', annualBudget:1400000,  annualBhag:1571744.95, budgetCum:[102666.67,205333.34,308000.01,418273.34,528546.67,638820.0,771773.33,904726.66,1037679.99,1158453.32,1279226.65,1399999.98], bhagCum:[115261.3,230522.6,345783.9,469585.01,593386.12,717187.23,866450.61,1015713.99,1164977.37,1300566.57,1436155.77,1571744.97] },
-  'Austin Jones':    { sub:'000-32', annualBudget:855000,   annualBhag:1178808.71, budgetCum:[62700.0,125400.0,188100.0,255445.5,322791.0,390136.5,471333.0,552529.5,633726.0,707484.0,781242.0,855000.0], bhagCum:[86445.97,172891.94,259337.91,352188.74,445039.57,537890.4,649837.93,761785.46,873732.99,975424.89,1077116.79,1178808.69] },
-  'Bob Brown':       { sub:'000-25', annualBudget:520000,   annualBhag:589404.35,  budgetCum:[38133.33,76266.66,114399.99,155358.66,196317.33,237276.0,286658.67,336041.34,385424.01,430282.68,475141.35,520000.02], bhagCum:[43222.99,86445.98,129668.97,176094.39,222519.81,268945.23,324919.0,380892.77,436866.54,487712.49,538558.44,589404.39] },
   'Bobby Townsend':  { sub:'000-39', annualBudget:1000000,  annualBhag:1080574.65, budgetCum:[73333.33,146666.66,219999.99,298766.66,377533.33,456300.0,551266.67,646233.34,741200.01,827466.68,913733.35,1000000.02], bhagCum:[79242.14,158484.28,237726.42,322839.68,407952.94,493066.2,595684.77,698303.34,800921.91,894139.48,987357.05,1080574.62] },
   'Jason Beamer':    { sub:'000-44', annualBudget:500000,   annualBhag:628697.98,  budgetCum:[36666.67,73333.34,110000.01,149383.34,188766.67,228150.0,275633.33,323116.66,370599.99,413733.32,456866.65,499999.98], bhagCum:[46104.52,92209.04,138313.56,187834.0,237354.44,286874.88,346580.23,406285.58,465990.93,520226.61,574462.29,628697.97] },
   'Derrick Almond':  { sub:'000-33', annualBudget:1075000,  annualBhag:1192564.81, budgetCum:[78833.33,157666.66,236499.99,321174.16,405848.33,490522.5,592611.67,694700.84,796790.01,889526.68,982263.35,1075000.02], bhagCum:[87454.75,174909.5,262364.25,356298.6,450232.95,544167.3,657421.2,770675.1,883929.0,986807.59,1089686.18,1192564.77] },
@@ -1871,7 +1873,8 @@ const EXCLUDED_REPS = new Set([
   'Jeremy Diggs', 'Chris Galinetti',
   'Mike Garvey', 'Emily Johnson',
   'Katie Haynes', 'Jennifer Paredes', 'Zanna Kelly',
-  'Tom Goldston', 'Damon Lockhart' // no longer with the company — customer/display data retained, sales metrics excluded
+  'Tom Goldston', 'Damon Lockhart', // no longer with the company — customer/display data retained, sales metrics excluded
+  'Austin Jones', 'Bob Brown'
 ]);
 
 const TRAILING_AGO = (() => { const d=new Date(); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); })();
@@ -2637,8 +2640,8 @@ function pill(good, label) {
   return `<div class="kpi-pill ${cls}">${arrow} ${label}</div>`;
 }
 
-// ─── COMBINED SCOREBOARD (YTD % to Budget + ROE, all reps except Bob Brown) ───
-const SCOREBOARD_EXCLUDED = new Set([...EXCLUDED_REPS, 'Bob Brown']);
+// ─── COMBINED SCOREBOARD (YTD % to Budget + ROE) ───
+const SCOREBOARD_EXCLUDED = new Set([...EXCLUDED_REPS]);
 
 // Shared rep data store — YTD data populated by renderYTDScoreboard,
 // ROE data merged in by renderROEScoreboard, then both call renderCombinedTable
@@ -3401,7 +3404,7 @@ function ownerName(idOrRow) {
 function ownerMatchesRep(name, activeRep) {
   if (!activeRep) return true;
   if (!name || name === '—') return false;
-  // Exact full-name match only — prevents 'Mitchell Jones' matching 'Austin Jones'
+  // Exact full-name match only — prevents similar names (e.g. two "Jones") from matching each other
   return name.toLowerCase().trim() === activeRep.toLowerCase().trim();
 }
 
@@ -3771,6 +3774,13 @@ function openCrmDay(key) {
 }
 
 // ── Create / edit form ──
+function crmAccountNames() {
+  const names = new Set();
+  (D.sales || []).forEach(r => { const n = (r.CustomerName || '').trim(); if (n) names.add(n); });
+  (D.activities || []).forEach(r => { const n = (r.AccountName || '').trim(); if (n) names.add(n); });
+  CRM.items.forEach(i => { if (i.account) names.add(i.account); });
+  return names;
+}
 function crmAccountOptions() {
   const names = new Set();
   (D.sales || []).forEach(r => { const n = (r.CustomerName || '').trim(); if (n) names.add(n); });
@@ -3812,7 +3822,7 @@ function openCrmForm(opts = {}) {
         <button type="button" class="${type === 'Task' ? 'on' : ''}" onclick="crmSetType('Task')">Task</button></div>`}
       <div class="crm-field"><label for="crm-f-summary">Summary</label>
         <input class="crm-in" id="crm-f-summary" maxlength="255" value="${crmEsc(v.summary)}" placeholder="${type === 'Event' ? 'e.g. Showroom visit' : 'e.g. Send samples'}"></div>
-      <div class="crm-field"><label for="crm-f-account">Account</label>
+      <div class="crm-field"><label for="crm-f-account">Account (required)</label>
         <input class="crm-in" id="crm-f-account" list="crm-acct-list" value="${crmEsc(v.account)}" placeholder="Start typing a customer or account name">
         <datalist id="crm-acct-list">${crmAccountOptions()}</datalist></div>
       <div id="crm-ev-fields" style="display:${type === 'Event' ? 'flex' : 'none'};flex-direction:column;gap:12px">
@@ -3883,6 +3893,10 @@ async function saveCrmForm() {
   const val  = x => document.getElementById(x).value.trim();
   const summary = val('crm-f-summary');
   if (!summary) { crmShowErr('Add a summary.'); return; }
+  // Every activity must be linked to a real account so it counts on the D10 scorecard
+  const acct = val('crm-f-account');
+  if (!acct) { crmShowErr('Choose the account this is for.'); return; }
+  if (!crmAccountNames().has(acct)) { crmShowErr('Pick an account from the list — "' + acct + '" isn\'t a known account name.'); return; }
   const notes = val('crm-f-notes');
   const common = {
     id, summary,
@@ -4555,9 +4569,6 @@ function hideOverlay() { document.getElementById('loading-overlay').style.displa
 
 // ── Pre-seeded historical data (Q1 & Q2 FY2026 from uploaded worksheets) ──
 const EATER_SEED = [
-  // Q1 2026 — Residential Sales (Bob Brown)
-  { qtr:'Q1-2026', name:'Austin Jones',   dept:'Residential Sales',
-    self:{E:7,A:8,T:7,En:8,R:7}, mgr:{E:6,A:6,T:7,En:8,R:6}, cal:{E:5,A:6,T:6,En:6,R:5} },
   { qtr:'Q1-2026', name:'Derrick Almond', dept:'Residential Sales',
     self:{E:6,A:6,T:8,En:7,R:6}, mgr:{E:8,A:8,T:8,En:8,R:7}, cal:{E:7,A:7,T:7,En:7,R:6} },
   { qtr:'Q1-2026', name:'Mitchell Jones', dept:'Residential Sales',
@@ -4578,11 +4589,7 @@ const EATER_SEED = [
   // Q1 2026 — Sales Management
   { qtr:'Q1-2026', name:'Phil Branon', dept:'Sales Management',
     self:{E:7,A:8,T:7,En:7,R:7}, mgr:{E:7,A:7,T:7,En:7,R:6}, cal:{E:7,A:7,T:7,En:7,R:6} },
-  { qtr:'Q1-2026', name:'Bob Brown',   dept:'Sales Management',
-    self:{E:8,A:8,T:8,En:8,R:7}, mgr:{E:7,A:7,T:7,En:6,R:6}, cal:{E:7,A:7,T:7,En:6,R:6} },
-  // Q2 2026 — Residential Sales (Bob Brown)
-  { qtr:'Q2-2026', name:'Austin Jones',   dept:'Residential Sales',
-    self:{E:7,A:7,T:6,En:7,R:7}, mgr:{E:6,A:6,T:7,En:6,R:6}, cal:{E:6,A:7,T:7,En:6,R:6} },
+  // Q2 2026 — Residential Sales
   { qtr:'Q2-2026', name:'Derrick Almond', dept:'Residential Sales',
     self:{E:8,A:7,T:7,En:8,R:6}, mgr:{E:8,A:8,T:7,En:7,R:7}, cal:{E:8,A:8,T:7,En:7,R:6} },
   { qtr:'Q2-2026', name:'Mitchell Jones', dept:'Residential Sales',
@@ -4600,14 +4607,11 @@ const EATER_SEED = [
     self:{E:7,A:9,T:7,En:7,R:5}, mgr:{E:7,A:8,T:8,En:7,R:7}, cal:{E:7,A:7,T:7,En:6,R:5} },
   { qtr:'Q2-2026', name:'Michael McLeod',   dept:'Commercial Sales',
     self:{E:7,A:8,T:8,En:7,R:7.5}, mgr:{E:6,A:9,T:9,En:5,R:6.5}, cal:{E:6,A:9,T:8,En:6,R:6} },
-  { qtr:'Q2-2026', name:'Bob Brown', dept:'Sales Management',
-    self:{E:7,A:7,T:7,En:7,R:6}, mgr:{E:null,A:null,T:null,En:null,R:null}, cal:{E:null,A:null,T:null,En:null,R:null} },
 ];
 
 // Employee roster with departments (for dropdown)
 const EATER_EMPLOYEES = [
   { name:'Anthony Deel',    dept:'Residential Sales' },
-  { name:'Austin Jones',    dept:'Residential Sales' },
   { name:'Bobby Townsend',  dept:'Residential Sales' },
   { name:'Derrick Almond',  dept:'Residential Sales' },
   { name:'Mitchell Jones',  dept:'Residential Sales' },
@@ -4615,7 +4619,6 @@ const EATER_EMPLOYEES = [
   { name:'Michael McLeod',  dept:'Commercial Sales'  },
   { name:'Nikki Petriello', dept:'Commercial Sales'  },
   { name:'Sean Mitchell',   dept:'Commercial Sales'  },
-  { name:'Bob Brown',       dept:'Sales Management'  },
   { name:'Phil Branon',     dept:'Sales Management'  },
 ];
 
@@ -4718,7 +4721,6 @@ async function eaterPersist() {
 // ── Determine which names the current user may see ────────────────────────
 // Department membership per manager — used to scope EATER tab visibility
 const EATER_MANAGER_SCOPE = {
-  'Bob Brown':   { dept: 'Residential Sales', label: 'Residential Sales' },
   'Phil Branon': { dept: 'Commercial Sales',  label: 'Commercial Sales'  },
 };
 
@@ -6289,7 +6291,7 @@ const D10_SEGMENTS = [
 (function() { let acc = 0; D10_SEGMENTS.forEach(seg => { seg.startSec = acc; acc += seg.minutes * 60; seg.endSec = acc; }); })();
 
 const D10_ROSTER = {
-  retail:     ['Derrick Almond','Austin Jones','Mitchell Jones'],
+  retail:     ['Derrick Almond','Mitchell Jones'],
   hybrid:     ['Nikki Petriello','Bobby Townsend','Anthony Deel'],
   commercial: ['Sean Mitchell','Jason Beamer','Michael McLeod'],
 };
@@ -6300,37 +6302,49 @@ const D10_ALL_PEOPLE = [].concat(D10_ROSTER.retail, D10_ROSTER.hybrid, D10_ROSTE
 const D10_TODO_ASSIGNEES = D10_ALL_PEOPLE.concat(['Phil Branon','Lauren Good','Todd Good','Sherry Kelly']);
 
 // Scorecard metric definitions per group — each rep gets one row per metric below,
-// each with its own Goal + rolling weekly figures. "# of Customer Calls (Commercial)"
-// is split into three call-category rows (End User / A&D / Dealer) rather than one
-// row needing a second input, so it stays consistent with every other metric row.
+// each with its own Goal + rolling weekly figures. Calls are split by account type
+// (Dealer, Builder, Dealer/Builder, End User, A&D, CFC), one row each. Keys are stable
+// identifiers for saved data; labels can be renamed freely without losing history.
 const D10_METRICS = {
   retail: [
-    { key:'calls',           label:'# of Customer Calls' },
+    { key:'calls',           label:'# of Dealer Calls' },     // key kept as 'calls' so saved history carries over
+    { key:'builderCalls',    label:'# of Builder Calls' },
     { key:'builderLeads',    label:'Builder Leads Entered' },
     { key:'activeCustomers', label:'Active (Buying) Customers' },
     { key:'activeDisplays',  label:'Active Displays' },
   ],
   hybrid: [
-    { key:'callsRetail',        label:'# of Customer Calls (Retail)' },
-    { key:'callsCommEndUser',   label:'# of Customer Calls (Commercial) — End User' },
-    { key:'callsCommAD',        label:'# of Customer Calls (Commercial) — A&D' },
-    { key:'callsCommDealer',    label:'# of Customer Calls (Commercial) — Dealer' },
+    { key:'callsRetail',        label:'# of Dealer/Builder Calls' },
+    { key:'callsCommEndUser',   label:'# of End User Calls' },
+    { key:'callsCommAD',        label:'# of A&D Calls' },
+    { key:'callsCommDealer',    label:'# of CFC Calls' },        // key predates the CFC rename; kept so saved history carries over
     { key:'builderLeads',       label:'Builder Leads Entered' },
     { key:'activeCustomers',    label:'Active (Buying) Customers' },
     { key:'activeDisplays',     label:'Active Displays' },
     { key:'oppClosing90',       label:'Opportunity $$ Closing in 90 Days' },
-    { key:'newLeads',           label:'New Leads Added' },
+    { key:'newLeads',           label:'New Commercial Leads Added' },
     { key:'maxxonPresentations',label:'Maxxon Applicator Presentations' },
   ],
   commercial: [
-    { key:'callsCommEndUser',   label:'# of Customer Calls (Commercial) — End User' },
-    { key:'callsCommAD',        label:'# of Customer Calls (Commercial) — A&D' },
-    { key:'callsCommDealer',    label:'# of Customer Calls (Commercial) — Dealer' },
+    { key:'callsCommEndUser',   label:'# of End User Calls' },
+    { key:'callsCommAD',        label:'# of A&D Calls' },
+    { key:'callsCommDealer',    label:'# of CFC Calls' },        // key predates the CFC rename; kept so saved history carries over
     { key:'oppClosing90',       label:'Opportunity $$ Closing in 90 Days' },
-    { key:'newLeads',           label:'New Leads Added' },
+    { key:'newLeads',           label:'New Commercial Leads Added' },
     { key:'maxxonPresentations',label:'Maxxon Applicator Presentations' },
   ],
 };
+
+// Call metrics filled automatically by the dashboard Worker from COMPLETED Acumatica events + tasks,
+// counted by completion week and the account's class (see SALES_D10_CLASS_METRICS in the Worker).
+// These rows are read-only here; goals and goal operators stay editable.
+const D10_AUTO_METRICS = {
+  retail:     ['calls', 'builderCalls'],
+  hybrid:     ['callsRetail', 'callsCommEndUser', 'callsCommAD', 'callsCommDealer'],
+  commercial: ['callsCommEndUser', 'callsCommAD', 'callsCommDealer'],
+};
+const D10_AUTO_TITLE = 'Filled automatically from completed Acumatica events and tasks (by completion week and account class)';
+function d10IsAuto(grp, metricKey) { return (D10_AUTO_METRICS[grp] || []).includes(metricKey); }
 
 let d10CurrentSegment    = 'segue';
 let d10Data              = null;  // in-memory data blob: {scorecard, rocks, todos, issues, segue, meetingLog}
@@ -6402,6 +6416,7 @@ function d10MergeData(saved) {
   base.issues     = Array.isArray(saved.issues) ? saved.issues : [];
   base.segue      = (saved.segue && typeof saved.segue === 'object') ? saved.segue : {};
   base.meetingLog = Array.isArray(saved.meetingLog) ? saved.meetingLog : [];
+  if (saved.autoSyncedAt) base.autoSyncedAt = saved.autoSyncedAt;
   return base;
 }
 
@@ -6578,6 +6593,18 @@ const D10_WEEKS_PER_MONTH = 52 / 12; // ≈4.33 — used only to convert a month
                                       // weekly-equivalent for conditional formatting; the
                                       // Goal value/unit shown to the user is never rewritten.
 // Returns the weekly-equivalent target for a row's Goal, or null if no goal is set.
+// How a week's value is compared with the target. Default ≥ (higher is better); use ≤/< for
+// metrics where lower is better, = for exact targets.
+const D10_GOAL_OPS = [
+  { key:'gte', label:'≥', test:(v, t) => v >= t },
+  { key:'gt',  label:'>', test:(v, t) => v >  t },
+  { key:'lte', label:'≤', test:(v, t) => v <= t },
+  { key:'lt',  label:'<', test:(v, t) => v <  t },
+  { key:'eq',  label:'=', test:(v, t) => Math.abs(v - t) < 1e-9 },
+];
+function d10GoalOp(row) {
+  return D10_GOAL_OPS.find(o => o.key === row.goalOp) || D10_GOAL_OPS[0];
+}
 function d10WeeklyTarget(row) {
   if (row.goalValue === '' || row.goalValue === null || row.goalValue === undefined) return null;
   const g = Number(row.goalValue);
@@ -6587,29 +6614,38 @@ function d10WeeklyTarget(row) {
 function d10RenderScorecard() {
   const weeks = d10GetRollingWeeks();
   const colCount = 2 + weeks.length;
-  document.getElementById('d10-scorecard-groups').innerHTML = ['retail','hybrid','commercial'].map(grp => {
+  const syncedAt = d10Data.autoSyncedAt ? new Date(d10Data.autoSyncedAt).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) : null;
+  const autoNote = `<div class="d10-auto-note"><span class="d10-auto-tag">auto</span> Call counts come from completed Acumatica events and tasks, by completion week and account class${syncedAt ? ` · last updated ${syncedAt}` : ''}.
+    ${USER.isManager ? `<button type="button" class="d10-auto-btn" onclick="d10RecountCalls(this)">Recount now</button>` : ''}</div>`;
+  document.getElementById('d10-scorecard-groups').innerHTML = autoNote + ['retail','hybrid','commercial'].map(grp => {
     const repBlocks = D10_ROSTER[grp].map(rep => {
       const canEdit = d10CanEdit(rep);
       const repJs = rep.replace(/'/g, "\\'");
       const metricRows = D10_METRICS[grp].map(m => {
         const row = d10FindScorecardRow(grp, rep, m.key);
         const target = d10WeeklyTarget(row);
+        const op = d10GoalOp(row);
         const targetTitle = target !== null
-          ? `Weekly target: ${d10Round1(target)}` + (row.goalUnit === 'month' ? ` (from monthly goal of ${row.goalValue}, ÷${d10Round1(D10_WEEKS_PER_MONTH)} wks/mo)` : '')
+          ? `Weekly target: ${op.label} ${d10Round1(target)}` + (row.goalUnit === 'month' ? ` (from monthly goal of ${row.goalValue}, ÷${d10Round1(D10_WEEKS_PER_MONTH)} wks/mo)` : '')
           : 'Set a goal to enable meeting/missed shading';
+        const auto = d10IsAuto(grp, m.key);
         const weekCells = weeks.map(w => {
           const val = row.weeks[w.key];
           const hasVal = val !== undefined && val !== null;
           let cellClass = '';
-          if (target !== null && hasVal) cellClass = Number(val) >= target ? 'd10-cell-hit' : 'd10-cell-miss';
-          return `<td class="${cellClass}" title="${targetTitle}"><input type="number" step="any" value="${hasVal?val:''}" ${canEdit?'':'disabled'} `
+          if (target !== null && hasVal) cellClass = op.test(Number(val), target) ? 'd10-cell-hit' : 'd10-cell-miss';
+          return `<td class="${cellClass}" title="${auto ? D10_AUTO_TITLE + ' · ' : ''}${targetTitle}"><input type="number" step="any" value="${hasVal?val:''}" ${(canEdit && !auto)?'':'disabled'} `
                + `onchange="d10UpdateWeekCell('${grp}','${repJs}','${m.key}','${w.key}',this.value)"></td>`;
         }).join('');
         const weeklyHint = row.goalUnit === 'month' && target !== null
-          ? `<div class="d10-goal-weekly-hint">&asymp; ${d10Round1(target)}/wk</div>` : '';
+          ? `<div class="d10-goal-weekly-hint">${op.label} &asymp; ${d10Round1(target)}/wk</div>` : '';
         return `<tr>
-          <td class="d10-metric-label">${d10Escape(m.label)}</td>
+          <td class="d10-metric-label">${d10Escape(m.label)}${auto ? ` <span class="d10-auto-tag" title="${D10_AUTO_TITLE}">auto</span>` : ''}</td>
           <td><div class="d10-goal-cell">
+            <select class="d10-goal-op" title="How each week is compared with the goal" ${canEdit?'':'disabled'}
+              onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','op',this.value)">
+              ${D10_GOAL_OPS.map(o => `<option value="${o.key}" ${o.key===op.key?'selected':''}>${o.label}</option>`).join('')}
+            </select>
             <input type="number" step="any" value="${row.goalValue===undefined||row.goalValue===null?'':row.goalValue}" ${canEdit?'':'disabled'}
               onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','value',this.value)">
             <select ${canEdit?'':'disabled'} onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','unit',this.value)">
@@ -6632,9 +6668,23 @@ function d10RenderScorecard() {
   }).join('');
 }
 function d10Round1(n) { return Math.round(n * 10) / 10; }
+async function d10RecountCalls(btn) {
+  btn.disabled = true; btn.textContent = 'Recounting…';
+  try {
+    const resp = await fetch(CONFIG.workerUrl + '/sales-d10-sync', { method: 'POST', headers: { Authorization: `Bearer ${auth.accessToken}` } });
+    const r = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(r.error || resp.status);
+    addLog(`✓ D10 calls recounted: ${r.counted} counted, ${r.noAccountClass} with no account, ${r.classNotTracked} untracked class`, 'ok');
+    await d10LoadData();
+    d10RenderScorecard();
+  } catch (e) {
+    addLog('✗ D10 recount failed: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = 'Recount now';
+  }
+}
 function d10UpdateWeekCell(grp, rep, metricKey, weekKey, value) {
   const row = d10FindScorecardRow(grp, rep, metricKey);
-  if (!row || !d10CanEdit(rep)) return;
+  if (!row || !d10CanEdit(rep) || d10IsAuto(grp, metricKey)) return;
   row.weeks[weekKey] = value === '' ? null : Number(value);
   d10SaveData();
   d10RenderScorecard(); // re-render so the meeting/missed shading updates immediately
@@ -6643,6 +6693,7 @@ function d10UpdateGoal(grp, rep, metricKey, field, value) {
   const row = d10FindScorecardRow(grp, rep, metricKey);
   if (!row || !d10CanEdit(rep)) return;
   if (field === 'value') row.goalValue = value === '' ? '' : Number(value);
+  else if (field === 'op') row.goalOp = value;
   else row.goalUnit = value;
   d10SaveData();
   d10RenderScorecard(); // goal changed — every week cell's shading in this row depends on it
