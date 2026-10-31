@@ -153,6 +153,10 @@
     overflow-wrap: break-word;
   }
   .kpi-sub { font-size: 10px; color: var(--muted); margin-top: 4px; font-weight: 500; line-height: 1.4; }
+  .kpi-click { cursor: pointer; transition: box-shadow .15s, border-color .15s; }
+  .kpi-click:hover { border-color: var(--red); }
+  .kpi-click.kpi-on { border-color: var(--red); box-shadow: inset 0 0 0 1px var(--red); }
+  .kpi-hint { font-size: 10px; color: var(--red); font-weight: 600; margin-top: 8px; }
   .kpi-pill { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 99px; font-size: 9px; font-weight: 700; margin-top: 6px; }
   .pill-green { background: rgba(90,158,69,0.12); color: #3a7a28; border: 1px solid rgba(90,158,69,0.3); }
   .pill-red   { background: rgba(184,50,40,0.10); color: var(--red); border: 1px solid rgba(184,50,40,0.25); }
@@ -1136,24 +1140,14 @@
         </div>
       </div>
 
-      <!-- Customers with activity in last 120 days + Pipeline by stage/rep -->
+      <!-- Overdue opportunities KPI (click filters the table below) + Pipeline by stage -->
       <div class="row cols-2">
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Customers with No Activity — Last 120 Days</span><span class="card-badge" id="act-120d-badge"></span></div>
-          <div class="ctrl-bar">
-            <input class="ctrl-input" id="act-120d-search" placeholder="Search customer…" oninput="renderAct120Table()">
-            <div class="row-count" id="act-120d-count"></div>
-          </div>
-          <div class="card-scroll">
-            <table>
-              <thead><tr>
-                <th>Customer</th>
-                <th>Activity Status</th>
-                <th>Sales Rep</th>
-                <th style="text-align:right">YTD Sales</th>
-              </tr></thead>
-              <tbody id="act-120d-tbody"></tbody>
-            </table>
+        <div class="card kpi-click" id="opp-overdue-card" role="button" tabindex="0" onclick="toggleOppOverdue()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleOppOverdue()}" aria-pressed="false">
+          <div class="card-hdr"><span class="card-title">Overdue Opportunities</span><span class="card-badge" id="opp-overdue-badge"></span></div>
+          <div class="card-body">
+            <div class="kpi-val" id="opp-kpi-overdue" style="color:var(--red)">—</div>
+            <div class="kpi-sub" id="opp-kpi-overdue-sub">open deals past their est. close date</div>
+            <div class="kpi-hint" id="opp-overdue-hint">Click to show only overdue deals in the table below</div>
           </div>
         </div>
         <div class="card">
@@ -2237,10 +2231,11 @@ async function loadData() {
       '$select':'AttributeID,ValueID,ValueDescription',
     });
 
-    // 4. Opportunities — CR-Opportunities2018R1 has DisplayName (owner full name)
-    //    which matches SalesRep names directly for rep filtering
+    // 4. Opportunities — CR-Opportunities2018R1.OwnerName is the opportunity owner's
+    //    full name (OwnerID_Description in the GI), which matches SalesRep names for
+    //    rep filtering. (DisplayName in this GI is Created By — not the owner.)
     D.opportunities = await tryFetch('Opportunities', 'CR-Opportunities2018R1', {
-      '$select':'OpportunityID,AccountName,DisplayName,Stage,Status,Total,EstimatedCloseDate,Probability,Description',
+      '$select':'OpportunityID,AccountName,OwnerName,Stage,Status,Total,EstimatedCloseDate,Probability,Description',
       '$filter': "Status ne 'Won' and Status ne 'Lost'",
       '$orderby':'Total desc',
     });
@@ -3416,15 +3411,25 @@ function renderOpportunities() {
   const ago120 = new Date(today); ago120.setDate(ago120.getDate() - 120);
   const next7  = new Date(today); next7.setDate(next7.getDate() + 7);
 
-  // ── Opportunities — filter by DisplayName which is the owner's full name
+  // ── Opportunities — filter by OwnerName (the opportunity owner's full name)
   const oppRows = activeRep
-    ? D.opportunities.filter(r => ownerMatchesRep(r.DisplayName||'', activeRep))
+    ? D.opportunities.filter(r => ownerMatchesRep(r.OwnerName||'', activeRep))
     : D.opportunities;
   const pipeline = oppRows.reduce((s,r)=>s+(+r.Total||0),0);
   const weighted = oppRows.reduce((s,r)=>s+((+r.Total||0)*(+(r.Probability||0)/100)),0);
   document.getElementById('opp-kpi-pipeline').textContent = fmtKpi(pipeline);
   document.getElementById('opp-kpi-sub').textContent = `${oppRows.length} open deals`;
   document.getElementById('opp-kpi-weighted').textContent = fmtKpi(weighted);
+
+  // ── Overdue opportunities KPI — open deals whose est. close date is before today
+  const overdueRows = oppRows.filter(oppIsOverdue);
+  const overdueTotal = overdueRows.reduce((s,r)=>s+(+r.Total||0),0);
+  document.getElementById('opp-kpi-overdue').textContent = overdueRows.length;
+  document.getElementById('opp-kpi-overdue-sub').textContent = overdueRows.length
+    ? `${fmtKpi(overdueTotal)} past est. close date`
+    : 'no open deals past their est. close date';
+  document.getElementById('opp-overdue-badge').textContent = oppRows.length
+    ? Math.round(overdueRows.length / oppRows.length * 100) + '% of open deals' : '';
 
   // ── Events (next 7 days) KPI + feed come from the calendar's GC-GraphSync data
   renderCrmEvents7d();
@@ -3471,9 +3476,6 @@ function renderOpportunities() {
         </div>`;
       }).join('')
     : '<div class="empty">No tasks due in the next 7 days.</div>';
-
-  // ── Customers active 120 days
-  renderAct120Table();
 
   // ── Opp filters
   const stages = [...new Set(D.opportunities.map(r=>r.Stage).filter(Boolean))].sort();
@@ -3981,57 +3983,24 @@ async function crmAction(id, action) {
   }
 }
 
-// ─── CUSTOMERS WITH NO ACTIVITY IN LAST 120 DAYS (inactive customers) ──────────
-function renderAct120Table() {
-  const activeRep  = getActiveRepFilter();
-  const fetchYear  = String(CUR_YEAR);
-  const today      = new Date();
-  const ago120     = new Date(today); ago120.setDate(today.getDate() - 120);
-
-  // Build set of customers who HAVE had activity logged (past 120 days OR any future)
-  // IMPORTANT: filter by rep so only activities from the selected rep count
-  // Otherwise a colleague's activity against the same customer would incorrectly
-  // mark it as "active" for the wrong rep (e.g. someone else logging against Hall's Flooring)
-  const activeSet = new Set();
-  D.activities.forEach(r => {
-    if (!r.StartDate) return;
-    // Apply rep filter — only count activity if it belongs to the active rep
-    if (activeRep && !ownerMatchesRep((r.OwnerName||'').trim(), activeRep)) return;
-    const actDate = new Date(r.StartDate);
-    // Include if within last 120 days OR scheduled for the future
-    if (actDate < ago120 && actDate < today) return;
-    const name = (r.AccountName||'').trim(); if (!name) return;
-    activeSet.add(name.toLowerCase());
-  });
-
-  // All customers from current FY sales, filtered by rep
-  const salesCusts = {};
-  D.sales.filter(r => r._year === fetchYear && (!activeRep || r.SalesRep === activeRep))
-    .forEach(r => {
-      const name = (r.CustomerName||'').trim(); if (!name) return;
-      if (!salesCusts[name]) salesCusts[name] = { name, rep: r.SalesRep||'—', ytd: 0 };
-      salesCusts[name].ytd += +r.ExtAmount||0;
-    });
-
-  // Inactive = customers with YTD sales but NO activity in last 120 days
-  const inactive = Object.values(salesCusts)
-    .filter(c => !activeSet.has(c.name.toLowerCase()))
-    .sort((a,b) => b.ytd - a.ytd); // sort by YTD sales desc (highest-value neglected first)
-
-  document.getElementById('act-120d-badge').textContent = inactive.length + ' inactive';
-
-  const search = (document.getElementById('act-120d-search')?.value||'').toLowerCase();
-  const filtered = search ? inactive.filter(r => r.name.toLowerCase().includes(search)) : inactive;
-  document.getElementById('act-120d-count').textContent = `${filtered.length} / ${inactive.length} customers`;
-
-  document.getElementById('act-120d-tbody').innerHTML = filtered.length
-    ? filtered.map(r => `<tr>
-        <td style="font-weight:600;color:var(--asf-navy)">${r.name}</td>
-        <td style="color:var(--red);font-weight:600">No activity in 120+ days</td>
-        <td style="color:var(--dim)">${r.rep}</td>
-        <td style="text-align:right;color:var(--asf-blue);font-weight:600">${fmt$(r.ytd)}</td>
-      </tr>`).join('')
-    : '<div style="padding:20px;text-align:center;color:var(--asf-green);font-weight:600">✓ All customers have recent activity</div>';
+// ─── OVERDUE OPPORTUNITIES FILTER ─────────────────────────────────────────────
+// The Overdue Opportunities KPI card toggles the table below to overdue deals only.
+let oppOverdueOnly = false;
+function oppIsOverdue(r) {
+  if (!r.EstimatedCloseDate) return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return new Date(r.EstimatedCloseDate) < today;
+}
+function toggleOppOverdue() {
+  oppOverdueOnly = !oppOverdueOnly;
+  const card = document.getElementById('opp-overdue-card');
+  card.classList.toggle('kpi-on', oppOverdueOnly);
+  card.setAttribute('aria-pressed', String(oppOverdueOnly));
+  document.getElementById('opp-overdue-hint').textContent = oppOverdueOnly
+    ? 'Showing overdue deals only — click to show all'
+    : 'Click to show only overdue deals in the table below';
+  renderOppTable();
+  if (oppOverdueOnly) document.getElementById('opp-tbody').closest('.card').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 function renderOppTable() {
@@ -4042,14 +4011,15 @@ function renderOppTable() {
   const today         = new Date(); today.setHours(0,0,0,0);
 
   let rows = D.opportunities.filter(r => {
-    if (activeRep && !ownerMatchesRep(r.DisplayName||'', activeRep)) return false;
+    if (activeRep && !ownerMatchesRep(r.OwnerName||'', activeRep)) return false;
+    if (oppOverdueOnly && !oppIsOverdue(r)) return false;
     if (search && !((r.AccountName||'').toLowerCase().includes(search)||(r.OpportunityID||'').toLowerCase().includes(search))) return false;
     if (projectSearch && !(r.Description||'').toLowerCase().includes(projectSearch)) return false;
     if (stage && r.Stage !== stage) return false;
     return true;
   });
 
-  document.getElementById('opp-count').textContent = `${rows.length} / ${D.opportunities.length} deals`;
+  document.getElementById('opp-count').textContent = `${rows.length} / ${D.opportunities.length} deals${oppOverdueOnly ? ' · overdue only' : ''}`;
 
   const stageCls = s => {
     const v=(s||'').toLowerCase();
@@ -4071,7 +4041,7 @@ function renderOppTable() {
       <td style="color:var(--asf-blue);font-weight:600;white-space:nowrap">${r.OpportunityID||'—'}</td>
       <td style="font-weight:500">${r.AccountName||'—'}</td>
       <td style="color:var(--dim);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.Description||'').replace(/"/g,'&quot;')}">${r.Description||'—'}</td>
-      <td style="color:var(--dim)">${r.DisplayName||'—'}</td>
+      <td style="color:var(--dim)">${r.OwnerName||'—'}</td>
       <td><span class="badge ${stageCls(r.Stage)}">${r.Stage||'—'}</span></td>
       <td><span class="badge b-dim">${r.Status||'—'}</span></td>
       <td>
@@ -6335,15 +6305,27 @@ const D10_METRICS = {
   ],
 };
 
-// Call metrics filled automatically by the dashboard Worker from COMPLETED Acumatica events + tasks,
-// counted by completion week and the account's class (see SALES_D10_CLASS_METRICS in the Worker).
+// Metrics filled automatically by the dashboard Worker's Sales D10 sync (runSalesD10Sync —
+// keep in lockstep with SALES_D10_CLASS_METRICS / SALES_D10_OTHER_METRICS in the Worker).
 // These rows are read-only here; goals and goal operators stay editable.
 const D10_AUTO_METRICS = {
-  retail:     ['calls', 'builderCalls'],
-  hybrid:     ['callsRetail', 'callsCommEndUser', 'callsCommAD', 'callsCommDealer'],
-  commercial: ['callsCommEndUser', 'callsCommAD', 'callsCommDealer'],
+  retail:     ['calls', 'builderCalls', 'builderLeads', 'activeCustomers', 'activeDisplays'],
+  hybrid:     ['callsRetail', 'callsCommEndUser', 'callsCommAD', 'callsCommDealer', 'builderLeads', 'activeCustomers', 'activeDisplays', 'oppClosing90', 'newLeads', 'maxxonPresentations'],
+  commercial: ['callsCommEndUser', 'callsCommAD', 'callsCommDealer', 'oppClosing90', 'newLeads', 'maxxonPresentations'],
 };
-const D10_AUTO_TITLE = 'Filled automatically from completed Acumatica events and tasks (by completion week and account class)';
+// Snapshot metrics are a level captured each week (not a weekly count), so their goal is
+// compared as-is — never converted from a monthly figure.
+const D10_SNAPSHOT_METRICS = ['activeCustomers', 'activeDisplays', 'oppClosing90'];
+const D10_AUTO_TITLES = {
+  builderLeads:        'Acumatica leads with the BUILDER class, by created week, credited to the lead owner',
+  newLeads:            'Acumatica leads not classed BUILDER, by created week, credited to the lead owner',
+  maxxonPresentations: 'Completed events and tasks with the "Maxxon Applicator" category, by completion week',
+  activeCustomers:     'Snapshot: customers with a positive invoice line in the last 90 days, credited to the invoice salesperson. Past weeks keep the value captured that week',
+  activeDisplays:      'Snapshot: active displays whose product line sold to that customer in the last 180 days (customer\'s salesperson). Past weeks keep the value captured that week',
+  oppClosing90:        'Snapshot: New/Open opportunities closing in the next 90 days (Detail Total, overdue excluded), credited to the owner. Past weeks keep the value captured that week',
+};
+const D10_AUTO_TITLE_CALLS = 'Completed Acumatica events and tasks, by completion week and account class';
+function d10AutoTitle(metricKey) { return 'Filled automatically: ' + (D10_AUTO_TITLES[metricKey] || D10_AUTO_TITLE_CALLS); }
 function d10IsAuto(grp, metricKey) { return (D10_AUTO_METRICS[grp] || []).includes(metricKey); }
 
 let d10CurrentSegment    = 'segue';
@@ -6609,13 +6591,14 @@ function d10WeeklyTarget(row) {
   if (row.goalValue === '' || row.goalValue === null || row.goalValue === undefined) return null;
   const g = Number(row.goalValue);
   if (isNaN(g)) return null;
+  if (D10_SNAPSHOT_METRICS.includes(row.metricKey)) return g;
   return row.goalUnit === 'month' ? g / D10_WEEKS_PER_MONTH : g;
 }
 function d10RenderScorecard() {
   const weeks = d10GetRollingWeeks();
   const colCount = 2 + weeks.length;
   const syncedAt = d10Data.autoSyncedAt ? new Date(d10Data.autoSyncedAt).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) : null;
-  const autoNote = `<div class="d10-auto-note"><span class="d10-auto-tag">auto</span> Call counts come from completed Acumatica events and tasks, by completion week and account class${syncedAt ? ` · last updated ${syncedAt}` : ''}.
+  const autoNote = `<div class="d10-auto-note"><span class="d10-auto-tag">auto</span> Rows tagged auto fill from Acumatica: calls and Maxxon presentations by completion week, leads by created week, and active customers, active displays and Opp $$ as a snapshot each week. Hover a tag for the rule${syncedAt ? ` · last updated ${syncedAt}` : ''}.
     ${USER.isManager ? `<button type="button" class="d10-auto-btn" onclick="d10RecountCalls(this)">Recount now</button>` : ''}</div>`;
   document.getElementById('d10-scorecard-groups').innerHTML = autoNote + ['retail','hybrid','commercial'].map(grp => {
     const repBlocks = D10_ROSTER[grp].map(rep => {
@@ -6626,21 +6609,22 @@ function d10RenderScorecard() {
         const target = d10WeeklyTarget(row);
         const op = d10GoalOp(row);
         const targetTitle = target !== null
-          ? `Weekly target: ${op.label} ${d10Round1(target)}` + (row.goalUnit === 'month' ? ` (from monthly goal of ${row.goalValue}, ÷${d10Round1(D10_WEEKS_PER_MONTH)} wks/mo)` : '')
+          ? `Weekly target: ${op.label} ${d10Round1(target)}` + (!D10_SNAPSHOT_METRICS.includes(m.key) && row.goalUnit === 'month' ? ` (from monthly goal of ${row.goalValue}, ÷${d10Round1(D10_WEEKS_PER_MONTH)} wks/mo)` : '')
           : 'Set a goal to enable meeting/missed shading';
         const auto = d10IsAuto(grp, m.key);
+        const snapshot = D10_SNAPSHOT_METRICS.includes(m.key);
         const weekCells = weeks.map(w => {
           const val = row.weeks[w.key];
           const hasVal = val !== undefined && val !== null;
           let cellClass = '';
           if (target !== null && hasVal) cellClass = op.test(Number(val), target) ? 'd10-cell-hit' : 'd10-cell-miss';
-          return `<td class="${cellClass}" title="${auto ? D10_AUTO_TITLE + ' · ' : ''}${targetTitle}"><input type="number" step="any" value="${hasVal?val:''}" ${(canEdit && !auto)?'':'disabled'} `
+          return `<td class="${cellClass}" title="${auto ? d10Escape(d10AutoTitle(m.key)) + ' · ' : ''}${targetTitle}"><input type="number" step="any" value="${hasVal?val:''}" ${(canEdit && !auto)?'':'disabled'} `
                + `onchange="d10UpdateWeekCell('${grp}','${repJs}','${m.key}','${w.key}',this.value)"></td>`;
         }).join('');
-        const weeklyHint = row.goalUnit === 'month' && target !== null
+        const weeklyHint = !snapshot && row.goalUnit === 'month' && target !== null
           ? `<div class="d10-goal-weekly-hint">${op.label} &asymp; ${d10Round1(target)}/wk</div>` : '';
         return `<tr>
-          <td class="d10-metric-label">${d10Escape(m.label)}${auto ? ` <span class="d10-auto-tag" title="${D10_AUTO_TITLE}">auto</span>` : ''}</td>
+          <td class="d10-metric-label">${d10Escape(m.label)}${auto ? ` <span class="d10-auto-tag" title="${d10Escape(d10AutoTitle(m.key))}">auto</span>` : ''}</td>
           <td><div class="d10-goal-cell">
             <select class="d10-goal-op" title="How each week is compared with the goal" ${canEdit?'':'disabled'}
               onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','op',this.value)">
@@ -6648,10 +6632,11 @@ function d10RenderScorecard() {
             </select>
             <input type="number" step="any" value="${row.goalValue===undefined||row.goalValue===null?'':row.goalValue}" ${canEdit?'':'disabled'}
               onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','value',this.value)">
-            <select ${canEdit?'':'disabled'} onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','unit',this.value)">
+            ${snapshot ? `<select disabled title="Snapshot metric: the goal is a level, compared with each week's captured value"><option>level</option></select>`
+            : `<select ${canEdit?'':'disabled'} onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','unit',this.value)">
               <option value="week" ${row.goalUnit!=='month'?'selected':''}>/wk</option>
               <option value="month" ${row.goalUnit==='month'?'selected':''}>/mo</option>
-            </select>
+            </select>`}
           </div>${weeklyHint}</td>
           ${weekCells}
         </tr>`;
@@ -6674,7 +6659,8 @@ async function d10RecountCalls(btn) {
     const resp = await fetch(CONFIG.workerUrl + '/sales-d10-sync', { method: 'POST', headers: { Authorization: `Bearer ${auth.accessToken}` } });
     const r = await resp.json().catch(() => ({}));
     if (!resp.ok) throw new Error(r.error || resp.status);
-    addLog(`✓ D10 calls recounted: ${r.counted} counted, ${r.noAccountClass} with no account, ${r.classNotTracked} untracked class`, 'ok');
+    addLog(`✓ D10 recounted (week of ${r.week}): calls ${r.counted} counted, ${r.noAccountClass} with no account, ${r.classNotTracked} untracked class · Maxxon ${r.maxxon} · leads ${r.leads} (${r.builderLeads} builder) · ${r.oppsClosing90} opps closing in 90d · ${r.activeCustomers} active customers · ${r.activeDisplays} active displays`, 'ok');
+    if (r.displaysNotMatched && r.displaysNotMatched.length) addLog(`⚠ D10: ${r.displaysNotMatched.length} display values have no sales category and can't count as active: ${r.displaysNotMatched.join(', ')}`, 'warn');
     await d10LoadData();
     d10RenderScorecard();
   } catch (e) {
