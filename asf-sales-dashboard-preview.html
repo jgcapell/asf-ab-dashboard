@@ -542,6 +542,10 @@
   #pane-display-tracker select{ padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--paper); font-family:'Inter',sans-serif; font-size:13px; color:var(--text); }
 
   #pane-display-tracker .result-count{ font-size:13px; color:var(--text-muted); margin:2px 2px 10px; }
+  #pane-display-tracker .dt-resultbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:2px 2px 10px; }
+  #pane-display-tracker .dt-resultbar .result-count{ margin:0; }
+  #pane-display-tracker .dt-export-btn{ background:var(--panel); border:1px solid var(--line); color:var(--ink); padding:7px 14px; border-radius:6px; font-family:inherit; font-size:11.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  #pane-display-tracker .dt-export-btn:hover{ border-color:var(--ink-soft); background:var(--surface2); }
 
   #pane-display-tracker .ms-container{ position:relative; }
   #pane-display-tracker .ms-btn{ padding:9px 12px; border:1px solid var(--line); border-radius:8px; background:var(--paper); font-family:'Inter',sans-serif; font-size:13px; color:var(--text); cursor:pointer; white-space:nowrap; }
@@ -1561,7 +1565,10 @@
     <div id="scheduleFilter" class="ms-container"></div>
   </div>
 
-  <p class="result-count" id="resultCount"></p>
+  <div class="dt-resultbar">
+    <p class="result-count" id="resultCount"></p>
+    <button type="button" class="dt-export-btn" id="dtExportBtn" onclick="exportScheduledShipDates()" title="Exports one row per scheduled display for the customers currently shown (respects filters)">&#8681; Export scheduled ship dates (CSV)</button>
+  </div>
 
   <table>
     <thead>
@@ -5995,6 +6002,47 @@ function sortRecords(list){
     if (av > bv) return 1*dir;
     return a.name.localeCompare(b.name);
   });
+}
+
+// ── CSV export: one row per scheduled (not-yet-shipped) display, for the customers currently shown ──
+function csvCell(v){
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function exportScheduledShipDates(){
+  const customers = sortRecords(applyFilters());
+  const header = ['Customer ID','Customer','Rep','City','State','Display Collection','Priority','Source','Sales Order #','Scheduled Ship Date','Note','Customer Status','Display System'];
+  const rows = [];
+  for (const r of customers){
+    const entries = Object.entries(r.scheduled || {});
+    for (const [display, s] of entries){
+      const prio = r.displayPriority && r.displayPriority[display] ? r.displayPriority[display].level : '';
+      rows.push([
+        r.id.trim(), r.name, r.rep, r.city, r.state, display, prio,
+        s.source === 'so' ? 'Sales Order' : 'Manual note',
+        s.source === 'so' ? s.soNbr : '',
+        s.source === 'so' ? s.shipDate : s.date,
+        s.source === 'manual' ? (s.note || '') : '',
+        STATUS_META[r.status] ? STATUS_META[r.status].label : r.status,
+        (r.displaySystems || []).join('; ')
+      ]);
+    }
+  }
+  // Soonest ship date first, undated last
+  rows.sort((a,b)=> (a[9]||'9999') < (b[9]||'9999') ? -1 : (a[9]||'9999') > (b[9]||'9999') ? 1 : 0);
+
+  if (!rows.length){ alert('No scheduled ship dates in the current view. Clear filters or schedule a display first.'); return; }
+
+  const csv = [header, ...rows].map(row => row.map(csvCell).join(',')).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM so Excel reads UTF-8 correctly
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `display-scheduled-ship-dates-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function render(){

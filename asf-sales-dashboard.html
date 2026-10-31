@@ -153,6 +153,10 @@
     overflow-wrap: break-word;
   }
   .kpi-sub { font-size: 10px; color: var(--muted); margin-top: 4px; font-weight: 500; line-height: 1.4; }
+  .kpi-click { cursor: pointer; transition: box-shadow .15s, border-color .15s; }
+  .kpi-click:hover { border-color: var(--red); }
+  .kpi-click.kpi-on { border-color: var(--red); box-shadow: inset 0 0 0 1px var(--red); }
+  .kpi-hint { font-size: 10px; color: var(--red); font-weight: 600; margin-top: 8px; }
   .kpi-pill { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 99px; font-size: 9px; font-weight: 700; margin-top: 6px; }
   .pill-green { background: rgba(90,158,69,0.12); color: #3a7a28; border: 1px solid rgba(90,158,69,0.3); }
   .pill-red   { background: rgba(184,50,40,0.10); color: var(--red); border: 1px solid rgba(184,50,40,0.25); }
@@ -201,6 +205,76 @@
 
   /* Trailing 12 sub-table */
   .t12-subtable { margin-top: 16px; border-top: 1px solid var(--border2); }
+
+  /* ── CRM calendar (Activities & Opportunities tab) ── */
+  #pane-opportunities .crm-toolbar { display:flex; align-items:center; gap:8px; padding:10px 16px; border-bottom:1px solid var(--border2); flex-wrap:wrap; }
+  #pane-opportunities .crm-nav { width:28px; height:28px; border:1px solid var(--border); background:var(--surface); border-radius:6px; color:var(--asf-navy); font-size:14px; cursor:pointer; line-height:1; }
+  #pane-opportunities .crm-nav:hover { background:var(--surface2); }
+  #pane-opportunities .crm-cal-label { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--asf-navy); min-width:160px; text-align:center; }
+  #pane-opportunities .crm-today-btn { border:1px solid var(--border); background:var(--surface); color:var(--dim); border-radius:6px; padding:5px 10px; font:inherit; font-size:11px; font-weight:600; cursor:pointer; }
+  #pane-opportunities .crm-toolbar .crm-spacer { flex:1; }
+  #pane-opportunities .crm-weekdays { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); background:var(--surface2); border-bottom:1px solid var(--border2); }
+  #pane-opportunities .crm-weekdays div { padding:6px 8px; font-size:10px; font-weight:700; color:var(--muted); letter-spacing:0.06em; }
+  #crm-cal-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
+  .crm-day { min-height:104px; min-width:0; border-right:1px solid var(--border2); border-bottom:1px solid var(--border2); padding:4px 5px 6px; display:flex; flex-direction:column; gap:2px; cursor:pointer; }
+  .crm-day:nth-child(7n) { border-right:none; }
+  .crm-day:hover { background:var(--surface2); }
+  .crm-day.crm-other { background:#fafbfd; }
+  .crm-day.crm-other .crm-day-num { color:var(--border); }
+  .crm-day-num { font-size:11px; font-weight:600; color:var(--dim); align-self:flex-start; padding:0 5px; line-height:18px; border-radius:9px; }
+  .crm-day.crm-today .crm-day-num { background:var(--asf-navy); color:#fff; }
+  .crm-item { display:flex; align-items:center; gap:4px; width:100%; min-width:0; border:none; text-align:left; font:inherit; font-size:10.5px; line-height:1.35; padding:2px 5px; border-radius:4px; cursor:pointer; white-space:nowrap; overflow:hidden; }
+  .crm-item:focus-visible, .crm-more:focus-visible, .crm-nav:focus-visible { outline:2px solid var(--asf-blue); outline-offset:1px; }
+  .crm-ev { background:rgba(91,143,204,0.14); color:var(--asf-navy); border-left:3px solid var(--asf-blue); }
+  .crm-ev:hover { background:rgba(91,143,204,0.24); }
+  .crm-tk { background:transparent; color:var(--dim); }
+  .crm-tk:hover { background:var(--border2); }
+  .crm-done { opacity:0.55; }
+  .crm-done .crm-sum { text-decoration:line-through; }
+  .crm-overdue { color:var(--red); font-weight:600; }
+  .crm-flag { background:var(--yellow-soft, #fff4d6); color:#8a5a00; border-left:3px solid #e0a100; }
+  .crm-flag-banner { background:var(--yellow-soft, #fff4d6); color:#7a4f00; border-radius:6px; padding:9px 11px; font-size:11.5px; line-height:1.45; }
+  .crm-time { font-weight:700; flex:none; }
+  .crm-glyph { flex:none; }
+  .crm-sum { overflow:hidden; text-overflow:ellipsis; }
+  .crm-more { border:none; background:none; color:var(--asf-blue); font:inherit; font-size:10px; font-weight:700; text-align:left; padding:1px 5px; cursor:pointer; }
+  .crm-cal-msg { grid-column:1/-1; padding:40px; text-align:center; color:var(--muted); font-size:12px; }
+  .crm-modal-bg { position:fixed; inset:0; background:rgba(20,40,64,0.45); z-index:9000; display:none; align-items:center; justify-content:center; padding:16px; }
+  .crm-modal-bg.open { display:flex; }
+  .crm-modal { background:var(--surface); border-radius:10px; width:min(480px,100%); max-height:90vh; overflow:auto; box-shadow:0 12px 40px rgba(20,40,64,0.28); }
+  .crm-modal-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border2); }
+  .crm-modal-hdr h3 { font-size:14px; font-weight:700; color:var(--asf-navy); margin:0; }
+  .crm-x { border:none; background:none; font-size:20px; color:var(--muted); cursor:pointer; line-height:1; }
+  .crm-modal-body { padding:16px 18px; display:flex; flex-direction:column; gap:12px; }
+  .crm-modal-foot { display:flex; gap:8px; justify-content:flex-end; padding:12px 18px; border-top:1px solid var(--border2); background:var(--surface2); }
+  .crm-field { display:flex; flex-direction:column; gap:4px; min-width:0; }
+  .crm-field label { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:0.05em; }
+  .crm-in { width:100%; box-sizing:border-box; padding:7px 9px; border:1px solid var(--border); border-radius:6px; font:inherit; font-size:12px; color:var(--text); background:var(--surface); }
+  .crm-in:focus { outline:none; border-color:var(--asf-blue); box-shadow:0 0 0 2px rgba(91,143,204,0.2); }
+  textarea.crm-in { min-height:64px; resize:vertical; }
+  .crm-row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .crm-row3 { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:10px; }
+  .crm-seg { display:inline-flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; align-self:flex-start; }
+  .crm-seg button { border:none; background:var(--surface); color:var(--dim); font:inherit; font-size:11px; font-weight:600; padding:6px 14px; cursor:pointer; }
+  .crm-seg button.on { background:var(--asf-navy); color:#fff; }
+  .crm-check { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--dim); }
+  .crm-err { display:none; background:var(--red-soft); color:var(--red); border-radius:6px; padding:8px 10px; font-size:11.5px; font-weight:600; }
+  .crm-hint { font-size:10.5px; color:var(--muted); }
+  .crm-btn-ghost { padding:6px 14px; border-radius:6px; font:inherit; font-size:11px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--dim); }
+  .crm-btn-danger { padding:6px 14px; border-radius:6px; font:inherit; font-size:11px; font-weight:600; cursor:pointer; border:1px solid rgba(184,50,40,0.35); background:var(--surface); color:var(--red); }
+  .crm-btn-ghost:disabled, .crm-btn-danger:disabled, .crm-modal-foot .btn-sm:disabled { opacity:0.5; cursor:wait; }
+  .crm-detail-row { display:flex; gap:10px; font-size:12px; }
+  .crm-detail-row span:first-child { width:78px; flex:none; color:var(--muted); font-size:10.5px; font-weight:700; padding-top:1px; }
+  .crm-detail-row span:last-child { color:var(--text); }
+  .crm-day-list { display:flex; flex-direction:column; gap:4px; }
+  .crm-day-list .crm-item { font-size:12px; padding:5px 8px; }
+  #crm-toast { position:fixed; right:20px; bottom:20px; z-index:9100; background:var(--asf-navy); color:#fff; font-size:12px; font-weight:600; padding:10px 14px; border-radius:8px; box-shadow:0 6px 20px rgba(20,40,64,0.3); display:none; max-width:360px; }
+  #crm-toast.err { background:var(--red); }
+  @media (max-width: 760px) {
+    .crm-day { min-height:68px; padding:3px; }
+    .crm-time { display:none; }
+    .crm-row2, .crm-row3 { grid-template-columns:1fr; }
+  }
 
   /* Scrollbar */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -571,6 +645,96 @@
     #pane-display-tracker .hero{ grid-template-columns:1fr; }
     #pane-display-tracker thead th:nth-child(3), #pane-display-tracker tbody td:nth-child(3){ display:none; }
   }
+  /* ═══════════════════════════════ D10 TAB ═══════════════════════════════ */
+  #pane-d10 .d10-wrap { max-width: 1400px; margin: 0 auto; padding: 20px 24px 60px; }
+
+  /* Timer bar — sticky so it stays visible while scrolling any segment's content */
+  #pane-d10 .d10-timerbar { position: sticky; top: 0; z-index: 20; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); padding: 14px 20px; margin-bottom: 18px; }
+  #pane-d10 .d10-timer-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  #pane-d10 .d10-clock { font-family: 'Syne', sans-serif; font-size: 34px; font-weight: 800; color: var(--asf-navy); letter-spacing: 0.02em; min-width: 110px; }
+  #pane-d10 .d10-clock.d10-warn { color: var(--orange); }
+  #pane-d10 .d10-clock.d10-over { color: var(--red); }
+  #pane-d10 .d10-timer-meta { font-size: 10px; color: var(--muted); letter-spacing: 0.06em; font-weight: 600; text-transform: uppercase; }
+  #pane-d10 .d10-timer-btns { display: flex; gap: 8px; margin-left: auto; }
+  #pane-d10 .d10-tbtn { padding: 7px 16px; border-radius: 6px; font-size: 11px; font-family: inherit; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--dim); transition: all .15s; }
+  #pane-d10 .d10-tbtn:hover { background: var(--border2); }
+  #pane-d10 .d10-tbtn.d10-start { background: var(--asf-green); border-color: var(--asf-green); color: #fff; }
+  #pane-d10 .d10-tbtn.d10-start:hover { background: #4c8639; }
+  #pane-d10 .d10-tbtn.d10-pause { background: var(--yellow); border-color: var(--yellow); color: #fff; }
+  #pane-d10 .d10-tbtn.d10-end { background: var(--red); border-color: var(--red); color: #fff; }
+  #pane-d10 .d10-sync-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background: var(--asf-green); margin-right:5px; vertical-align:middle; }
+
+  /* Segment progress bar */
+  #pane-d10 .d10-segbar { display: flex; gap: 3px; margin-top: 12px; height: 26px; border-radius: 6px; overflow: hidden; }
+  #pane-d10 .d10-seg-block { position: relative; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--surface2); border: 1px solid var(--border2); cursor: pointer; transition: all .15s; }
+  #pane-d10 .d10-seg-block:hover { background: var(--border2); }
+  #pane-d10 .d10-seg-block.d10-seg-active { background: var(--asf-navy); color: #fff; border-color: var(--asf-navy); }
+  #pane-d10 .d10-seg-block.d10-seg-onschedule:not(.d10-seg-active) { box-shadow: inset 0 0 0 2px var(--asf-blue); color: var(--asf-navy); }
+  #pane-d10 .d10-seg-block.d10-seg-done { background: rgba(90,158,69,0.14); color: var(--asf-green); }
+
+  /* Segment content panes */
+  #pane-d10 .d10-segment-content { display: none; }
+  #pane-d10 .d10-segment-content.d10-active { display: block; }
+  #pane-d10 .d10-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 18px; }
+  #pane-d10 .d10-card-title { font-size: 13px; font-weight: 700; color: var(--asf-navy); margin-bottom: 4px; }
+  #pane-d10 .d10-card-sub { font-size: 11px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+  #pane-d10 .d10-group-hdr { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--asf-blue); margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 2px solid var(--border2); }
+  #pane-d10 .d10-group-hdr:first-of-type { margin-top: 0; }
+
+  #pane-d10 .d10-table-wrap { overflow-x: auto; border: 1px solid var(--border2); border-radius: 8px; }
+  #pane-d10 table.d10-table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+  #pane-d10 table.d10-table th { background: var(--surface2); color: var(--dim); font-weight: 700; text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); font-size: 10px; letter-spacing: 0.03em; text-transform: uppercase; position: sticky; top: 0; }
+  #pane-d10 table.d10-table td { padding: 5px 10px; border-bottom: 1px solid var(--border2); color: var(--text); }
+  #pane-d10 table.d10-table tr:last-child td { border-bottom: none; }
+  #pane-d10 table.d10-table td.d10-rowname { font-weight: 600; color: var(--asf-navy); white-space: nowrap; }
+  #pane-d10 table.d10-table tr.d10-rep-subhdr td { background: var(--surface2); font-weight: 700; color: var(--asf-navy); padding: 8px 10px; border-top: 2px solid var(--border); font-size: 11px; letter-spacing: 0.03em; }
+  #pane-d10 table.d10-table td.d10-metric-label { padding-left: 22px; color: var(--dim); font-weight: 500; white-space: nowrap; }
+  #pane-d10 table.d10-table input[type=number], #pane-d10 table.d10-table input[type=text], #pane-d10 table.d10-table input[type=date] { width: 78px; padding: 4px 6px; border: 1px solid var(--border2); border-radius: 4px; font-size: 11px; font-family: inherit; background: var(--surface); color: var(--text); }
+  #pane-d10 table.d10-table input:disabled { background: var(--surface2); color: var(--muted); border-color: transparent; cursor: not-allowed; }
+  #pane-d10 table.d10-table select { padding: 4px 6px; border: 1px solid var(--border2); border-radius: 4px; font-size: 10px; font-family: inherit; background: var(--surface); color: var(--text); }
+  #pane-d10 .d10-goal-cell { display: flex; gap: 4px; align-items: center; }
+  #pane-d10 .d10-goal-cell input { width: 60px !important; }
+  #pane-d10 .d10-goal-cell select.d10-goal-op { width: 42px; padding-left: 4px; padding-right: 2px; }
+  #pane-d10 .d10-goal-weekly-hint { font-size: 9px; color: var(--muted); margin-top: 2px; }
+  #pane-d10 .d10-auto-tag { display: inline-block; font-size: 8.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--asf-blue); background: rgba(91,143,204,0.12); border-radius: 3px; padding: 1px 4px; vertical-align: middle; }
+  #pane-d10 .d10-auto-note { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 11px; color: var(--muted); margin: 0 0 10px; }
+  #pane-d10 .d10-auto-btn { border: 1px solid var(--border); background: var(--surface); color: var(--dim); border-radius: 5px; padding: 3px 9px; font: inherit; font-size: 10.5px; font-weight: 600; cursor: pointer; }
+  #pane-d10 table.d10-table td.d10-cell-hit  { background: var(--green-soft); }
+  #pane-d10 table.d10-table td.d10-cell-miss { background: var(--red-soft); }
+  #pane-d10 table.d10-table td.d10-cell-hit  input, #pane-d10 table.d10-table td.d10-cell-miss input { background: transparent; }
+  #pane-d10 .d10-legend-swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+
+  #pane-d10 .d10-status-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; border: none; text-transform: uppercase; }
+  #pane-d10 .d10-status-chip.d10-on   { background: var(--green-soft); color: var(--asf-green); }
+  #pane-d10 .d10-status-chip.d10-off  { background: var(--red-soft); color: var(--red); }
+
+  #pane-d10 .d10-ids-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 900px) { #pane-d10 .d10-ids-grid { grid-template-columns: 1fr; } }
+  #pane-d10 .d10-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  #pane-d10 .d10-litem { background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 12px; }
+  #pane-d10 .d10-litem-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  #pane-d10 .d10-litem-text { font-size: 12px; color: var(--text); font-weight: 500; line-height: 1.4; flex: 1; }
+  #pane-d10 .d10-litem-text.d10-resolved, #pane-d10 .d10-litem-text.d10-done { text-decoration: line-through; color: var(--muted); }
+  #pane-d10 .d10-litem-meta { font-size: 10px; color: var(--muted); margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap; }
+  #pane-d10 .d10-litem-link { font-size: 10px; color: var(--asf-blue); font-weight: 600; margin-top: 5px; }
+  #pane-d10 .d10-x { background: none; border: none; color: var(--muted); font-size: 15px; cursor: pointer; line-height: 1; padding: 2px 4px; }
+  #pane-d10 .d10-x:hover { color: var(--red); }
+  #pane-d10 .d10-check { width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; margin-top: 1px; }
+
+  #pane-d10 .d10-addform { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border2); }
+  #pane-d10 .d10-addform input[type=text] { flex: 1; min-width: 160px; padding: 7px 10px; border: 1px solid var(--border2); border-radius: 6px; font-size: 12px; font-family: inherit; }
+  #pane-d10 .d10-addform select, #pane-d10 .d10-addform input[type=date] { padding: 7px 8px; border: 1px solid var(--border2); border-radius: 6px; font-size: 11px; font-family: inherit; background: var(--surface); }
+  #pane-d10 .d10-addbtn { padding: 7px 16px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; border: none; background: var(--asf-navy); color: #fff; cursor: pointer; }
+  #pane-d10 .d10-addbtn:hover { background: #174068; }
+
+  #pane-d10 .d10-recap-card { border-left: 3px solid var(--asf-blue); }
+  #pane-d10 .d10-rating-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  #pane-d10 .d10-locked-note { font-size: 10px; color: var(--muted); font-style: italic; margin-top: 4px; }
+
+  #pane-d10 .d10-speaker-box { margin-top: 16px; padding: 20px; border-radius: 10px; background: var(--surface2); border: 1px dashed var(--border); text-align: center; }
+  #pane-d10 .d10-speaker-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  #pane-d10 .d10-speaker-name { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--asf-navy); margin-bottom: 14px; min-height: 30px; }
+  #pane-d10 .d10-speaker-btns { display: flex; justify-content: center; gap: 10px; }
 </style>
 </head>
 <body>
@@ -618,6 +782,7 @@
           <div class="user-badge-role" id="user-badge-role">—</div>
         </div>
       </div>
+      <button class="hbtn" onclick="connectOutlook()" title="Send your Acumatica tasks and events to Outlook and To Do">CONNECT OUTLOOK</button>
       <button class="hbtn" onclick="printDashboard()">PRINT / PDF</button>
       <button class="hbtn" onclick="toggleLog()">DEBUG LOG</button>
       <span id="sync-indicator" style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:600;letter-spacing:0.06em;margin-right:4px">● Live</span>
@@ -648,10 +813,11 @@
   <div id="nav-tabs" style="display:flex">
     <button class="tab active" data-tab="overview" onclick="showTab(this)">Sales Overview</button>
     <button class="tab" data-tab="customers" onclick="showTab(this)">Customer Summary</button>
-    <button class="tab" data-tab="opportunities" onclick="showTab(this)">Activities &amp; Opportunities</button>
+    <button class="tab" data-tab="opportunities" onclick="showTab(this);initCrmCalendar()">Activities &amp; Opportunities</button>
     <button class="tab" data-tab="eater" onclick="showTab(this);initEaterTab()">E.A.T.E.R.</button>
     <button class="tab" data-tab="display-tracker" onclick="showTab(this);initDisplayTracker()">Display Tracker</button>
     <button class="tab" data-tab="leadintel" onclick="showTab(this);initLeadIntelTab()">Lead Intelligence</button>
+    <button class="tab" data-tab="d10" onclick="showTab(this);initD10Tab()">D10</button>
   </div>
 
   <!-- ═══════════════════════════════════ TAB: SALES OVERVIEW -->
@@ -926,6 +1092,22 @@
   <div id="pane-opportunities" class="tab-pane">
     <div class="page">
 
+      <!-- Calendar: Acumatica events + tasks (GC-GraphSync), create/edit/complete/cancel as the signed-in rep -->
+      <div class="card" id="crm-cal-card">
+        <div class="card-hdr"><span class="card-title">Calendar</span><span class="card-badge" id="crm-cal-badge"></span></div>
+        <div class="crm-toolbar">
+          <button type="button" class="crm-nav" onclick="crmShiftMonth(-1)" aria-label="Previous month">&#8249;</button>
+          <div class="crm-cal-label" id="crm-cal-label">—</div>
+          <button type="button" class="crm-nav" onclick="crmShiftMonth(1)" aria-label="Next month">&#8250;</button>
+          <button type="button" class="crm-today-btn" onclick="crmGoToday()">Today</button>
+          <div class="crm-spacer"></div>
+          <button type="button" class="btn-sm" onclick="openCrmForm({type:'Event'})">+ Event</button>
+          <button type="button" class="btn-sm" onclick="openCrmForm({type:'Task'})">+ Task</button>
+        </div>
+        <div class="crm-weekdays"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+        <div id="crm-cal-grid"><div class="crm-cal-msg">Loading calendar…</div></div>
+      </div>
+
       <!-- KPI row -->
       <div class="row cols-4">
         <div class="card">
@@ -937,8 +1119,8 @@
           <div class="card-body"><div class="kpi-val" id="opp-kpi-weighted" style="color:var(--asf-green)">—</div><div class="kpi-sub">probability-adjusted</div></div>
         </div>
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Activities (±7 Days)</span></div>
-          <div class="card-body"><div class="kpi-val" id="act-kpi-7d" style="color:var(--asf-navy)">—</div><div class="kpi-sub" id="act-kpi-7d-sub">logged interactions</div></div>
+          <div class="card-hdr"><span class="card-title">Events (Next 7 Days)</span></div>
+          <div class="card-body"><div class="kpi-val" id="act-kpi-7d" style="color:var(--asf-navy)">—</div><div class="kpi-sub" id="act-kpi-7d-sub">scheduled events</div></div>
         </div>
         <div class="card">
           <div class="card-hdr"><span class="card-title">Tasks Due (Next 7 Days)</span></div>
@@ -946,10 +1128,10 @@
         </div>
       </div>
 
-      <!-- Activities last 7 days + Tasks due next 7 days -->
+      <!-- Events next 7 days + Tasks due next 7 days -->
       <div class="row cols-2">
         <div class="card">
-          <div class="card-hdr"><span class="card-title">Activities — Last &amp; Next 7 Days</span><span class="card-badge" id="act-7d-badge"></span></div>
+          <div class="card-hdr"><span class="card-title">Events — Next 7 Days</span><span class="card-badge" id="act-7d-badge"></span></div>
           <div class="card-scroll" style="max-height:320px">
             <div id="act-7d-feed" style="padding:10px 14px"></div>
           </div>
@@ -962,24 +1144,14 @@
         </div>
       </div>
 
-      <!-- Customers with activity in last 120 days + Pipeline by stage/rep -->
+      <!-- Overdue opportunities KPI (click filters the table below) + Pipeline by stage -->
       <div class="row cols-2">
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Customers with No Activity — Last 120 Days</span><span class="card-badge" id="act-120d-badge"></span></div>
-          <div class="ctrl-bar">
-            <input class="ctrl-input" id="act-120d-search" placeholder="Search customer…" oninput="renderAct120Table()">
-            <div class="row-count" id="act-120d-count"></div>
-          </div>
-          <div class="card-scroll">
-            <table>
-              <thead><tr>
-                <th>Customer</th>
-                <th>Activity Status</th>
-                <th>Sales Rep</th>
-                <th style="text-align:right">YTD Sales</th>
-              </tr></thead>
-              <tbody id="act-120d-tbody"></tbody>
-            </table>
+        <div class="card kpi-click" id="opp-overdue-card" role="button" tabindex="0" onclick="toggleOppOverdue()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleOppOverdue()}" aria-pressed="false">
+          <div class="card-hdr"><span class="card-title">Overdue Opportunities</span><span class="card-badge" id="opp-overdue-badge"></span></div>
+          <div class="card-body">
+            <div class="kpi-val" id="opp-kpi-overdue" style="color:var(--red)">—</div>
+            <div class="kpi-sub" id="opp-kpi-overdue-sub">open deals past their est. close date</div>
+            <div class="kpi-hint" id="opp-overdue-hint">Click to show only overdue deals in the table below</div>
           </div>
         </div>
         <div class="card">
@@ -1020,6 +1192,12 @@
     </div>
   </div>
 
+
+  <!-- CRM calendar modal + toast (shared by create / edit / detail views) -->
+  <div class="crm-modal-bg" id="crm-modal-bg" onclick="if(event.target===this)crmCloseModal()">
+    <div class="crm-modal" role="dialog" aria-modal="true" aria-labelledby="crm-modal-title" id="crm-modal"></div>
+  </div>
+  <div id="crm-toast" role="status" aria-live="polite"></div>
 
   <!-- ══════════════════════════════════════ TAB: E.A.T.E.R. -->
   <div id="pane-eater" class="tab-pane">
@@ -1523,6 +1701,132 @@
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════ TAB: D10 -->
+  <div id="pane-d10" class="tab-pane">
+  <div class="d10-wrap">
+
+    <div class="d10-timerbar">
+      <div class="d10-timer-row">
+        <div>
+          <div class="d10-clock" id="d10-clock">45:00</div>
+          <div class="d10-timer-meta" id="d10-timer-meta"><span class="d10-sync-dot"></span>Not started</div>
+        </div>
+        <div class="d10-timer-btns">
+          <button class="d10-tbtn d10-start" id="d10-btn-start" onclick="d10Start()">Start</button>
+          <button class="d10-tbtn d10-pause" id="d10-btn-pause" onclick="d10Pause()" style="display:none">Pause</button>
+          <button class="d10-tbtn" id="d10-btn-reset" onclick="d10Reset()">Reset</button>
+          <button class="d10-tbtn d10-end" id="d10-btn-end" onclick="d10EndMeeting()">End Meeting</button>
+        </div>
+      </div>
+      <div class="d10-segbar" id="d10-segbar"><!-- filled by JS --></div>
+    </div>
+
+    <!-- SEGUE -->
+    <div class="d10-segment-content" id="d10-seg-segue">
+      <div class="d10-card">
+        <div class="d10-card-title">Segue</div>
+        <div class="d10-card-sub" id="d10-segue-week-label">Mark who&rsquo;s here, then run the room for one win each &mdash; nothing here is saved.</div>
+        <div class="d10-table-wrap"><table class="d10-table">
+          <thead><tr><th>Present</th><th>Rep</th></tr></thead>
+          <tbody id="d10-segue-tbody"></tbody>
+        </table></div>
+        <div class="d10-speaker-box">
+          <div class="d10-speaker-label">Now Speaking</div>
+          <div class="d10-speaker-name" id="d10-speaker-name">Mark attendance above to start the round.</div>
+          <div class="d10-speaker-btns">
+            <button class="d10-tbtn" onclick="d10PrevSpeaker()">&larr; Prev</button>
+            <button class="d10-tbtn d10-start" onclick="d10NextSpeaker()">Next &rarr;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCORECARD -->
+    <div class="d10-segment-content" id="d10-seg-scorecard">
+      <div class="d10-card">
+        <div class="d10-card-title">Scorecard</div>
+        <div class="d10-card-sub">Rolling 13-week (90-day) view, current week first. Managers/admins can edit any row; reps can edit their own row only.
+          <span style="display:inline-block;margin-left:8px"><span class="d10-legend-swatch" style="background:var(--green-soft)"></span>meeting/exceeding goal</span>
+          <span style="display:inline-block;margin-left:8px"><span class="d10-legend-swatch" style="background:var(--red-soft)"></span>below goal</span>
+          &mdash; monthly goals are compared against a weekly-equivalent (&divide;4.33 wks/mo); hover any shaded cell for the math.
+        </div>
+      </div>
+      <div id="d10-scorecard-groups"><!-- filled by JS: one .d10-card per group (Residential / Hybrid / Commercial) --></div>
+    </div>
+
+    <!-- ROCK REVIEW -->
+    <div class="d10-segment-content" id="d10-seg-rocks">
+      <div class="d10-card">
+        <div class="d10-card-title">Rock Review</div>
+        <div class="d10-card-sub">One 90-day Rock per person. Click a status chip to toggle On-Track / Off-Track.</div>
+        <div id="d10-rocks-groups"><!-- filled by JS --></div>
+      </div>
+    </div>
+
+    <!-- IDS -->
+    <div class="d10-segment-content" id="d10-seg-ids">
+      <div class="d10-card">
+        <div class="d10-card-title">IDS &mdash; Identify, Discuss, Solve</div>
+        <div class="d10-card-sub">Raise issues on the left; assign To-Dos on the right. Link a To-Do back to the issue that raised it.</div>
+        <div class="d10-ids-grid">
+          <div>
+            <div class="d10-group-hdr">Issues</div>
+            <div class="d10-list" id="d10-issues-list"></div>
+            <div class="d10-addform">
+              <input type="text" id="d10-new-issue-text" placeholder="New issue&hellip;">
+              <input type="text" id="d10-new-issue-owner" placeholder="Raised by (optional)" style="max-width:140px">
+              <button class="d10-addbtn" onclick="d10AddIssue()">Add Issue</button>
+            </div>
+          </div>
+          <div>
+            <div class="d10-group-hdr">To-Dos</div>
+            <div class="d10-list" id="d10-todos-list"></div>
+            <div class="d10-addform">
+              <input type="text" id="d10-new-todo-text" placeholder="New to-do&hellip;">
+              <select id="d10-new-todo-person"></select>
+              <select id="d10-new-todo-cadence">
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Bi-weekly</option>
+              </select>
+              <input type="date" id="d10-new-todo-due">
+              <select id="d10-new-todo-issue"><option value="">No linked issue</option></select>
+              <button class="d10-addbtn" onclick="d10AddTodo()">Add To-Do</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONCLUDE -->
+    <div class="d10-segment-content" id="d10-seg-conclude">
+      <div class="d10-card d10-recap-card">
+        <div class="d10-card-title">Conclude</div>
+        <div class="d10-card-sub">Recap of what came out of this meeting, plus a quick close-out rating.</div>
+        <div class="d10-group-hdr">To-Dos created this meeting</div>
+        <div class="d10-list" id="d10-recap-todos"></div>
+        <div class="d10-group-hdr">Off-Track Rocks</div>
+        <div class="d10-list" id="d10-recap-rocks"></div>
+        <div class="d10-group-hdr">Meeting Rating</div>
+        <div class="d10-card-sub" style="margin-bottom:8px">Anyone who attended can log their own score &mdash; pick your name and rate.</div>
+        <div class="d10-rating-row">
+          <select id="d10-rating-person"></select>
+          <select id="d10-rating-select">
+            <option value="">Rate 1&ndash;10</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+          <input type="text" id="d10-rating-note" placeholder="Optional note" style="flex:1;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;font-family:inherit;font-size:12px">
+          <button class="d10-addbtn" onclick="d10SaveRating()">Save Rating</button>
+        </div>
+        <div class="d10-list" id="d10-rating-list" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
 </div><!-- /#dashboard -->
 
 <script>
@@ -1533,6 +1837,7 @@ const CONFIG = {
   scopes:       'api offline_access openid profile email',
   redirectUri:  window.location.origin + window.location.pathname,
   workerUrl:    'https://asf-inventory-dashboard.greg-capell.workers.dev',
+  calendarSyncUrl: 'https://asf-graph-smoketest.greg-capell.workers.dev', // Acumatica → Outlook sync Worker
 };
 
 // ─── BUDGET / BHAG DATA (from 2025-2026_Budget_BHAG.xlsx) ────────────────────
@@ -1547,8 +1852,6 @@ const BHAG_CUM   = BHAG_MONTHLY.reduce((acc,v,i)   => { acc.push((acc[i-1]||0)+v
 // Per-rep annual budget + BHAG, distributed by seasonal weights
 const REP_TARGETS = {
   'Anthony Deel':    { sub:'000-24', annualBudget:1400000,  annualBhag:1571744.95, budgetCum:[102666.67,205333.34,308000.01,418273.34,528546.67,638820.0,771773.33,904726.66,1037679.99,1158453.32,1279226.65,1399999.98], bhagCum:[115261.3,230522.6,345783.9,469585.01,593386.12,717187.23,866450.61,1015713.99,1164977.37,1300566.57,1436155.77,1571744.97] },
-  'Austin Jones':    { sub:'000-32', annualBudget:855000,   annualBhag:1178808.71, budgetCum:[62700.0,125400.0,188100.0,255445.5,322791.0,390136.5,471333.0,552529.5,633726.0,707484.0,781242.0,855000.0], bhagCum:[86445.97,172891.94,259337.91,352188.74,445039.57,537890.4,649837.93,761785.46,873732.99,975424.89,1077116.79,1178808.69] },
-  'Bob Brown':       { sub:'000-25', annualBudget:520000,   annualBhag:589404.35,  budgetCum:[38133.33,76266.66,114399.99,155358.66,196317.33,237276.0,286658.67,336041.34,385424.01,430282.68,475141.35,520000.02], bhagCum:[43222.99,86445.98,129668.97,176094.39,222519.81,268945.23,324919.0,380892.77,436866.54,487712.49,538558.44,589404.39] },
   'Bobby Townsend':  { sub:'000-39', annualBudget:1000000,  annualBhag:1080574.65, budgetCum:[73333.33,146666.66,219999.99,298766.66,377533.33,456300.0,551266.67,646233.34,741200.01,827466.68,913733.35,1000000.02], bhagCum:[79242.14,158484.28,237726.42,322839.68,407952.94,493066.2,595684.77,698303.34,800921.91,894139.48,987357.05,1080574.62] },
   'Jason Beamer':    { sub:'000-44', annualBudget:500000,   annualBhag:628697.98,  budgetCum:[36666.67,73333.34,110000.01,149383.34,188766.67,228150.0,275633.33,323116.66,370599.99,413733.32,456866.65,499999.98], bhagCum:[46104.52,92209.04,138313.56,187834.0,237354.44,286874.88,346580.23,406285.58,465990.93,520226.61,574462.29,628697.97] },
   'Derrick Almond':  { sub:'000-33', annualBudget:1075000,  annualBhag:1192564.81, budgetCum:[78833.33,157666.66,236499.99,321174.16,405848.33,490522.5,592611.67,694700.84,796790.01,889526.68,982263.35,1075000.02], bhagCum:[87454.75,174909.5,262364.25,356298.6,450232.95,544167.3,657421.2,770675.1,883929.0,986807.59,1089686.18,1192564.77] },
@@ -1571,14 +1874,19 @@ const EXCLUDED_REPS = new Set([
   'Jeremy Diggs', 'Chris Galinetti',
   'Mike Garvey', 'Emily Johnson',
   'Katie Haynes', 'Jennifer Paredes', 'Zanna Kelly',
-  'Tom Goldston', 'Damon Lockhart' // no longer with the company — customer/display data retained, sales metrics excluded
+  'Tom Goldston', 'Damon Lockhart', // no longer with the company — customer/display data retained, sales metrics excluded
+  'Austin Jones', 'Bob Brown'
 ]);
 
 const TRAILING_AGO = (() => { const d=new Date(); d.setFullYear(d.getFullYear()-1); return d.toISOString().slice(0,10); })();
 const CUR_YEAR = new Date().getFullYear();
 
 // ─── AUTH & USER IDENTITY ────────────────────────────────────────────────────
+// auth.refreshToken holds the Worker SESSION ID (not an Acumatica refresh token): the
+// dashboard Worker keeps each rep's Acumatica key server-side, encrypted, and the browser
+// only ever receives short-lived access tokens. Sessions expire after 7 days without use.
 let auth = { accessToken: null, refreshToken: null };
+const SESSION_LS_KEY = 'asf_sales_session';
 
 // Current user context — resolved after login
 let USER = {
@@ -1604,16 +1912,25 @@ async function handleCallback(code, state) {
   if (state !== sessionStorage.getItem('oauth_state')) { showLoginErr('OAuth state mismatch. Please try again.'); return; }
   setLoadTxt('Signing you in…');
   try {
-    // 1. Exchange code for tokens
-    const resp = await fetch(`${CONFIG.workerUrl}/token`, {
-      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: CONFIG.redirectUri, client_id: CONFIG.clientId }),
+    // 1. Exchange the code through the Worker, which keeps the Acumatica key and
+    //    returns a session ID + access token
+    const resp = await fetch(`${CONFIG.workerUrl}/session/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, redirect_uri: CONFIG.redirectUri, client_id: CONFIG.clientId }),
     });
-    if (!resp.ok) throw new Error(`Token exchange failed (${resp.status})`);
-    const t = await resp.json();
-    auth.accessToken = t.access_token; auth.refreshToken = t.refresh_token;
+    const t = await resp.json().catch(() => ({}));
+    if (!resp.ok || !t.access_token) throw new Error(`Sign-in failed (${t.error || resp.status})`);
+    auth.accessToken = t.access_token; auth.refreshToken = t.session;
+    try { localStorage.setItem(SESSION_LS_KEY, t.session); } catch (e) {}
 
     window.history.replaceState({}, '', window.location.pathname);
+    await afterSignIn();
+  } catch(e) { showLoginErr(e.message); }
+}
+
+// Shared by a fresh sign-in and by resuming a saved 7-day session on page load
+async function afterSignIn() {
+  try {
     showDashboard();
 
     // 2. Resolve identity and load data in parallel
@@ -1709,6 +2026,14 @@ async function resolveUserIdentity() {
 }
 
 
+// Opens Microsoft sign-in for the Acumatica → Outlook sync in a new tab.
+// login_hint pre-selects the rep's ASF account on Microsoft's sign-in page.
+function connectOutlook() {
+  const url = new URL(CONFIG.calendarSyncUrl + '/auth/login');
+  if (USER.email) url.searchParams.set('hint', USER.email);
+  window.open(url.toString(), '_blank', 'noopener');
+}
+
 function updateUserBadge() {
   document.getElementById('user-badge').style.display = 'flex';
   document.getElementById('user-badge-name').textContent = USER.displayName || USER.username || '—';
@@ -1748,15 +2073,19 @@ function onRepFilterChange() {
 
 
 async function doRefreshToken() {
-  const resp = await fetch(`${CONFIG.workerUrl}/token`, {
-    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: auth.refreshToken, client_id: CONFIG.clientId }),
+  const resp = await fetch(`${CONFIG.workerUrl}/session/refresh`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session: auth.refreshToken }),
   });
   if (!resp.ok) { logout(); throw new Error('Session expired.'); }
-  const t = await resp.json(); auth.accessToken = t.access_token; auth.refreshToken = t.refresh_token || auth.refreshToken;
+  const t = await resp.json(); auth.accessToken = t.access_token;
 }
 
 function logout() {
+  // Ends this browser's session; the Worker keeps the stored key so background calendar sync continues
+  const sess = auth.refreshToken;
+  if (sess) fetch(`${CONFIG.workerUrl}/session/logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session: sess }) }).catch(() => {});
+  try { localStorage.removeItem(SESSION_LS_KEY); } catch (e) {}
   stopBackgroundSync();
   lastKVFingerprint = null;
   auth = { accessToken: null, refreshToken: null };
@@ -1909,10 +2238,11 @@ async function loadData() {
       '$select':'AttributeID,ValueID,ValueDescription',
     });
 
-    // 4. Opportunities — CR-Opportunities2018R1 has DisplayName (owner full name)
-    //    which matches SalesRep names directly for rep filtering
+    // 4. Opportunities — CR-Opportunities2018R1.OwnerName is the opportunity owner's
+    //    full name (OwnerID_Description in the GI), which matches SalesRep names for
+    //    rep filtering. (DisplayName in this GI is Created By — not the owner.)
     D.opportunities = await tryFetch('Opportunities', 'CR-Opportunities2018R1', {
-      '$select':'OpportunityID,AccountName,DisplayName,Stage,Status,Total,EstimatedCloseDate,Probability,Description',
+      '$select':'OpportunityID,AccountName,OwnerName,Stage,Status,Total,EstimatedCloseDate,Probability,Description',
       '$filter': "Status ne 'Won' and Status ne 'Lost'",
       '$orderby':'Total desc',
     });
@@ -1991,6 +2321,7 @@ async function loadData() {
     renderYTDScoreboard();
     renderCustomerData();
     renderOpportunities();
+    if (crmInitialized) loadCrmItems();   // REFRESH also reloads the calendar
     addLog('All data loaded.','ok');
 
     // Fetch GL expense data for ROE scoreboard (async, non-blocking)
@@ -2311,8 +2642,8 @@ function pill(good, label) {
   return `<div class="kpi-pill ${cls}">${arrow} ${label}</div>`;
 }
 
-// ─── COMBINED SCOREBOARD (YTD % to Budget + ROE, all reps except Bob Brown) ───
-const SCOREBOARD_EXCLUDED = new Set([...EXCLUDED_REPS, 'Bob Brown']);
+// ─── COMBINED SCOREBOARD (YTD % to Budget + ROE) ───
+const SCOREBOARD_EXCLUDED = new Set([...EXCLUDED_REPS]);
 
 // Shared rep data store — YTD data populated by renderYTDScoreboard,
 // ROE data merged in by renderROEScoreboard, then both call renderCombinedTable
@@ -3075,7 +3406,7 @@ function ownerName(idOrRow) {
 function ownerMatchesRep(name, activeRep) {
   if (!activeRep) return true;
   if (!name || name === '—') return false;
-  // Exact full-name match only — prevents 'Mitchell Jones' matching 'Austin Jones'
+  // Exact full-name match only — prevents similar names (e.g. two "Jones") from matching each other
   return name.toLowerCase().trim() === activeRep.toLowerCase().trim();
 }
 
@@ -3087,9 +3418,9 @@ function renderOpportunities() {
   const ago120 = new Date(today); ago120.setDate(ago120.getDate() - 120);
   const next7  = new Date(today); next7.setDate(next7.getDate() + 7);
 
-  // ── Opportunities — filter by DisplayName which is the owner's full name
+  // ── Opportunities — filter by OwnerName (the opportunity owner's full name)
   const oppRows = activeRep
-    ? D.opportunities.filter(r => ownerMatchesRep(r.DisplayName||'', activeRep))
+    ? D.opportunities.filter(r => ownerMatchesRep(r.OwnerName||'', activeRep))
     : D.opportunities;
   const pipeline = oppRows.reduce((s,r)=>s+(+r.Total||0),0);
   const weighted = oppRows.reduce((s,r)=>s+((+r.Total||0)*(+(r.Probability||0)/100)),0);
@@ -3097,14 +3428,19 @@ function renderOpportunities() {
   document.getElementById('opp-kpi-sub').textContent = `${oppRows.length} open deals`;
   document.getElementById('opp-kpi-weighted').textContent = fmtKpi(weighted);
 
-  // ── Activity KPIs — window covers past 7 days AND next 7 days
-  //     (StartDate on activities is a scheduled date, can be past or future)
-  const next7ForAct = new Date(today); next7ForAct.setDate(today.getDate() + 7);
-  const acts7d = D.activities.filter(r =>
-    r.StartDate && new Date(r.StartDate) >= ago7 && new Date(r.StartDate) <= next7ForAct
-    && ownerMatchesRep(r.OwnerName||ownerName(r.Owner), activeRep));
-  document.getElementById('act-kpi-7d').textContent = acts7d.length;
-  document.getElementById('act-kpi-7d-sub').textContent = '±7 days';
+  // ── Overdue opportunities KPI — open deals whose est. close date is before today
+  const overdueRows = oppRows.filter(oppIsOverdue);
+  const overdueTotal = overdueRows.reduce((s,r)=>s+(+r.Total||0),0);
+  document.getElementById('opp-kpi-overdue').textContent = overdueRows.length;
+  document.getElementById('opp-kpi-overdue-sub').textContent = overdueRows.length
+    ? `${fmtKpi(overdueTotal)} past est. close date`
+    : 'no open deals past their est. close date';
+  document.getElementById('opp-overdue-badge').textContent = oppRows.length
+    ? Math.round(overdueRows.length / oppRows.length * 100) + '% of open deals' : '';
+
+  // ── Events (next 7 days) KPI + feed come from the calendar's GC-GraphSync data
+  renderCrmEvents7d();
+  if (crmInitialized) renderCrmCalendar();
 
   // ── Task KPIs
   // EP-Tasks.Owner is already a full name string — direct match works
@@ -3124,23 +3460,6 @@ function renderOpportunities() {
     const pct=(v/stageMax)*100;
     return `<div class="bar-row"><div class="bar-lbl">${s}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${SCOLORS[i%SCOLORS.length]}">${pct>22?`<span class="bar-fill-lbl">${fmtK(v)}</span>`:''}</div></div>${pct<=22?`<div class="bar-val-out">${fmtK(v)}</div>`:''}</div>`;
   }).join('');
-
-  // ── Activities last 7 days feed
-  // Sort by StartDate ascending so upcoming appear at top after past
-  acts7d.sort((a,b) => new Date(a.StartDate) - new Date(b.StartDate));
-  document.getElementById('act-7d-badge').textContent = acts7d.length + ' activities';
-  document.getElementById('act-7d-feed').innerHTML = acts7d.length
-    ? acts7d.map(r => `
-        <div style="padding:9px 0;border-bottom:1px solid var(--border2)">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
-            <span style="font-weight:700;font-size:12px;color:var(--asf-navy)">${r.AccountName||'—'}</span>
-            ${r.RelatedEntityType?`<span class="badge b-dim">${r.RelatedEntityType}</span>`:''}
-            <span style="margin-left:auto;font-size:10px;color:var(--muted)">${fmtDate(r.StartDate)}</span>
-          </div>
-          <div style="font-size:11px;color:var(--dim)">${r.Summary||r.Description||'No summary'}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px">Owner: ${r.OwnerName||'—'}</div>
-        </div>`).join('')
-    : '<div class="empty">No activities in the last 7 days.</div>';
 
   // ── Tasks due next 7 days feed
   document.getElementById('task-7d-badge').textContent = tasks7d.length + ' tasks';
@@ -3165,9 +3484,6 @@ function renderOpportunities() {
       }).join('')
     : '<div class="empty">No tasks due in the next 7 days.</div>';
 
-  // ── Customers active 120 days
-  renderAct120Table();
-
   // ── Opp filters
   const stages = [...new Set(D.opportunities.map(r=>r.Stage).filter(Boolean))].sort();
   document.getElementById('opp-stage-filter').innerHTML =
@@ -3180,57 +3496,518 @@ function renderOpportunities() {
   renderOppTable();
 }
 
-// ─── CUSTOMERS WITH NO ACTIVITY IN LAST 120 DAYS (inactive customers) ──────────
-function renderAct120Table() {
-  const activeRep  = getActiveRepFilter();
-  const fetchYear  = String(CUR_YEAR);
-  const today      = new Date();
-  const ago120     = new Date(today); ago120.setDate(today.getDate() - 120);
+// ─── CRM CALENDAR (Activities & Opportunities tab) ──────────────────────────
+// Month calendar of Acumatica Events and Tasks from GC-GraphSync, lazy-loaded
+// on the first click of this tab. Create / edit / complete / cancel go through
+// the dashboard Worker's /crm/* routes, which forward the rep's own Acumatica
+// token — records are created as the rep, and owner-only actions (cancelling
+// an event) work on the rep's own items. Changes reach Outlook / To Do through
+// the separate calendar sync within ~5 minutes for reps who connected Outlook.
+let crmInitialized = false;
+const CRM = { items: [], categories: [], loaded: false, error: null, month: null };
 
-  // Build set of customers who HAVE had activity logged (past 120 days OR any future)
-  // IMPORTANT: filter by rep so only activities from the selected rep count
-  // Otherwise a colleague's activity against the same customer would incorrectly
-  // mark it as "active" for the wrong rep (e.g. someone else logging against Hall's Flooring)
-  const activeSet = new Set();
-  D.activities.forEach(r => {
-    if (!r.StartDate) return;
-    // Apply rep filter — only count activity if it belongs to the active rep
-    if (activeRep && !ownerMatchesRep((r.OwnerName||'').trim(), activeRep)) return;
-    const actDate = new Date(r.StartDate);
-    // Include if within last 120 days OR scheduled for the future
-    if (actDate < ago120 && actDate < today) return;
-    const name = (r.AccountName||'').trim(); if (!name) return;
-    activeSet.add(name.toLowerCase());
+// Acumatica stores a time zone on each event; send the rep's own zone so the
+// Acumatica event form opens in local time instead of GMT.
+const CRM_ACU_TZ = {
+  'America/New_York':    '(GMT-05:00) Eastern Time (US & Canada)',
+  'America/Detroit':     '(GMT-05:00) Eastern Time (US & Canada)',
+  'America/Chicago':     '(GMT-06:00) Central Time (US & Canada)',
+  'America/Denver':      '(GMT-07:00) Mountain Time (US & Canada)',
+  'America/Los_Angeles': '(GMT-08:00) Pacific Time (US & Canada)',
+};
+function crmAcuTimeZone() {
+  return CRM_ACU_TZ[Intl.DateTimeFormat().resolvedOptions().timeZone] || CRM_ACU_TZ['America/New_York'];
+}
+
+function crmEsc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+// GC-GraphSync times are true UTC; treat a value without an offset as UTC.
+function crmUtc(s) {
+  if (!s) return null;
+  const str = String(s);
+  const d = new Date(/[zZ]$|[+-]\d\d:?\d\d$/.test(str) ? str : str + 'Z');
+  return isNaN(d) ? null : d;
+}
+function crmDayKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function crmFmtDay(key) {
+  return new Date(key + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+}
+function crmFmtTime(d) {
+  return d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+}
+function crmTimeInput(d) {
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// Items whose Outlook / To Do copy was deleted get one of these prefixes from the sync
+const CRM_FLAG_RE = /^\[(Canceled in Outlook|Deleted in To Do)\]\s*/;
+function crmFlagOf(summary) {
+  const m = CRM_FLAG_RE.exec(summary || '');
+  return m ? m[1] : null;
+}
+
+function crmNormalize(r) {
+  const type   = r.ActivityType === 'Event' ? 'Event' : 'Task';
+  const allDay = r.AllDay === true || r.AllDay === 'true';
+  const start  = crmUtc(r.StartDate), end = crmUtc(r.EndDate);
+  // Date-only values (task due dates, all-day events) are stored as midnight:
+  // use the date part as-is so they never shift a day.
+  const dueKey = r.EndDate ? String(r.EndDate).slice(0, 10) : null;
+  let dayKey = dueKey;
+  if (type === 'Event') dayKey = allDay ? String(r.StartDate || '').slice(0, 10) || null : (start ? crmDayKey(start) : null);
+  return {
+    id: r.NoteID, type, allDay, start, end, dayKey, dueKey,
+    summary:    (r.Summary || '').trim() || '(no summary)',
+    flag:       crmFlagOf((r.Summary || '').trim()),
+    status:     r.Status || '',
+    location:   (r.Location || '').trim(),
+    owner:      (r.OwnerName || '').trim(),
+    ownerEmail: (r.OwnerEmail || '').trim().toLowerCase(),
+    account:    (r.AccountName || '').trim(),
+    category:   (r.Category || '').trim(),
+    showAs:     (r.ShowAs || '').trim(),
+  };
+}
+
+function initCrmCalendar() {
+  if (crmInitialized) { renderCrmCalendar(); return; }
+  crmInitialized = true;
+  const n = new Date();
+  CRM.month = new Date(n.getFullYear(), n.getMonth(), 1);
+  renderCrmCalendar();
+  loadCrmItems();
+}
+
+// Acumatica OData caps an unpaged GI read at 500 rows and drops the rest
+// silently — GC-GraphSync is past that, so newer items went missing. Page
+// explicitly with $top/$skip (same approach as the Display Tracker fetch).
+async function crmFetchAll() {
+  const pageSize = 1000, rows = [];
+  for (let skip = 0; skip < 50000; skip += pageSize) {
+    const page = await odataGet('GC-GraphSync', { '$top': String(pageSize), '$skip': String(skip) });
+    rows.push(...page);
+    if (page.length < pageSize) break;
+  }
+  return rows;
+}
+
+async function loadCrmItems() {
+  try {
+    const [rows, cats] = await Promise.all([
+      crmFetchAll(),
+      // Full Acumatica category list; optional — falls back to categories already in use
+      odataGet('GC-ActivityCategories', {}).catch(e => { addLog(`⚠ Categories: ${e.message}`, 'warn'); return []; }),
+    ]);
+    CRM.items  = rows.map(crmNormalize).filter(i => i.id);
+    CRM.categories = cats.map(c => String(c.Description || '').trim()).filter(Boolean);
+    CRM.loaded = true;
+    CRM.error  = null;
+    addLog(`✓ Calendar: ${CRM.items.length} events/tasks`, 'ok');
+  } catch (e) {
+    CRM.error = e.message;
+    addLog(`✗ Calendar: ${e.message}`, 'error');
+  }
+  renderCrmCalendar();
+  renderCrmEvents7d();
+}
+
+// Canceled items are hidden; the rep selector scopes the calendar like the rest of the tab.
+function crmVisibleItems() {
+  const rep = getActiveRepFilter();
+  return CRM.items.filter(i => i.status !== 'Canceled' && ownerMatchesRep(i.owner, rep));
+}
+
+function crmSort(a, b) {
+  const rank = i => (i.type === 'Task' || i.allDay) ? 0 : 1;
+  if (rank(a) !== rank(b)) return rank(a) - rank(b);
+  return (a.start?.getTime() || 0) - (b.start?.getTime() || 0);
+}
+
+function crmPill(i, todayKey) {
+  const done    = i.status === 'Completed';
+  const overdue = i.type === 'Task' && !done && i.dueKey && i.dueKey < todayKey;
+  const time    = (i.type === 'Event' && !i.allDay && i.start)
+    ? crmFmtTime(i.start).replace(':00', '').replace(' ', '').toLowerCase() : '';
+  const glyph   = i.type === 'Task' ? (done ? '☑' : '☐') : '';
+  const cls     = ['crm-item', i.type === 'Event' ? 'crm-ev' : 'crm-tk', done ? 'crm-done' : '', overdue ? 'crm-overdue' : '', i.flag ? 'crm-flag' : ''].join(' ');
+  return `<button type="button" class="${cls}" title="${crmEsc(i.summary + (i.account ? ' — ' + i.account : ''))}" onclick="event.stopPropagation();openCrmDetail('${i.id}')">`
+    + (glyph ? `<span class="crm-glyph">${glyph}</span>` : '')
+    + (time ? `<span class="crm-time">${time}</span>` : '')
+    + `<span class="crm-sum">${crmEsc(i.summary)}</span></button>`;
+}
+
+function renderCrmCalendar() {
+  const grid = document.getElementById('crm-cal-grid');
+  if (!grid || !CRM.month) return;
+  const m = CRM.month;
+  document.getElementById('crm-cal-label').textContent = m.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+  const rep = getActiveRepFilter();
+  document.getElementById('crm-cal-badge').textContent = rep || 'All reps';
+  if (CRM.error)   { grid.innerHTML = `<div class="crm-cal-msg">The calendar couldn't load: ${crmEsc(CRM.error)}</div>`; return; }
+  if (!CRM.loaded) { grid.innerHTML = '<div class="crm-cal-msg">Loading calendar…</div>'; return; }
+
+  const byDay = {};
+  crmVisibleItems().forEach(i => { if (i.dayKey) (byDay[i.dayKey] = byDay[i.dayKey] || []).push(i); });
+  const first     = new Date(m.getFullYear(), m.getMonth(), 1);
+  const daysInMon = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+  const weeks     = Math.ceil((first.getDay() + daysInMon) / 7);
+  const gridStart = new Date(first); gridStart.setDate(1 - first.getDay());
+  const todayKey  = crmDayKey(new Date());
+
+  let html = '';
+  for (let n = 0; n < weeks * 7; n++) {
+    const day   = new Date(gridStart); day.setDate(gridStart.getDate() + n);
+    const key   = crmDayKey(day);
+    const items = (byDay[key] || []).sort(crmSort);
+    const cls   = ['crm-day', day.getMonth() !== m.getMonth() ? 'crm-other' : '', key === todayKey ? 'crm-today' : ''].join(' ');
+    html += `<div class="${cls}" onclick="openCrmForm({type:'Event',date:'${key}'})" title="Add an event on ${crmFmtDay(key)}">`
+      + `<span class="crm-day-num">${day.getDate()}</span>`
+      + items.slice(0, 3).map(i => crmPill(i, todayKey)).join('')
+      + (items.length > 3 ? `<button type="button" class="crm-more" onclick="event.stopPropagation();openCrmDay('${key}')">+${items.length - 3} more</button>` : '')
+      + `</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function crmShiftMonth(delta) {
+  CRM.month = new Date(CRM.month.getFullYear(), CRM.month.getMonth() + delta, 1);
+  renderCrmCalendar();
+}
+function crmGoToday() {
+  const n = new Date();
+  CRM.month = new Date(n.getFullYear(), n.getMonth(), 1);
+  renderCrmCalendar();
+}
+
+// Events — Next 7 Days card + KPI tile (same data as the calendar)
+function renderCrmEvents7d() {
+  const feed  = document.getElementById('act-7d-feed');
+  const kpi   = document.getElementById('act-kpi-7d');
+  const badge = document.getElementById('act-7d-badge');
+  if (!feed) return;
+  if (!CRM.loaded) {
+    kpi.textContent = '—'; badge.textContent = '';
+    feed.innerHTML = `<div class="empty">${CRM.error ? 'Events are unavailable right now.' : 'Loading events…'}</div>`;
+    return;
+  }
+  const now = new Date(), until = new Date(now); until.setDate(until.getDate() + 7);
+  const evs = crmVisibleItems().filter(i => {
+    if (i.type !== 'Event' || i.status === 'Completed' || !i.start) return false;
+    const endsAt = i.allDay ? new Date(i.dayKey + 'T23:59:59') : (i.end || i.start);
+    return endsAt >= now && i.start <= until;
+  }).sort((a, b) => a.start - b.start);
+  kpi.textContent   = evs.length;
+  badge.textContent = evs.length + ' events';
+  feed.innerHTML = evs.length ? evs.map(i => `
+    <div style="padding:9px 0;border-bottom:1px solid var(--border2);cursor:pointer" onclick="openCrmDetail('${i.id}')">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+        <span style="font-weight:700;font-size:12px;color:var(--asf-navy)">${crmEsc(i.account || i.summary)}</span>
+        ${i.category ? `<span class="badge b-dim">${crmEsc(i.category)}</span>` : ''}
+        <span style="margin-left:auto;font-size:10px;color:var(--muted)">${crmFmtDay(i.dayKey)}${i.allDay ? ' · All day' : ' · ' + crmFmtTime(i.start)}</span>
+      </div>
+      <div style="font-size:11px;color:var(--dim)">${crmEsc(i.summary)}${i.location ? ' · ' + crmEsc(i.location) : ''}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">Owner: ${crmEsc(i.owner || '—')}</div>
+    </div>`).join('')
+    : '<div class="empty">No events in the next 7 days.</div>';
+}
+
+// ── Modal plumbing ──
+function crmOpenModal(html) {
+  document.getElementById('crm-modal').innerHTML = html;
+  document.getElementById('crm-modal-bg').classList.add('open');
+  const first = document.querySelector('#crm-modal input, #crm-modal button.btn-sm');
+  if (first) first.focus();
+}
+function crmCloseModal() {
+  document.getElementById('crm-modal-bg').classList.remove('open');
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('crm-modal-bg')?.classList.contains('open')) crmCloseModal();
+});
+function crmToast(msg, isErr) {
+  const t = document.getElementById('crm-toast');
+  t.textContent = msg; t.className = isErr ? 'err' : ''; t.style.display = 'block';
+  clearTimeout(crmToast._t);
+  crmToast._t = setTimeout(() => { t.style.display = 'none'; }, isErr ? 7000 : 4000);
+}
+function crmModalHdr(title) {
+  return `<div class="crm-modal-hdr"><h3 id="crm-modal-title">${crmEsc(title)}</h3><button type="button" class="crm-x" onclick="crmCloseModal()" aria-label="Close">×</button></div>`;
+}
+
+// ── Detail view ──
+function openCrmDetail(id) {
+  const i = CRM.items.find(x => x.id === id);
+  if (!i) return;
+  const mine = !!i.ownerEmail && i.ownerEmail === (USER.email || '').toLowerCase();
+  const open = i.status !== 'Completed' && i.status !== 'Canceled';
+  const when = i.type === 'Task'
+    ? (i.dueKey ? 'Due ' + crmFmtDay(i.dueKey) : 'No due date')
+    : (i.allDay ? crmFmtDay(i.dayKey) + ' · All day'
+                : `${crmFmtDay(i.dayKey)} · ${crmFmtTime(i.start)}${i.end ? '–' + crmFmtTime(i.end) : ''}`);
+  const row = (k, v) => v ? `<div class="crm-detail-row"><span>${k}</span><span>${crmEsc(v)}</span></div>` : '';
+  const flagBanner = i.flag ? `<div class="crm-flag-banner"><b>${crmEsc(i.flag)}.</b> This ${i.type.toLowerCase()} was ${i.type === 'Event' ? 'deleted or canceled in Outlook' : 'deleted from Microsoft To Do'}. ${mine ? (i.type === 'Event' ? 'Cancel it here to close it in Acumatica, or keep it to put it back on your calendar.' : 'Complete or cancel it here, or keep it to put it back in To Do.') : 'The owner can confirm or keep it.'}</div>` : '';
+  const actions = (mine && open && i.flag)
+    ? `<button type="button" class="crm-btn-ghost" onclick="crmKeepFlagged('${i.id}')">Keep it</button>
+       ${i.type === 'Task' ? `<button type="button" class="crm-btn-ghost" onclick="crmAction('${i.id}','complete')">Mark complete</button>` : ''}
+       <button type="button" class="crm-btn-danger" onclick="crmAction('${i.id}','cancel')">Confirm cancel</button>`
+    : (mine && open)
+    ? `<button type="button" class="crm-btn-danger" onclick="crmAction('${i.id}','cancel')">Cancel ${i.type.toLowerCase()}</button>
+       <button type="button" class="crm-btn-ghost" onclick="openCrmForm({id:'${i.id}'})">Edit</button>
+       <button type="button" class="btn-sm" onclick="crmAction('${i.id}','complete')">Mark complete</button>`
+    : `<button type="button" class="crm-btn-ghost" onclick="crmCloseModal()">Close</button>`;
+  crmOpenModal(crmModalHdr(i.type === 'Task' ? 'Task' : 'Event') + `
+    <div class="crm-modal-body">
+      <div style="font-size:14px;font-weight:700;color:var(--text)">${crmEsc(i.flag ? i.summary.replace(CRM_FLAG_RE, '') : i.summary)}</div>
+      ${flagBanner}
+      ${row('When', when)}${row('Account', i.account)}${row('Location', i.location)}
+      ${row('Category', i.category)}${row('Owner', i.owner)}${row('Status', i.status)}
+      ${!mine ? '<div class="crm-hint">Only the owner can change this item.</div>' : ''}
+      <div class="crm-err" id="crm-form-err"></div>
+    </div>
+    <div class="crm-modal-foot">${actions}</div>`);
+}
+
+// ── Day list ("+N more") ──
+function openCrmDay(key) {
+  const todayKey = crmDayKey(new Date());
+  const items = crmVisibleItems().filter(i => i.dayKey === key).sort(crmSort);
+  crmOpenModal(crmModalHdr(crmFmtDay(key)) + `
+    <div class="crm-modal-body"><div class="crm-day-list">${items.map(i => crmPill(i, todayKey)).join('')}</div></div>
+    <div class="crm-modal-foot">
+      <button type="button" class="crm-btn-ghost" onclick="openCrmForm({type:'Task',date:'${key}'})">+ Task</button>
+      <button type="button" class="btn-sm" onclick="openCrmForm({type:'Event',date:'${key}'})">+ Event</button>
+    </div>`);
+}
+
+// ── Create / edit form ──
+function crmAccountNames() {
+  const names = new Set();
+  (D.sales || []).forEach(r => { const n = (r.CustomerName || '').trim(); if (n) names.add(n); });
+  (D.activities || []).forEach(r => { const n = (r.AccountName || '').trim(); if (n) names.add(n); });
+  CRM.items.forEach(i => { if (i.account) names.add(i.account); });
+  return names;
+}
+function crmAccountOptions() {
+  const names = new Set();
+  (D.sales || []).forEach(r => { const n = (r.CustomerName || '').trim(); if (n) names.add(n); });
+  (D.activities || []).forEach(r => { const n = (r.AccountName || '').trim(); if (n) names.add(n); });
+  CRM.items.forEach(i => { if (i.account) names.add(i.account); });
+  return [...names].sort((a, b) => a.localeCompare(b)).map(n => `<option value="${crmEsc(n)}"></option>`).join('');
+}
+// Dropdown options: Acumatica's full category list (GC-ActivityCategories), plus the item's
+// current category if it isn't in that list, so editing never silently drops it.
+function crmCategoryOptions(current) {
+  const cats = new Set(CRM.categories.length ? CRM.categories : CRM.items.map(i => i.category).filter(Boolean));
+  if (current) cats.add(current);
+  return '<option value="">(none)</option>' + [...cats].sort((a, b) => a.localeCompare(b))
+    .map(c => `<option value="${crmEsc(c)}"${c === current ? ' selected' : ''}>${crmEsc(c)}</option>`).join('');
+}
+
+function openCrmForm(opts = {}) {
+  const edit = opts.id ? CRM.items.find(x => x.id === opts.id) : null;
+  const type = edit ? edit.type : (opts.type || 'Event');
+  const date = opts.date || crmDayKey(new Date());
+  const v = {
+    summary:  edit?.summary || '',
+    account:  edit?.account || '',
+    date:     edit ? (edit.dayKey || date) : date,
+    t1:       edit?.start && !edit.allDay ? crmTimeInput(edit.start) : '09:00',
+    t2:       edit?.end && !edit.allDay ? crmTimeInput(edit.end) : '09:30',
+    allDay:   !!edit?.allDay,
+    location: edit?.location || '',
+    showAs:   edit?.showAs || 'Busy',
+    category: edit?.category || '',
+    due:      edit ? (edit.dueKey || date) : date,
+  };
+  const showAsOpts = ['Busy', 'Free', 'Tentative', 'Out of Office']
+    .map(o => `<option${o === v.showAs ? ' selected' : ''}>${o}</option>`).join('');
+  crmOpenModal(crmModalHdr(edit ? `Edit ${type.toLowerCase()}` : `New ${type.toLowerCase()}`) + `
+    <div class="crm-modal-body" id="crm-form" data-type="${type}" data-id="${edit ? edit.id : ''}">
+      ${edit ? '' : `<div class="crm-seg" role="group" aria-label="Item type">
+        <button type="button" class="${type === 'Event' ? 'on' : ''}" onclick="crmSetType('Event')">Event</button>
+        <button type="button" class="${type === 'Task' ? 'on' : ''}" onclick="crmSetType('Task')">Task</button></div>`}
+      <div class="crm-field"><label for="crm-f-summary">Summary</label>
+        <input class="crm-in" id="crm-f-summary" maxlength="255" value="${crmEsc(v.summary)}" placeholder="${type === 'Event' ? 'e.g. Showroom visit' : 'e.g. Send samples'}"></div>
+      <div class="crm-field"><label for="crm-f-account">Account (required)</label>
+        <input class="crm-in" id="crm-f-account" list="crm-acct-list" value="${crmEsc(v.account)}" placeholder="Start typing a customer or account name">
+        <datalist id="crm-acct-list">${crmAccountOptions()}</datalist></div>
+      <div id="crm-ev-fields" style="display:${type === 'Event' ? 'flex' : 'none'};flex-direction:column;gap:12px">
+        <div class="crm-row3">
+          <div class="crm-field"><label for="crm-f-date">Date</label><input class="crm-in" type="date" id="crm-f-date" value="${v.date}"></div>
+          <div class="crm-field"><label for="crm-f-t1">Start</label><input class="crm-in" type="time" id="crm-f-t1" value="${v.t1}"${v.allDay ? ' disabled' : ''}></div>
+          <div class="crm-field"><label for="crm-f-t2">End</label><input class="crm-in" type="time" id="crm-f-t2" value="${v.t2}"${v.allDay ? ' disabled' : ''}></div>
+        </div>
+        <label class="crm-check"><input type="checkbox" id="crm-f-allday"${v.allDay ? ' checked' : ''} onchange="document.getElementById('crm-f-t1').disabled=this.checked;document.getElementById('crm-f-t2').disabled=this.checked"> All day</label>
+        <div class="crm-row2">
+          <div class="crm-field"><label for="crm-f-location">Location</label><input class="crm-in" id="crm-f-location" value="${crmEsc(v.location)}"></div>
+          <div class="crm-field"><label for="crm-f-showas">Show as</label><select class="crm-in" id="crm-f-showas">${showAsOpts}</select></div>
+        </div>
+      </div>
+      <div id="crm-tk-fields" style="display:${type === 'Task' ? 'flex' : 'none'};flex-direction:column;gap:12px">
+        <div class="crm-field"><label for="crm-f-due">Due date</label><input class="crm-in" type="date" id="crm-f-due" value="${v.due}"></div>
+      </div>
+      <div class="crm-field"><label for="crm-f-category">Category</label>
+        <select class="crm-in" id="crm-f-category">${crmCategoryOptions(v.category)}</select></div>
+      <div class="crm-field"><label for="crm-f-notes">Notes</label>
+        <textarea class="crm-in" id="crm-f-notes" placeholder="${edit ? 'Leave blank to keep the existing notes' : 'Optional'}"></textarea></div>
+      <div class="crm-err" id="crm-form-err"></div>
+      <div class="crm-hint">Saves to Acumatica as you. If you've connected Outlook, it appears there within about 5 minutes.</div>
+    </div>
+    <div class="crm-modal-foot">
+      <button type="button" class="crm-btn-ghost" onclick="crmCloseModal()">Discard</button>
+      <button type="button" class="btn-sm" id="crm-save-btn" onclick="saveCrmForm()">${edit ? 'Save changes' : 'Save ' + type.toLowerCase()}</button>
+    </div>`);
+  document.getElementById('crm-f-summary').focus();
+}
+
+function crmSetType(type) {
+  const f = document.getElementById('crm-form');
+  f.dataset.type = type;
+  f.querySelectorAll('.crm-seg button').forEach(b => b.classList.toggle('on', b.textContent === type));
+  document.getElementById('crm-ev-fields').style.display = type === 'Event' ? 'flex' : 'none';
+  document.getElementById('crm-tk-fields').style.display = type === 'Task' ? 'flex' : 'none';
+  document.getElementById('crm-modal-title').textContent = 'New ' + type.toLowerCase();
+  document.getElementById('crm-save-btn').textContent = 'Save ' + type.toLowerCase();
+  // Carry the chosen day across: Event date ↔ Task due date
+  if (type === 'Task') document.getElementById('crm-f-due').value = document.getElementById('crm-f-date').value;
+  else document.getElementById('crm-f-date').value = document.getElementById('crm-f-due').value;
+}
+
+async function crmApi(method, path, body) {
+  const call = () => fetch(CONFIG.workerUrl + path, {
+    method,
+    headers: { Authorization: `Bearer ${auth.accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   });
+  let res = await call();
+  if (res.status === 401 && auth.refreshToken) { await doRefreshToken(); res = await call(); }
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || j.error) throw new Error(j.error || `Request failed (${res.status})`);
+  return j;
+}
 
-  // All customers from current FY sales, filtered by rep
-  const salesCusts = {};
-  D.sales.filter(r => r._year === fetchYear && (!activeRep || r.SalesRep === activeRep))
-    .forEach(r => {
-      const name = (r.CustomerName||'').trim(); if (!name) return;
-      if (!salesCusts[name]) salesCusts[name] = { name, rep: r.SalesRep||'—', ytd: 0 };
-      salesCusts[name].ytd += +r.ExtAmount||0;
-    });
+function crmShowErr(msg) {
+  const e = document.getElementById('crm-form-err');
+  if (!e) { crmToast(msg, true); return; }
+  e.textContent = msg; e.style.display = msg ? 'block' : 'none';
+}
 
-  // Inactive = customers with YTD sales but NO activity in last 120 days
-  const inactive = Object.values(salesCusts)
-    .filter(c => !activeSet.has(c.name.toLowerCase()))
-    .sort((a,b) => b.ytd - a.ytd); // sort by YTD sales desc (highest-value neglected first)
+async function saveCrmForm() {
+  const f    = document.getElementById('crm-form');
+  const type = f.dataset.type;
+  const id   = f.dataset.id || undefined;
+  const val  = x => document.getElementById(x).value.trim();
+  const summary = val('crm-f-summary');
+  if (!summary) { crmShowErr('Add a summary.'); return; }
+  // Every activity must be linked to a real account so it counts on the D10 scorecard
+  const acct = val('crm-f-account');
+  if (!acct) { crmShowErr('Choose the account this is for.'); return; }
+  if (!crmAccountNames().has(acct)) { crmShowErr('Pick an account from the list — "' + acct + '" isn\'t a known account name.'); return; }
+  const notes = val('crm-f-notes');
+  const common = {
+    id, summary,
+    account:  val('crm-f-account'),
+    category: val('crm-f-category'),
+    notes:    (id && !notes) ? undefined : notes,   // blank on edit = keep existing notes
+  };
+  let path, body;
+  if (type === 'Event') {
+    const d = val('crm-f-date');
+    if (!d) { crmShowErr('Pick a date.'); return; }
+    const allDay = document.getElementById('crm-f-allday').checked;
+    let start, end;
+    if (allDay) { start = `${d}T00:00:00Z`; end = `${d}T00:00:00Z`; }
+    else {
+      const s = new Date(`${d}T${val('crm-f-t1')}`), e = new Date(`${d}T${val('crm-f-t2')}`);
+      if (isNaN(s) || isNaN(e)) { crmShowErr('Enter a start and end time.'); return; }
+      if (e <= s) { crmShowErr('The end time must be after the start time.'); return; }
+      start = s.toISOString(); end = e.toISOString();
+    }
+    path = '/crm/event';
+    body = { ...common, start, end, allDay, location: val('crm-f-location'),
+             showAs: document.getElementById('crm-f-showas').value, timeZone: crmAcuTimeZone() };
+  } else {
+    const due = val('crm-f-due');
+    if (!due) { crmShowErr('Pick a due date.'); return; }
+    const today = crmDayKey(new Date());
+    path = '/crm/task';
+    body = { ...common, dueDate: due, startDate: id ? undefined : (due < today ? due : today) };
+  }
+  const btn = document.getElementById('crm-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…'; crmShowErr('');
+  try {
+    await crmApi('PUT', path, body);
+    crmCloseModal();
+    crmToast(`${type} saved to Acumatica.`);
+    await loadCrmItems();
+  } catch (e) {
+    crmShowErr(e.message);
+    btn.disabled = false; btn.textContent = id ? 'Save changes' : 'Save ' + type.toLowerCase();
+  }
+}
 
-  document.getElementById('act-120d-badge').textContent = inactive.length + ' inactive';
+// "Keep it": removes the flag prefix (and restores Busy for events); the sync then puts the
+// item back in the rep's Outlook / To Do on its next run.
+async function crmKeepFlagged(id) {
+  const i = CRM.items.find(x => x.id === id);
+  if (!i || !i.flag) return;
+  const summary = i.summary.replace(CRM_FLAG_RE, '');
+  document.querySelectorAll('#crm-modal .crm-modal-foot button').forEach(b => { b.disabled = true; });
+  try {
+    if (i.type === 'Event') {
+      const start = i.allDay ? `${i.dayKey}T00:00:00Z` : i.start.toISOString();
+      const end   = i.allDay ? `${i.dayKey}T00:00:00Z` : (i.end || i.start).toISOString();
+      await crmApi('PUT', '/crm/event', { id, summary, start, end, allDay: i.allDay, location: i.location,
+        showAs: 'Busy', category: i.category, timeZone: crmAcuTimeZone() });
+    } else {
+      await crmApi('PUT', '/crm/task', { id, summary, dueDate: i.dueKey || crmDayKey(new Date()), category: i.category });
+    }
+    crmCloseModal();
+    crmToast(`Kept — it will be back in ${i.type === 'Event' ? 'Outlook' : 'To Do'} within about 5 minutes.`);
+    await loadCrmItems();
+  } catch (e) {
+    crmShowErr(e.message);
+    document.querySelectorAll('#crm-modal .crm-modal-foot button').forEach(b => { b.disabled = false; });
+  }
+}
 
-  const search = (document.getElementById('act-120d-search')?.value||'').toLowerCase();
-  const filtered = search ? inactive.filter(r => r.name.toLowerCase().includes(search)) : inactive;
-  document.getElementById('act-120d-count').textContent = `${filtered.length} / ${inactive.length} customers`;
+async function crmAction(id, action) {
+  const i = CRM.items.find(x => x.id === id);
+  if (!i) return;
+  if (action === 'cancel' && !confirm(`Cancel "${i.summary}" in Acumatica?`)) return;
+  document.querySelectorAll('#crm-modal .crm-modal-foot button').forEach(b => { b.disabled = true; });
+  try {
+    await crmApi('POST', '/crm/action', { entity: i.type, action, id });
+    crmCloseModal();
+    crmToast(`${i.type} ${action === 'cancel' ? 'canceled' : 'completed'}.`);
+    await loadCrmItems();
+  } catch (e) {
+    crmShowErr(e.message);
+    document.querySelectorAll('#crm-modal .crm-modal-foot button').forEach(b => { b.disabled = false; });
+  }
+}
 
-  document.getElementById('act-120d-tbody').innerHTML = filtered.length
-    ? filtered.map(r => `<tr>
-        <td style="font-weight:600;color:var(--asf-navy)">${r.name}</td>
-        <td style="color:var(--red);font-weight:600">No activity in 120+ days</td>
-        <td style="color:var(--dim)">${r.rep}</td>
-        <td style="text-align:right;color:var(--asf-blue);font-weight:600">${fmt$(r.ytd)}</td>
-      </tr>`).join('')
-    : '<div style="padding:20px;text-align:center;color:var(--asf-green);font-weight:600">✓ All customers have recent activity</div>';
+// ─── OVERDUE OPPORTUNITIES FILTER ─────────────────────────────────────────────
+// The Overdue Opportunities KPI card toggles the table below to overdue deals only.
+let oppOverdueOnly = false;
+function oppIsOverdue(r) {
+  if (!r.EstimatedCloseDate) return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return new Date(r.EstimatedCloseDate) < today;
+}
+function toggleOppOverdue() {
+  oppOverdueOnly = !oppOverdueOnly;
+  const card = document.getElementById('opp-overdue-card');
+  card.classList.toggle('kpi-on', oppOverdueOnly);
+  card.setAttribute('aria-pressed', String(oppOverdueOnly));
+  document.getElementById('opp-overdue-hint').textContent = oppOverdueOnly
+    ? 'Showing overdue deals only — click to show all'
+    : 'Click to show only overdue deals in the table below';
+  renderOppTable();
+  if (oppOverdueOnly) document.getElementById('opp-tbody').closest('.card').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 function renderOppTable() {
@@ -3241,14 +4018,15 @@ function renderOppTable() {
   const today         = new Date(); today.setHours(0,0,0,0);
 
   let rows = D.opportunities.filter(r => {
-    if (activeRep && !ownerMatchesRep(r.DisplayName||'', activeRep)) return false;
+    if (activeRep && !ownerMatchesRep(r.OwnerName||'', activeRep)) return false;
+    if (oppOverdueOnly && !oppIsOverdue(r)) return false;
     if (search && !((r.AccountName||'').toLowerCase().includes(search)||(r.OpportunityID||'').toLowerCase().includes(search))) return false;
     if (projectSearch && !(r.Description||'').toLowerCase().includes(projectSearch)) return false;
     if (stage && r.Stage !== stage) return false;
     return true;
   });
 
-  document.getElementById('opp-count').textContent = `${rows.length} / ${D.opportunities.length} deals`;
+  document.getElementById('opp-count').textContent = `${rows.length} / ${D.opportunities.length} deals${oppOverdueOnly ? ' · overdue only' : ''}`;
 
   const stageCls = s => {
     const v=(s||'').toLowerCase();
@@ -3270,7 +4048,7 @@ function renderOppTable() {
       <td style="color:var(--asf-blue);font-weight:600;white-space:nowrap">${r.OpportunityID||'—'}</td>
       <td style="font-weight:500">${r.AccountName||'—'}</td>
       <td style="color:var(--dim);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.Description||'').replace(/"/g,'&quot;')}">${r.Description||'—'}</td>
-      <td style="color:var(--dim)">${r.DisplayName||'—'}</td>
+      <td style="color:var(--dim)">${r.OwnerName||'—'}</td>
       <td><span class="badge ${stageCls(r.Stage)}">${r.Stage||'—'}</span></td>
       <td><span class="badge b-dim">${r.Status||'—'}</span></td>
       <td>
@@ -3768,9 +4546,6 @@ function hideOverlay() { document.getElementById('loading-overlay').style.displa
 
 // ── Pre-seeded historical data (Q1 & Q2 FY2026 from uploaded worksheets) ──
 const EATER_SEED = [
-  // Q1 2026 — Residential Sales (Bob Brown)
-  { qtr:'Q1-2026', name:'Austin Jones',   dept:'Residential Sales',
-    self:{E:7,A:8,T:7,En:8,R:7}, mgr:{E:6,A:6,T:7,En:8,R:6}, cal:{E:5,A:6,T:6,En:6,R:5} },
   { qtr:'Q1-2026', name:'Derrick Almond', dept:'Residential Sales',
     self:{E:6,A:6,T:8,En:7,R:6}, mgr:{E:8,A:8,T:8,En:8,R:7}, cal:{E:7,A:7,T:7,En:7,R:6} },
   { qtr:'Q1-2026', name:'Mitchell Jones', dept:'Residential Sales',
@@ -3791,11 +4566,7 @@ const EATER_SEED = [
   // Q1 2026 — Sales Management
   { qtr:'Q1-2026', name:'Phil Branon', dept:'Sales Management',
     self:{E:7,A:8,T:7,En:7,R:7}, mgr:{E:7,A:7,T:7,En:7,R:6}, cal:{E:7,A:7,T:7,En:7,R:6} },
-  { qtr:'Q1-2026', name:'Bob Brown',   dept:'Sales Management',
-    self:{E:8,A:8,T:8,En:8,R:7}, mgr:{E:7,A:7,T:7,En:6,R:6}, cal:{E:7,A:7,T:7,En:6,R:6} },
-  // Q2 2026 — Residential Sales (Bob Brown)
-  { qtr:'Q2-2026', name:'Austin Jones',   dept:'Residential Sales',
-    self:{E:7,A:7,T:6,En:7,R:7}, mgr:{E:6,A:6,T:7,En:6,R:6}, cal:{E:6,A:7,T:7,En:6,R:6} },
+  // Q2 2026 — Residential Sales
   { qtr:'Q2-2026', name:'Derrick Almond', dept:'Residential Sales',
     self:{E:8,A:7,T:7,En:8,R:6}, mgr:{E:8,A:8,T:7,En:7,R:7}, cal:{E:8,A:8,T:7,En:7,R:6} },
   { qtr:'Q2-2026', name:'Mitchell Jones', dept:'Residential Sales',
@@ -3813,14 +4584,11 @@ const EATER_SEED = [
     self:{E:7,A:9,T:7,En:7,R:5}, mgr:{E:7,A:8,T:8,En:7,R:7}, cal:{E:7,A:7,T:7,En:6,R:5} },
   { qtr:'Q2-2026', name:'Michael McLeod',   dept:'Commercial Sales',
     self:{E:7,A:8,T:8,En:7,R:7.5}, mgr:{E:6,A:9,T:9,En:5,R:6.5}, cal:{E:6,A:9,T:8,En:6,R:6} },
-  { qtr:'Q2-2026', name:'Bob Brown', dept:'Sales Management',
-    self:{E:7,A:7,T:7,En:7,R:6}, mgr:{E:null,A:null,T:null,En:null,R:null}, cal:{E:null,A:null,T:null,En:null,R:null} },
 ];
 
 // Employee roster with departments (for dropdown)
 const EATER_EMPLOYEES = [
   { name:'Anthony Deel',    dept:'Residential Sales' },
-  { name:'Austin Jones',    dept:'Residential Sales' },
   { name:'Bobby Townsend',  dept:'Residential Sales' },
   { name:'Derrick Almond',  dept:'Residential Sales' },
   { name:'Mitchell Jones',  dept:'Residential Sales' },
@@ -3828,7 +4596,6 @@ const EATER_EMPLOYEES = [
   { name:'Michael McLeod',  dept:'Commercial Sales'  },
   { name:'Nikki Petriello', dept:'Commercial Sales'  },
   { name:'Sean Mitchell',   dept:'Commercial Sales'  },
-  { name:'Bob Brown',       dept:'Sales Management'  },
   { name:'Phil Branon',     dept:'Sales Management'  },
 ];
 
@@ -3931,7 +4698,6 @@ async function eaterPersist() {
 // ── Determine which names the current user may see ────────────────────────
 // Department membership per manager — used to scope EATER tab visibility
 const EATER_MANAGER_SCOPE = {
-  'Bob Brown':   { dept: 'Residential Sales', label: 'Residential Sales' },
   'Phil Branon': { dept: 'Commercial Sales',  label: 'Commercial Sales'  },
 };
 
@@ -4453,6 +5219,15 @@ function eaterRenderAll() {
   const code=p.get('code'), state=p.get('state'), error=p.get('error');
   if(error) { showLoginErr('Login error: '+(p.get('error_description')||error)); return; }
   if(code && state) { await handleCallback(code,state); return; }
+  // Resume a saved session (7 days without use before it expires)
+  let saved = null;
+  try { saved = localStorage.getItem(SESSION_LS_KEY); } catch (e) {}
+  if (saved) {
+    auth.refreshToken = saved;
+    setLoadTxt('Signing you in…');
+    try { await doRefreshToken(); await afterSignIn(); return; }
+    catch (e) { /* expired or revoked: fall through to the sign-in screen */ }
+  }
   hideOverlay(); document.getElementById('login-screen').style.display='flex';
 })();
 
@@ -5512,6 +6287,786 @@ function detailHtml(r){
   `;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// D10 TAB — Level-10-style weekly meeting: shared countdown timer, Scorecard,
+// Rock Review, and IDS (Issues/To-Dos). All shared state lives in the D10_KV
+// Cloudflare KV namespace via /d10-data (scorecard+rocks+todos+issues) and
+// /d10-timer (the running clock), mirroring the EATER_KV GET/PUT pattern.
+// ═══════════════════════════════════════════════════════════════════════════
+const D10_KV_URL    = CONFIG.workerUrl + '/d10-data';
+const D10_TIMER_URL = CONFIG.workerUrl + '/d10-timer';
+const D10_LS_DATA   = 'asf-d10-data-cache';
+const D10_LS_TIMER  = 'asf-d10-timer-cache';
+
+const D10_TOTAL_SECONDS = 45 * 60;
+const D10_SEGMENTS = [
+  { key:'segue',     label:'Segue',       minutes:5  },
+  { key:'scorecard', label:'Scorecard',   minutes:5  },
+  { key:'rocks',     label:'Rock Review', minutes:5  },
+  { key:'ids',       label:'IDS',         minutes:25 },
+  { key:'conclude',  label:'Conclude',    minutes:5  },
+];
+(function() { let acc = 0; D10_SEGMENTS.forEach(seg => { seg.startSec = acc; acc += seg.minutes * 60; seg.endSec = acc; }); })();
+
+const D10_ROSTER = {
+  retail:     ['Derrick Almond','Mitchell Jones'],
+  hybrid:     ['Nikki Petriello','Bobby Townsend','Anthony Deel'],
+  commercial: ['Sean Mitchell','Jason Beamer','Michael McLeod'],
+};
+const D10_GROUP_LABELS = { retail:'Residential', hybrid:'Hybrid', commercial:'Commercial' };
+const D10_ALL_PEOPLE = [].concat(D10_ROSTER.retail, D10_ROSTER.hybrid, D10_ROSTER.commercial);
+// Managers are assignable on To-Dos (IDS regularly assigns action items to leadership too)
+// but are NOT part of the Scorecard/Rock Review rosters above.
+const D10_TODO_ASSIGNEES = D10_ALL_PEOPLE.concat(['Phil Branon','Lauren Good','Todd Good','Sherry Kelly']);
+
+// Scorecard metric definitions per group — each rep gets one row per metric below,
+// each with its own Goal + rolling weekly figures. Calls are split by account type
+// (Dealer, Builder, Dealer/Builder, End User, A&D, CFC), one row each. Keys are stable
+// identifiers for saved data; labels can be renamed freely without losing history.
+const D10_METRICS = {
+  retail: [
+    { key:'calls',           label:'# of Dealer Calls' },     // key kept as 'calls' so saved history carries over
+    { key:'builderCalls',    label:'# of Builder Calls' },
+    { key:'builderLeads',    label:'Builder Leads Entered' },
+    { key:'activeCustomers', label:'Active (Buying) Customers' },
+    { key:'activeDisplays',  label:'Active Displays' },
+  ],
+  hybrid: [
+    { key:'callsRetail',        label:'# of Dealer/Builder Calls' },
+    { key:'callsCommEndUser',   label:'# of End User Calls' },
+    { key:'callsCommAD',        label:'# of A&D Calls' },
+    { key:'callsCommDealer',    label:'# of CFC Calls' },        // key predates the CFC rename; kept so saved history carries over
+    { key:'builderLeads',       label:'Builder Leads Entered' },
+    { key:'activeCustomers',    label:'Active (Buying) Customers' },
+    { key:'activeDisplays',     label:'Active Displays' },
+    { key:'oppClosing90',       label:'Opportunity $$ Closing in 90 Days' },
+    { key:'newLeads',           label:'New Commercial Leads Added' },
+    { key:'maxxonPresentations',label:'Maxxon Applicator Presentations' },
+  ],
+  commercial: [
+    { key:'callsCommEndUser',   label:'# of End User Calls' },
+    { key:'callsCommAD',        label:'# of A&D Calls' },
+    { key:'callsCommDealer',    label:'# of CFC Calls' },        // key predates the CFC rename; kept so saved history carries over
+    { key:'oppClosing90',       label:'Opportunity $$ Closing in 90 Days' },
+    { key:'newLeads',           label:'New Commercial Leads Added' },
+    { key:'maxxonPresentations',label:'Maxxon Applicator Presentations' },
+  ],
+};
+
+// Metrics filled automatically by the dashboard Worker's Sales D10 sync (runSalesD10Sync —
+// keep in lockstep with SALES_D10_CLASS_METRICS / SALES_D10_OTHER_METRICS in the Worker).
+// These rows are read-only here; goals and goal operators stay editable.
+const D10_AUTO_METRICS = {
+  retail:     ['calls', 'builderCalls', 'builderLeads', 'activeCustomers', 'activeDisplays'],
+  hybrid:     ['callsRetail', 'callsCommEndUser', 'callsCommAD', 'callsCommDealer', 'builderLeads', 'activeCustomers', 'activeDisplays', 'oppClosing90', 'newLeads', 'maxxonPresentations'],
+  commercial: ['callsCommEndUser', 'callsCommAD', 'callsCommDealer', 'oppClosing90', 'newLeads', 'maxxonPresentations'],
+};
+// Snapshot metrics are a level captured each week (not a weekly count), so their goal is
+// compared as-is — never converted from a monthly figure.
+const D10_SNAPSHOT_METRICS = ['activeCustomers', 'activeDisplays', 'oppClosing90'];
+const D10_AUTO_TITLES = {
+  builderLeads:        'Acumatica leads with the BUILDER class, by created week, credited to the lead owner',
+  newLeads:            'Acumatica leads not classed BUILDER, by created week, credited to the lead owner',
+  maxxonPresentations: 'Completed events and tasks with the "Maxxon Applicator" category, by completion week',
+  activeCustomers:     'Snapshot: customers with a positive invoice line in the last 90 days, credited to the invoice salesperson. Past weeks keep the value captured that week',
+  activeDisplays:      'Snapshot: active displays whose product line sold to that customer in the last 180 days (customer\'s salesperson). Past weeks keep the value captured that week',
+  oppClosing90:        'Snapshot: New/Open opportunities closing in the next 90 days (Detail Total, overdue excluded), credited to the owner. Past weeks keep the value captured that week',
+};
+const D10_AUTO_TITLE_CALLS = 'Completed Acumatica events and tasks, by completion week and account class';
+function d10AutoTitle(metricKey) { return 'Filled automatically: ' + (D10_AUTO_TITLES[metricKey] || D10_AUTO_TITLE_CALLS); }
+function d10IsAuto(grp, metricKey) { return (D10_AUTO_METRICS[grp] || []).includes(metricKey); }
+
+let d10CurrentSegment    = 'segue';
+let d10Data              = null;  // in-memory data blob: {scorecard, rocks, todos, issues, segue, meetingLog}
+let d10Timer             = null;  // in-memory timer state
+let d10TickInterval      = null;
+let d10TimerPollInterval = null;
+let d10DataPollInterval  = null;
+let d10LastDataFingerprint  = null;
+let d10LastTimerFingerprint = null;
+
+function d10Uid() { return 'd10-' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function d10Escape(s) { return (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function d10Truncate(s,n) { return s && s.length>n ? s.slice(0,n)+'…' : (s||''); }
+
+// ── Rolling 90-day columns: most recent 13 Monday-start weeks, current week FIRST ──
+// (index 0 = this week; older weeks age out to the right as the table renders left-to-right)
+function d10GetRollingWeeks() {
+  const weeks = [];
+  const now = new Date();
+  const dow = now.getDay(); // 0=Sun..6=Sat
+  const diffToMonday = (dow === 0 ? -6 : 1 - dow);
+  const thisMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+  for (let i = 0; i <= 12; i++) {
+    const d = new Date(thisMonday);
+    d.setDate(d.getDate() - i*7);
+    weeks.push({ key: d.toISOString().slice(0,10), label: (d.getMonth()+1) + '/' + d.getDate() });
+  }
+  return weeks; // oldest column ages out on its own each week since this is computed from "now", not stored
+}
+
+// ── Default / seed data ─────────────────────────────────────────────────────
+function d10DefaultData() {
+  const mkScorecardRows = (grp) => {
+    const rows = [];
+    D10_ROSTER[grp].forEach(rep => {
+      D10_METRICS[grp].forEach(m => rows.push({ rep, metricKey:m.key, goalValue:'', goalUnit:'week', weeks:{} }));
+    });
+    return rows;
+  };
+  return {
+    scorecard: { retail: mkScorecardRows('retail'), hybrid: mkScorecardRows('hybrid'), commercial: mkScorecardRows('commercial') },
+    rocks: D10_ALL_PEOPLE.map(n => ({ id:d10Uid(), person:n, text:'', deadline:'', status:'on-track' })),
+    todos: [],
+    issues: [],
+    segue: {},   // keyed by Monday-date week key: { attendance:{name:bool} } — see d10GetSegueWeek
+    meetingLog: [],
+  };
+}
+
+// Merge saved KV data over the current-roster/metric shape so a roster or metric-list
+// change (new hire, departure, added metric) never silently drops or corrupts what's
+// already saved. Scorecard rows are keyed by rep+metric since a rep now has several.
+function d10MergeData(saved) {
+  const base = d10DefaultData();
+  if (!saved || typeof saved !== 'object') return base;
+  ['retail','hybrid','commercial'].forEach(grp => {
+    const savedRows = (saved.scorecard && saved.scorecard[grp]) || [];
+    const rowKey = r => r.rep + '|' + r.metricKey;
+    const byKey = new Map(savedRows.map(r => [rowKey(r), r]));
+    base.scorecard[grp] = base.scorecard[grp].map(r => byKey.has(rowKey(r)) ? Object.assign({}, r, byKey.get(rowKey(r))) : r);
+    savedRows.forEach(r => { if (!base.scorecard[grp].find(x => rowKey(x) === rowKey(r))) base.scorecard[grp].push(r); });
+  });
+  if (Array.isArray(saved.rocks) && saved.rocks.length) {
+    const byPerson = new Map(saved.rocks.map(r => [r.person, r]));
+    base.rocks = base.rocks.map(r => byPerson.get(r.person) ? Object.assign({}, r, byPerson.get(r.person)) : r);
+    saved.rocks.forEach(r => { if (!base.rocks.find(x => x.person === r.person)) base.rocks.push(r); });
+  }
+  base.todos      = Array.isArray(saved.todos) ? saved.todos : [];
+  base.issues     = Array.isArray(saved.issues) ? saved.issues : [];
+  base.segue      = (saved.segue && typeof saved.segue === 'object') ? saved.segue : {};
+  base.meetingLog = Array.isArray(saved.meetingLog) ? saved.meetingLog : [];
+  if (saved.autoSyncedAt) base.autoSyncedAt = saved.autoSyncedAt;
+  return base;
+}
+
+async function d10LoadData() {
+  try {
+    const resp = await fetch(D10_KV_URL, { headers: { Authorization: `Bearer ${auth.accessToken}` } });
+    if (!resp.ok) throw new Error('KV fetch failed: ' + resp.status);
+    const text = await resp.text();
+    d10LastDataFingerprint = text;
+    const saved = JSON.parse(text);
+    try { localStorage.setItem(D10_LS_DATA, text); } catch(e) {}
+    d10Data = d10MergeData(saved);
+  } catch(e) {
+    console.warn('D10 data load failed, using localStorage cache:', e.message);
+    try { d10Data = d10MergeData(JSON.parse(localStorage.getItem(D10_LS_DATA) || 'null')); }
+    catch(e2) { d10Data = d10DefaultData(); }
+  }
+  return d10Data;
+}
+
+async function d10SaveData() {
+  const text = JSON.stringify(d10Data);
+  d10LastDataFingerprint = text;
+  try { localStorage.setItem(D10_LS_DATA, text); } catch(e) {}
+  try {
+    const resp = await fetch(D10_KV_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.accessToken}` },
+      body: text,
+    });
+    if (!resp.ok) throw new Error('KV save failed: ' + resp.status);
+  } catch(e) { console.warn('D10 data save failed, preserved in localStorage:', e.message); }
+}
+
+// ── Permissions — managers/admins edit everything; reps edit only their own row ──
+function d10CanEdit(personName) {
+  return USER.isManager || (!!USER.salespersonName && USER.salespersonName === personName);
+}
+
+// ═══════════════════════════ TIMER ═══════════════════════════
+function d10DefaultTimer() {
+  return { status:'idle', elapsedAtLastEvent:0, runningSince:null, sessionStartedAt:null, updatedAt:Date.now(), updatedBy:USER.salespersonName||USER.displayName||'' };
+}
+
+async function d10LoadTimer() {
+  try {
+    const resp = await fetch(D10_TIMER_URL, { headers: { Authorization: `Bearer ${auth.accessToken}` } });
+    if (!resp.ok) throw new Error('Timer fetch failed: ' + resp.status);
+    const text = await resp.text();
+    d10LastTimerFingerprint = text;
+    const saved = JSON.parse(text);
+    try { localStorage.setItem(D10_LS_TIMER, text); } catch(e) {}
+    d10Timer = saved || d10DefaultTimer();
+  } catch(e) {
+    console.warn('D10 timer load failed, using localStorage cache:', e.message);
+    try { d10Timer = JSON.parse(localStorage.getItem(D10_LS_TIMER) || 'null') || d10DefaultTimer(); }
+    catch(e2) { d10Timer = d10DefaultTimer(); }
+  }
+  return d10Timer;
+}
+
+async function d10SaveTimer() {
+  d10Timer.updatedAt = Date.now();
+  d10Timer.updatedBy = USER.salespersonName || USER.displayName || '';
+  const text = JSON.stringify(d10Timer);
+  d10LastTimerFingerprint = text;
+  try { localStorage.setItem(D10_LS_TIMER, text); } catch(e) {}
+  try {
+    const resp = await fetch(D10_TIMER_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.accessToken}` },
+      body: text,
+    });
+    if (!resp.ok) throw new Error('Timer save failed: ' + resp.status);
+  } catch(e) { console.warn('D10 timer save failed, preserved in localStorage:', e.message); }
+}
+
+// Elapsed is derived from wall-clock timestamps (not a running client-side counter),
+// so every device converges on the same value regardless of when it last polled.
+function d10ElapsedSeconds() {
+  if (!d10Timer) return 0;
+  let el = d10Timer.elapsedAtLastEvent || 0;
+  if (d10Timer.status === 'running' && d10Timer.runningSince) el += (Date.now() - d10Timer.runningSince) / 1000;
+  return Math.max(0, el);
+}
+
+function d10SegmentForElapsed(elapsed) {
+  for (const seg of D10_SEGMENTS) if (elapsed < seg.endSec) return seg.key;
+  return D10_SEGMENTS[D10_SEGMENTS.length-1].key;
+}
+
+async function d10Start() {
+  if (!d10Timer) d10Timer = d10DefaultTimer();
+  if (d10Timer.status === 'running') return;
+  if (d10Timer.status === 'idle' && (d10Timer.elapsedAtLastEvent||0) === 0) d10Timer.sessionStartedAt = Date.now();
+  d10Timer.status = 'running';
+  d10Timer.runningSince = Date.now();
+  await d10SaveTimer();
+  d10RenderTimer();
+}
+async function d10Pause() {
+  if (!d10Timer || d10Timer.status !== 'running') return;
+  d10Timer.elapsedAtLastEvent = d10ElapsedSeconds();
+  d10Timer.status = 'paused';
+  d10Timer.runningSince = null;
+  await d10SaveTimer();
+  d10RenderTimer();
+}
+async function d10Reset() {
+  if (!confirm('Reset the meeting clock to 45:00? This is shared with everyone in the meeting.')) return;
+  d10Timer.status = 'idle';
+  d10Timer.elapsedAtLastEvent = 0;
+  d10Timer.runningSince = null;
+  await d10SaveTimer();
+  d10RenderTimer();
+}
+async function d10EndMeeting() {
+  if (!confirm('End this D10 meeting? The clock resets to 45:00 for next time.')) return;
+  d10Timer.status = 'idle';
+  d10Timer.elapsedAtLastEvent = 0;
+  d10Timer.runningSince = null;
+  await d10SaveTimer();
+  d10RenderTimer();
+  d10RenderConclude(); // recap stays visible after the reset so the room can still see it
+}
+
+function d10Fmt(sec) {
+  sec = Math.max(0, Math.round(sec));
+  return String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0');
+}
+
+function d10RenderTimer() {
+  if (!d10Timer) return;
+  const elapsed   = d10ElapsedSeconds();
+  const remaining = D10_TOTAL_SECONDS - elapsed;
+  const clockEl = document.getElementById('d10-clock');
+  if (!clockEl) return;
+  clockEl.textContent = (remaining < 0 ? '-' : '') + d10Fmt(Math.abs(remaining));
+  clockEl.className = 'd10-clock' + (remaining <= 0 ? ' d10-over' : remaining <= 300 ? ' d10-warn' : '');
+
+  const statusLabel = d10Timer.status === 'running' ? 'Running' : d10Timer.status === 'paused' ? 'Paused' : 'Not started';
+  document.getElementById('d10-timer-meta').innerHTML =
+    '<span class="d10-sync-dot"></span>' + statusLabel + (d10Timer.updatedBy ? ' &middot; last touched by ' + d10Escape(d10Timer.updatedBy) : '');
+
+  document.getElementById('d10-btn-start').style.display = d10Timer.status === 'running' ? 'none' : 'inline-block';
+  document.getElementById('d10-btn-pause').style.display = d10Timer.status === 'running' ? 'inline-block' : 'none';
+
+  const curSeg = d10SegmentForElapsed(elapsed);
+  document.getElementById('d10-segbar').innerHTML = D10_SEGMENTS.map(seg => {
+    const width      = (seg.minutes / 45 * 100).toFixed(2) + '%';
+    const done       = elapsed >= seg.endSec;
+    const onSchedule = seg.key === curSeg;
+    const isActive   = seg.key === d10CurrentSegment;
+    return `<div class="d10-seg-block${isActive?' d10-seg-active':''}${onSchedule?' d10-seg-onschedule':''}${done?' d10-seg-done':''}" `
+         + `style="width:${width}" onclick="d10ShowSegment('${seg.key}')" title="${seg.label} — ${seg.minutes} min">${seg.label}</div>`;
+  }).join('');
+}
+
+function d10ShowSegment(key) {
+  d10CurrentSegment = key;
+  document.querySelectorAll('#pane-d10 .d10-segment-content').forEach(el => el.classList.remove('d10-active'));
+  document.getElementById('d10-seg-' + key).classList.add('d10-active');
+  d10RenderTimer();
+  if (key === 'conclude') d10RenderConclude();
+}
+
+// ═══════════════════════════ SCORECARD ═══════════════════════════
+// Each rep now has several metric rows (see D10_METRICS), grouped under a
+// rep sub-header row within their group's table, each with its own Goal.
+function d10FindScorecardRow(grp, rep, metricKey) {
+  return d10Data.scorecard[grp].find(r => r.rep === rep && r.metricKey === metricKey);
+}
+const D10_WEEKS_PER_MONTH = 52 / 12; // ≈4.33 — used only to convert a monthly Goal into a
+                                      // weekly-equivalent for conditional formatting; the
+                                      // Goal value/unit shown to the user is never rewritten.
+// Returns the weekly-equivalent target for a row's Goal, or null if no goal is set.
+// How a week's value is compared with the target. Default ≥ (higher is better); use ≤/< for
+// metrics where lower is better, = for exact targets.
+const D10_GOAL_OPS = [
+  { key:'gte', label:'≥', test:(v, t) => v >= t },
+  { key:'gt',  label:'>', test:(v, t) => v >  t },
+  { key:'lte', label:'≤', test:(v, t) => v <= t },
+  { key:'lt',  label:'<', test:(v, t) => v <  t },
+  { key:'eq',  label:'=', test:(v, t) => Math.abs(v - t) < 1e-9 },
+];
+function d10GoalOp(row) {
+  return D10_GOAL_OPS.find(o => o.key === row.goalOp) || D10_GOAL_OPS[0];
+}
+function d10WeeklyTarget(row) {
+  if (row.goalValue === '' || row.goalValue === null || row.goalValue === undefined) return null;
+  const g = Number(row.goalValue);
+  if (isNaN(g)) return null;
+  if (D10_SNAPSHOT_METRICS.includes(row.metricKey)) return g;
+  return row.goalUnit === 'month' ? g / D10_WEEKS_PER_MONTH : g;
+}
+function d10RenderScorecard() {
+  const weeks = d10GetRollingWeeks();
+  const colCount = 2 + weeks.length;
+  const syncedAt = d10Data.autoSyncedAt ? new Date(d10Data.autoSyncedAt).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) : null;
+  const autoNote = `<div class="d10-auto-note"><span class="d10-auto-tag">auto</span> Rows tagged auto fill from Acumatica: calls and Maxxon presentations by completion week, leads by created week, and active customers, active displays and Opp $$ as a snapshot each week. Hover a tag for the rule${syncedAt ? ` · last updated ${syncedAt}` : ''}.
+    ${USER.isManager ? `<button type="button" class="d10-auto-btn" onclick="d10RecountCalls(this)">Recount now</button>` : ''}</div>`;
+  document.getElementById('d10-scorecard-groups').innerHTML = autoNote + ['retail','hybrid','commercial'].map(grp => {
+    const repBlocks = D10_ROSTER[grp].map(rep => {
+      const canEdit = d10CanEdit(rep);
+      const repJs = rep.replace(/'/g, "\\'");
+      const metricRows = D10_METRICS[grp].map(m => {
+        const row = d10FindScorecardRow(grp, rep, m.key);
+        const target = d10WeeklyTarget(row);
+        const op = d10GoalOp(row);
+        const targetTitle = target !== null
+          ? `Weekly target: ${op.label} ${d10Round1(target)}` + (!D10_SNAPSHOT_METRICS.includes(m.key) && row.goalUnit === 'month' ? ` (from monthly goal of ${row.goalValue}, ÷${d10Round1(D10_WEEKS_PER_MONTH)} wks/mo)` : '')
+          : 'Set a goal to enable meeting/missed shading';
+        const auto = d10IsAuto(grp, m.key);
+        const snapshot = D10_SNAPSHOT_METRICS.includes(m.key);
+        const weekCells = weeks.map(w => {
+          const val = row.weeks[w.key];
+          const hasVal = val !== undefined && val !== null;
+          let cellClass = '';
+          if (target !== null && hasVal) cellClass = op.test(Number(val), target) ? 'd10-cell-hit' : 'd10-cell-miss';
+          return `<td class="${cellClass}" title="${auto ? d10Escape(d10AutoTitle(m.key)) + ' · ' : ''}${targetTitle}"><input type="number" step="any" value="${hasVal?val:''}" ${(canEdit && !auto)?'':'disabled'} `
+               + `onchange="d10UpdateWeekCell('${grp}','${repJs}','${m.key}','${w.key}',this.value)"></td>`;
+        }).join('');
+        const weeklyHint = !snapshot && row.goalUnit === 'month' && target !== null
+          ? `<div class="d10-goal-weekly-hint">${op.label} &asymp; ${d10Round1(target)}/wk</div>` : '';
+        return `<tr>
+          <td class="d10-metric-label">${d10Escape(m.label)}${auto ? ` <span class="d10-auto-tag" title="${d10Escape(d10AutoTitle(m.key))}">auto</span>` : ''}</td>
+          <td><div class="d10-goal-cell">
+            <select class="d10-goal-op" title="How each week is compared with the goal" ${canEdit?'':'disabled'}
+              onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','op',this.value)">
+              ${D10_GOAL_OPS.map(o => `<option value="${o.key}" ${o.key===op.key?'selected':''}>${o.label}</option>`).join('')}
+            </select>
+            <input type="number" step="any" value="${row.goalValue===undefined||row.goalValue===null?'':row.goalValue}" ${canEdit?'':'disabled'}
+              onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','value',this.value)">
+            ${snapshot ? `<select disabled title="Snapshot metric: the goal is a level, compared with each week's captured value"><option>level</option></select>`
+            : `<select ${canEdit?'':'disabled'} onchange="d10UpdateGoal('${grp}','${repJs}','${m.key}','unit',this.value)">
+              <option value="week" ${row.goalUnit!=='month'?'selected':''}>/wk</option>
+              <option value="month" ${row.goalUnit==='month'?'selected':''}>/mo</option>
+            </select>`}
+          </div>${weeklyHint}</td>
+          ${weekCells}
+        </tr>`;
+      }).join('');
+      return `<tr class="d10-rep-subhdr"><td colspan="${colCount}">${d10Escape(rep)}</td></tr>${metricRows}`;
+    }).join('');
+    return `<div class="d10-card">
+      <div class="d10-card-title">${D10_GROUP_LABELS[grp]} Scorecard</div>
+      <div class="d10-table-wrap"><table class="d10-table">
+        <thead><tr><th>Metric</th><th>Goal</th>${weeks.map(w => `<th>Wk ${w.label}</th>`).join('')}</tr></thead>
+        <tbody>${repBlocks}</tbody>
+      </table></div>
+    </div>`;
+  }).join('');
+}
+function d10Round1(n) { return Math.round(n * 10) / 10; }
+async function d10RecountCalls(btn) {
+  btn.disabled = true; btn.textContent = 'Recounting…';
+  try {
+    const resp = await fetch(CONFIG.workerUrl + '/sales-d10-sync', { method: 'POST', headers: { Authorization: `Bearer ${auth.accessToken}` } });
+    const r = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(r.error || resp.status);
+    addLog(`✓ D10 recounted (week of ${r.week}): calls ${r.counted} counted, ${r.noAccountClass} with no account, ${r.classNotTracked} untracked class · Maxxon ${r.maxxon} · leads ${r.leads} (${r.builderLeads} builder) · ${r.oppsClosing90} opps closing in 90d · ${r.activeCustomers} active customers · ${r.activeDisplays} active displays`, 'ok');
+    if (r.displaysNotMatched && r.displaysNotMatched.length) addLog(`⚠ D10: ${r.displaysNotMatched.length} display values have no sales category and can't count as active: ${r.displaysNotMatched.join(', ')}`, 'warn');
+    await d10LoadData();
+    d10RenderScorecard();
+  } catch (e) {
+    addLog('✗ D10 recount failed: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = 'Recount now';
+  }
+}
+function d10UpdateWeekCell(grp, rep, metricKey, weekKey, value) {
+  const row = d10FindScorecardRow(grp, rep, metricKey);
+  if (!row || !d10CanEdit(rep) || d10IsAuto(grp, metricKey)) return;
+  row.weeks[weekKey] = value === '' ? null : Number(value);
+  d10SaveData();
+  d10RenderScorecard(); // re-render so the meeting/missed shading updates immediately
+}
+function d10UpdateGoal(grp, rep, metricKey, field, value) {
+  const row = d10FindScorecardRow(grp, rep, metricKey);
+  if (!row || !d10CanEdit(rep)) return;
+  if (field === 'value') row.goalValue = value === '' ? '' : Number(value);
+  else if (field === 'op') row.goalOp = value;
+  else row.goalUnit = value;
+  d10SaveData();
+  d10RenderScorecard(); // goal changed — every week cell's shading in this row depends on it
+}
+
+// ═══════════════════════════ ROCK REVIEW ═══════════════════════════
+function d10RenderRocks() {
+  document.getElementById('d10-rocks-groups').innerHTML = ['retail','hybrid','commercial'].map(grp => {
+    const rows = D10_ROSTER[grp].map(name => {
+      let r = d10Data.rocks.find(x => x.person === name);
+      if (!r) { r = { id:d10Uid(), person:name, text:'', deadline:'', status:'on-track' }; d10Data.rocks.push(r); }
+      return r;
+    });
+    const rowsHtml = rows.map(r => {
+      const canEdit = d10CanEdit(r.person);
+      return `<tr>
+        <td class="d10-rowname">${d10Escape(r.person)}</td>
+        <td><input type="text" style="width:280px" value="${d10Escape(r.text)}" placeholder="90-day rock…" ${canEdit?'':'disabled'}
+          onchange="d10UpdateRock('${r.id}','text',this.value)"></td>
+        <td><input type="date" value="${r.deadline||''}" ${canEdit?'':'disabled'} onchange="d10UpdateRock('${r.id}','deadline',this.value)"></td>
+        <td><button class="d10-status-chip ${r.status==='off-track'?'d10-off':'d10-on'}" ${canEdit?'':'disabled'}
+          onclick="d10ToggleRockStatus('${r.id}')">${r.status==='off-track'?'Off-Track':'On-Track'}</button></td>
+      </tr>`;
+    }).join('');
+    return `<div class="d10-group-hdr">${D10_GROUP_LABELS[grp]}</div>
+      <div class="d10-table-wrap"><table class="d10-table">
+        <thead><tr><th>Person</th><th>Rock (90-day)</th><th>Deadline</th><th>Status</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table></div>`;
+  }).join('');
+}
+function d10UpdateRock(id, field, value) {
+  const r = d10Data.rocks.find(x => x.id === id);
+  if (!r || !d10CanEdit(r.person)) return;
+  r[field] = value;
+  d10SaveData();
+}
+function d10ToggleRockStatus(id) {
+  const r = d10Data.rocks.find(x => x.id === id);
+  if (!r || !d10CanEdit(r.person)) return;
+  r.status = r.status === 'off-track' ? 'on-track' : 'off-track';
+  d10SaveData();
+  d10RenderRocks();
+}
+
+// ═══════════════════════════ IDS: ISSUES & TO-DOS ═══════════════════════════
+function d10RenderIssuesTodoOptions() {
+  const sel = document.getElementById('d10-new-todo-issue');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">No linked issue</option>' +
+    d10Data.issues.filter(i => !i.resolved).map(i => `<option value="${i.id}">${d10Escape(d10Truncate(i.text,50))}</option>`).join('');
+  sel.value = cur;
+}
+function d10RenderIssues() {
+  const host = document.getElementById('d10-issues-list');
+  if (!d10Data.issues.length) { host.innerHTML = '<div class="d10-locked-note">No issues raised yet.</div>'; return; }
+  host.innerHTML = d10Data.issues.slice().reverse().map(i => {
+    const linkedTodos = d10Data.todos.filter(t => t.linkedIssueId === i.id);
+    return `<div class="d10-litem">
+      <div class="d10-litem-top">
+        <input type="checkbox" class="d10-check" ${i.resolved?'checked':''} onchange="d10ToggleIssueResolved('${i.id}')" title="Mark resolved">
+        <div class="d10-litem-text ${i.resolved?'d10-resolved':''}">${d10Escape(i.text)}</div>
+        <button class="d10-x" onclick="d10DeleteIssue('${i.id}')" title="Delete">&times;</button>
+      </div>
+      <div class="d10-litem-meta">${i.owner ? 'Raised by ' + d10Escape(i.owner) : ''}</div>
+      ${linkedTodos.length ? `<div class="d10-litem-link">&#8618; ${linkedTodos.length} linked to-do${linkedTodos.length>1?'s':''}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+function d10AddIssue() {
+  const textEl = document.getElementById('d10-new-issue-text');
+  const ownerEl = document.getElementById('d10-new-issue-owner');
+  const text = textEl.value.trim();
+  if (!text) return;
+  d10Data.issues.push({ id:d10Uid(), text, owner: ownerEl.value.trim(), resolved:false, createdAt: Date.now() });
+  textEl.value=''; ownerEl.value='';
+  d10SaveData(); d10RenderIssues(); d10RenderIssuesTodoOptions();
+}
+function d10ToggleIssueResolved(id) {
+  const i = d10Data.issues.find(x => x.id === id); if (!i) return;
+  i.resolved = !i.resolved;
+  d10SaveData(); d10RenderIssues(); d10RenderIssuesTodoOptions();
+}
+function d10DeleteIssue(id) {
+  if (!confirm('Delete this issue?')) return;
+  d10Data.issues = d10Data.issues.filter(x => x.id !== id);
+  d10Data.todos.forEach(t => { if (t.linkedIssueId === id) t.linkedIssueId = null; }); // unlink, don't delete, its to-dos
+  d10SaveData(); d10RenderIssues(); d10RenderTodos(); d10RenderIssuesTodoOptions();
+}
+
+function d10RenderTodos() {
+  const host = document.getElementById('d10-todos-list');
+  if (!d10Data.todos.length) { host.innerHTML = '<div class="d10-locked-note">No to-dos yet.</div>'; return; }
+  host.innerHTML = d10Data.todos.slice().reverse().map(t => {
+    const issue = t.linkedIssueId ? d10Data.issues.find(i => i.id === t.linkedIssueId) : null;
+    const canEdit = d10CanEdit(t.person);
+    return `<div class="d10-litem">
+      <div class="d10-litem-top">
+        <input type="checkbox" class="d10-check" ${t.done?'checked':''} ${canEdit?'':'disabled'} onchange="d10ToggleTodoDone('${t.id}')">
+        <div class="d10-litem-text ${t.done?'d10-done':''}">${d10Escape(t.text)}</div>
+        <button class="d10-x" onclick="d10DeleteTodo('${t.id}')" title="Delete">&times;</button>
+      </div>
+      <div class="d10-litem-meta">
+        <span>${d10Escape(t.person)}</span>
+        <span>${t.cadence === 'biweekly' ? 'Bi-weekly' : 'Weekly'}</span>
+        ${t.dueDate ? `<span>Due ${t.dueDate}</span>` : ''}
+      </div>
+      ${issue ? `<div class="d10-litem-link">&#8617; from issue: ${d10Escape(d10Truncate(issue.text,60))}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+function d10AddTodo() {
+  const textEl    = document.getElementById('d10-new-todo-text');
+  const personEl  = document.getElementById('d10-new-todo-person');
+  const cadenceEl = document.getElementById('d10-new-todo-cadence');
+  const dueEl     = document.getElementById('d10-new-todo-due');
+  const issueEl   = document.getElementById('d10-new-todo-issue');
+  const text = textEl.value.trim();
+  if (!text) return;
+  d10Data.todos.push({
+    id: d10Uid(), text, person: personEl.value, cadence: cadenceEl.value,
+    dueDate: dueEl.value || '', linkedIssueId: issueEl.value || null, done:false, createdAt: Date.now(),
+  });
+  textEl.value=''; dueEl.value=''; issueEl.value='';
+  d10SaveData(); d10RenderTodos(); d10RenderIssues();
+}
+function d10ToggleTodoDone(id) {
+  const t = d10Data.todos.find(x => x.id === id); if (!t) return;
+  t.done = !t.done;
+  d10SaveData(); d10RenderTodos();
+}
+function d10DeleteTodo(id) {
+  if (!confirm('Delete this to-do?')) return;
+  d10Data.todos = d10Data.todos.filter(x => x.id !== id);
+  d10SaveData(); d10RenderTodos(); d10RenderIssues();
+}
+function d10PopulateTodoPersonSelect() {
+  const sel = document.getElementById('d10-new-todo-person');
+  const cur = sel.value;
+  sel.innerHTML = D10_TODO_ASSIGNEES.map(n => `<option value="${d10Escape(n)}">${d10Escape(n)}</option>`).join('');
+  if (D10_TODO_ASSIGNEES.includes(cur)) sel.value = cur;
+}
+
+// ═══════════════════════════ SEGUE & CONCLUDE ═══════════════════════════
+// Segue tracks attendance only (saved to KV, same Monday-start week as the
+// Scorecard). The "who's speaking" round for one win each is intentionally
+// NOT saved anywhere — it's just a live prompt (d10SpeakerIdx is a plain
+// in-memory variable) to keep the room moving through present reps in order.
+function d10CurrentWeekKey() {
+  return d10GetRollingWeeks()[0].key; // index 0 is now the current week
+}
+function d10GetSegueWeek() {
+  const wk = d10CurrentWeekKey();
+  if (!d10Data.segue[wk]) d10Data.segue[wk] = { attendance:{} };
+  return d10Data.segue[wk];
+}
+function d10RenderSegue() {
+  const wk = d10CurrentWeekKey();
+  const wkDate = new Date(wk + 'T00:00:00');
+  const label = document.getElementById('d10-segue-week-label');
+  if (label) label.textContent = `Week of ${wkDate.getMonth()+1}/${wkDate.getDate()} — mark who's here, then run the room for one win each — nothing here is saved.`;
+  const seg = d10GetSegueWeek();
+  document.getElementById('d10-segue-tbody').innerHTML = D10_ALL_PEOPLE.map(name => {
+    const present = !!seg.attendance[name];
+    const nameJs = name.replace(/'/g, "\\'");
+    return `<tr>
+      <td><input type="checkbox" class="d10-check" ${present?'checked':''} onchange="d10ToggleAttendance('${nameJs}',this.checked)"></td>
+      <td class="d10-rowname">${d10Escape(name)}</td>
+    </tr>`;
+  }).join('');
+  d10RenderSpeakerPrompt();
+}
+function d10ToggleAttendance(name, checked) {
+  const seg = d10GetSegueWeek();
+  seg.attendance[name] = checked;
+  d10SaveData();
+  d10RenderSpeakerPrompt(); // present list changed — refresh the speaking order
+}
+
+// ── Speaker prompt: cycles through PRESENT reps only, purely client-side ──
+let d10SpeakerIdx = 0;
+function d10PresentReps() {
+  const seg = d10GetSegueWeek();
+  return D10_ALL_PEOPLE.filter(n => seg.attendance[n]);
+}
+function d10RenderSpeakerPrompt() {
+  const el = document.getElementById('d10-speaker-name');
+  if (!el) return;
+  const present = d10PresentReps();
+  if (!present.length) { el.textContent = 'Mark attendance above to start the round.'; return; }
+  if (d10SpeakerIdx >= present.length) d10SpeakerIdx = 0;
+  el.textContent = present[d10SpeakerIdx];
+}
+function d10NextSpeaker() {
+  const present = d10PresentReps();
+  if (!present.length) return;
+  d10SpeakerIdx = (d10SpeakerIdx + 1) % present.length;
+  d10RenderSpeakerPrompt();
+}
+function d10PrevSpeaker() {
+  const present = d10PresentReps();
+  if (!present.length) return;
+  d10SpeakerIdx = (d10SpeakerIdx - 1 + present.length) % present.length;
+  d10RenderSpeakerPrompt();
+}
+function d10RenderConclude() {
+  const sessionStart = (d10Timer && d10Timer.sessionStartedAt) || 0;
+  const newTodos = d10Data.todos.filter(t => (t.createdAt||0) >= sessionStart);
+  document.getElementById('d10-recap-todos').innerHTML = newTodos.length
+    ? newTodos.map(t => `<div class="d10-litem"><div class="d10-litem-text">${d10Escape(t.text)}</div>`
+        + `<div class="d10-litem-meta"><span>${d10Escape(t.person)}</span>${t.dueDate?'<span>Due '+t.dueDate+'</span>':''}</div></div>`).join('')
+    : '<div class="d10-locked-note">No to-dos created yet this meeting.</div>';
+
+  const offTrack = d10Data.rocks.filter(r => r.status === 'off-track');
+  document.getElementById('d10-recap-rocks').innerHTML = offTrack.length
+    ? offTrack.map(r => `<div class="d10-litem"><div class="d10-litem-text">${d10Escape(r.person)}: ${d10Escape(r.text||'(no rock set)')}</div></div>`).join('')
+    : '<div class="d10-locked-note">No off-track rocks.</div>';
+
+  d10PopulateRatingPersonSelect();
+  const sessionRatings = d10Data.meetingLog.filter(h => (h.date||0) >= sessionStart);
+  const listHost = document.getElementById('d10-rating-list');
+  if (!sessionRatings.length) {
+    listHost.innerHTML = '<div class="d10-locked-note">No ratings logged yet this meeting.</div>';
+  } else {
+    const avg = (sessionRatings.reduce((s,h) => s + h.rating, 0) / sessionRatings.length).toFixed(1);
+    listHost.innerHTML =
+      `<div class="d10-locked-note" style="font-style:normal;font-weight:700;color:var(--asf-navy);margin-bottom:6px">Average: ${avg}/10 (${sessionRatings.length} rating${sessionRatings.length>1?'s':''})</div>`
+      + sessionRatings.slice().reverse().map(h =>
+          `<div class="d10-litem"><div class="d10-litem-top"><div class="d10-litem-text">${d10Escape(h.person||'—')}: ${h.rating}/10</div></div>`
+          + `${h.note ? '<div class="d10-litem-meta">'+d10Escape(h.note)+'</div>' : ''}</div>`
+        ).join('');
+  }
+}
+// Candidates default to this week's PRESENT reps (from Segue attendance) plus the
+// core Sales Management roster, since either group might be in the room; falls
+// back to the full To-Do assignee list if attendance hasn't been marked yet.
+function d10RatingCandidates() {
+  const present = d10PresentReps();
+  const managers = ['Phil Branon','Lauren Good','Todd Good','Sherry Kelly'];
+  const combined = present.length ? present.concat(managers) : D10_TODO_ASSIGNEES;
+  return combined.filter((v,i,a) => a.indexOf(v) === i);
+}
+function d10PopulateRatingPersonSelect() {
+  const sel = document.getElementById('d10-rating-person');
+  if (!sel) return;
+  const cur = sel.value;
+  const candidates = d10RatingCandidates();
+  sel.innerHTML = '<option value="">Who&rsquo;s rating?</option>' + candidates.map(n => `<option value="${d10Escape(n)}">${d10Escape(n)}</option>`).join('');
+  sel.value = candidates.includes(cur) ? cur : '';
+}
+function d10SaveRating() {
+  const personEl = document.getElementById('d10-rating-person');
+  const sel       = document.getElementById('d10-rating-select');
+  const noteEl    = document.getElementById('d10-rating-note');
+  if (!personEl.value || !sel.value) return;
+  d10Data.meetingLog.push({ person: personEl.value, rating: Number(sel.value), note: noteEl.value.trim(), date: Date.now(), by: USER.salespersonName || USER.displayName || '' });
+  personEl.value=''; sel.value=''; noteEl.value='';
+  d10SaveData(); d10RenderConclude();
+}
+
+// ═══════════════════════════ INIT & BACKGROUND SYNC ═══════════════════════════
+// Guards against a race on first render: nav-tabs become clickable as soon as
+// showDashboard() runs, but USER.isManager/salespersonName aren't populated
+// until the GC-CurrentUser role lookup in resolveUserIdentity() resolves a
+// moment later. Clicking straight into D10 before that finishes would render
+// every Scorecard/Rock cell as locked (canEdit false-by-default) and nothing
+// would ever re-check it afterward. Waiting here (usually 0ms — identity is
+// resolved before dashboard load finishes in the normal flow) closes that gap.
+async function d10WaitForUserIdentity(maxWaitMs = 4000) {
+  const start = Date.now();
+  while (USER.salespersonName === null && (Date.now() - start) < maxWaitMs) {
+    await new Promise(r => setTimeout(r, 150));
+  }
+}
+
+let d10Initialized = false;
+async function initD10Tab() {
+  await d10WaitForUserIdentity();
+  if (d10Initialized) { d10RenderAll(); d10StartPolling(); return; }
+  d10Initialized = true;
+  await Promise.all([d10LoadData(), d10LoadTimer()]);
+  d10PopulateTodoPersonSelect();
+  d10RenderIssuesTodoOptions();
+  d10RenderAll();
+  d10ShowSegment('segue');
+  d10StartPolling();
+}
+function d10RenderAll() {
+  d10RenderSegue();
+  d10RenderScorecard();
+  d10RenderRocks();
+  d10RenderIssues();
+  d10RenderTodos();
+  d10RenderTimer();
+  d10RenderConclude();
+}
+function d10StartPolling() {
+  if (!d10TickInterval) {
+    // Local 1s tick just repaints from wall-clock math — no drift, no network call
+    d10TickInterval = setInterval(() => {
+      if (document.getElementById('pane-d10')?.classList.contains('active')) d10RenderTimer();
+    }, 1000);
+  }
+  if (!d10TimerPollInterval) {
+    // Resync the shared clock every 3s so Start/Pause/Reset from any device shows up quickly
+    d10TimerPollInterval = setInterval(async () => {
+      if (!document.getElementById('pane-d10')?.classList.contains('active')) return;
+      if (!auth.accessToken) return;
+      try {
+        const resp = await fetch(D10_TIMER_URL, { headers: { Authorization: `Bearer ${auth.accessToken}` } });
+        if (!resp.ok) return;
+        const text = await resp.text();
+        if (text === d10LastTimerFingerprint) return;
+        d10LastTimerFingerprint = text;
+        const saved = JSON.parse(text);
+        if (saved) { d10Timer = saved; d10RenderTimer(); }
+      } catch(e) { /* silent — network blip, retry next interval */ }
+    }, 3000);
+  }
+  if (!d10DataPollInterval) {
+    // Slower resync for Scorecard/Rocks/Issues/To-Dos; skipped while someone is actively typing
+    d10DataPollInterval = setInterval(async () => {
+      if (!document.getElementById('pane-d10')?.classList.contains('active')) return;
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
+      if (!auth.accessToken) return;
+      try {
+        const resp = await fetch(D10_KV_URL, { headers: { Authorization: `Bearer ${auth.accessToken}` } });
+        if (!resp.ok) return;
+        const text = await resp.text();
+        if (text === d10LastDataFingerprint) return;
+        d10LastDataFingerprint = text;
+        d10Data = d10MergeData(JSON.parse(text));
+        d10RenderAll();
+        d10RenderIssuesTodoOptions();
+      } catch(e) { /* silent — network blip, retry next interval */ }
+    }, 15000);
+  }
+}
 </script>
 </body>
 </html>
