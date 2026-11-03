@@ -1016,6 +1016,7 @@
           <div class="card-hdr">
             <span class="card-title">Sales by Category</span>
             <span class="card-badge" id="cust-class-badge">Trailing 12M</span>
+            <button type="button" class="btn-sm" id="cust-cat-rebuild" style="margin-left:8px;display:none" onclick="rebuildPriorYearCache()" title="Re-pull last fiscal year from Acumatica so recent sales-category changes show here">↻ Update categories</button>
           </div>
           <div class="card-body" id="cust-itemclass-bars">
             <div class="empty">Loading…</div>
@@ -3286,7 +3287,27 @@ function renderCustActFeed() {
   feed.innerHTML = actHtml + (custTasks.length && custActs.length ? `<div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;padding:4px 0">TASKS</div>` : '') + taskHtml;
 }
 
+// Last fiscal year is served from a KV copy (fast loads); category changes made in Acumatica
+// only reach it when it's rebuilt. Managers can rebuild on demand (~1 minute).
+async function rebuildPriorYearCache() {
+  const fy = CUR_YEAR - 1;
+  if (!confirm(`Re-pull FY${fy} invoice lines from Acumatica so sales-category changes show in this chart? This takes about a minute, then the dashboard reloads.`)) return;
+  const btn = document.getElementById('cust-cat-rebuild');
+  btn.disabled = true; btn.textContent = 'Updating…';
+  try {
+    const rows = await fetchSalesCache(fy, { refresh: true });
+    try { localStorage.setItem(`asf-sales-cache-rebuilt-${fy}`, new Date().toISOString().slice(0, 10)); } catch (e) {}
+    addLog(`✓ FY${fy} cache rebuilt: ${rows.length} rows`, 'ok');
+    await loadData();
+  } catch (e) {
+    addLog(`✗ FY${fy} cache rebuild: ${e.message}`, 'error'); showErr(e.message);
+  }
+  btn.disabled = false; btn.textContent = '↻ Update categories';
+}
+
 function renderCustItemClassBars() {
+  const rebuildBtn = document.getElementById('cust-cat-rebuild');
+  if (rebuildBtn) rebuildBtn.style.display = USER.isManager ? '' : 'none';
   const activeRep  = getActiveRepFilter();
   // Trailing 12 months — a new fiscal year is only days old, so FY-to-date would be near empty
   let src = (D.trailing12rows || []).filter(r => !activeRep || r.SalesRep === activeRep);
