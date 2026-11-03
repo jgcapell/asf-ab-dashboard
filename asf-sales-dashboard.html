@@ -1015,7 +1015,7 @@
         <div class="card">
           <div class="card-hdr">
             <span class="card-title">Sales by Category</span>
-            <span class="card-badge" id="cust-class-badge">Current Year</span>
+            <span class="card-badge" id="cust-class-badge">Trailing 12M</span>
           </div>
           <div class="card-body" id="cust-itemclass-bars">
             <div class="empty">Loading…</div>
@@ -1027,7 +1027,7 @@
             <span class="card-badge" id="cust-act-badge" style="display:none"></span>
           </div>
           <div class="card-body" style="display:flex;flex-direction:column;gap:10px;padding-bottom:10px">
-            <div style="font-size:11px;color:var(--muted)">Filter the item class chart and table to a specific customer.</div>
+            <div style="font-size:11px;color:var(--muted)">Filter the sales category chart and table to a specific customer.</div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <input class="ctrl-input" id="cust-tab-search" placeholder="Type customer name…"
                      oninput="onCustTabSearch()" onfocus="onCustTabFocus()" onblur="onCustTabBlur()"
@@ -2037,7 +2037,6 @@ function onRepFilterChange() {
   renderCustomerData();
   renderOpportunities();
   // Also re-render customer item class bars if on customer tab
-  if (activeCustTab) renderCustItemClassBars();
 }
 
 
@@ -3141,6 +3140,8 @@ function renderCustomerData() {
   document.getElementById('cust-kpi-new-sub').textContent =
     newCusts.length === 1 ? 'new account' : 'new accounts';
 
+  // Sales by Category: summary for everyone in view, or the selected customer
+  try { renderCustItemClassBars(); } catch (e) { console.error('renderCustItemClassBars', e); addLog(`✗ Sales by Category: ${e.message}`, 'error'); }
   renderCustomerTable();
 }
 
@@ -3302,7 +3303,7 @@ function renderCustItemClassBars() {
   const COLORS = ['#1e5080','#5a9e45','#5b8fcc','#c4890a','#6b52b8','#c4621a','#3a7a28','#3a6faa'];
   const el = document.getElementById('cust-itemclass-bars');
   document.getElementById('cust-class-badge').textContent =
-    (activeCustTab ? activeCustTab + ' · ' : '') + 'Trailing 12M';
+    (activeCustTab || activeRep || 'All customers') + ' · Trailing 12M';
   if (!clsData.length) { el.innerHTML='<div class="empty">No data</div>'; return; }
   el.innerHTML = clsData.slice(0,10).map((d,i) => {
     const pct = (d.sales/maxSales)*100;
