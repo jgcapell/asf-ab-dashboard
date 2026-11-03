@@ -954,8 +954,8 @@
         </div>
       </div>
 
-      <!-- Trailing 12 detail table + Item Class bars -->
-      <div class="row cols-2">
+      <!-- Trailing 12 detail table -->
+      <div class="row">
         <div class="card">
           <div class="card-hdr"><span class="card-title">Trailing 12M — Period Detail</span></div>
           <div class="card-scroll">
@@ -977,10 +977,6 @@
               </tr></tfoot>
             </table>
           </div>
-        </div>
-        <div class="card">
-          <div class="card-hdr"><span class="card-title">Sales by Item Class (Trailing 12M)</span></div>
-          <div class="card-body" id="itemclass-bars"></div>
         </div>
       </div>
 
@@ -2119,7 +2115,17 @@ async function fetchSalesCache(fiscalYear, { refresh = false } = {}) {
 
 async function tryFetchCache(label, fiscalYear) {
   addLog(`Fetching ${label}…`);
-  try { const r = await fetchSalesCache(fiscalYear); addLog(`✓ ${label}: ${r.length} rows`, 'ok'); return r; }
+  try {
+    let r = await fetchSalesCache(fiscalYear);
+    const lsKey = `asf-sales-cache-rebuilt-${fiscalYear}`;
+    let tried = null; try { tried = localStorage.getItem(lsKey); } catch (e) {}
+    if (r.length && !('CategoryID' in r[0]) && tried !== new Date().toISOString().slice(0, 10)) {
+      try { localStorage.setItem(lsKey, new Date().toISOString().slice(0, 10)); } catch (e) {}
+      addLog(`${label}: rebuilding cache to add sales categories (one-time, slower load)…`);
+      r = await fetchSalesCache(fiscalYear, { refresh: true });
+    }
+    addLog(`✓ ${label}: ${r.length} rows`, 'ok'); return r;
+  }
   catch(e) { addLog(`✗ ${label}: ${e.message}`, 'error'); showErr(e.message); return []; }
 }
 
@@ -2166,7 +2172,7 @@ async function loadData() {
 
     // 'DisplaySystem' is a column on the InvoicedItems GI in Acumatica (mirrors
     // 'DisplayingDealers'), sourced from the DISPLAYSYS attribute.
-    const SALES_COLS = 'ReferenceNbr,CustomerName,InvoiceDate,PaymentDate,SalesRep,ExtAmount,ExtCost,ExtProfit,ItemClass,Category,Quantity,FinancialPeriod,FiscalYear,DisplayingDealers,DisplaySystem';
+    const SALES_COLS = 'ReferenceNbr,CustomerName,InvoiceDate,PaymentDate,SalesRep,ExtAmount,ExtCost,ExtProfit,ItemClass,CategoryID,Quantity,FinancialPeriod,FiscalYear,DisplayingDealers,DisplaySystem';
 
     addLog(`Fetching FY${curFyLabel}: ${curStart} → ${todayStr}`);
     addLog(`Fetching FY${priFyLabel} YTD: ${priStart} → ${priEnd}`);
@@ -2229,6 +2235,11 @@ async function loadData() {
       '$filter': `CreatedOn ge datetime'${newCustStart}T00:00:00' and CustomerStatus eq 'Active'`,
       '$orderby': 'CreatedOn desc',
     });
+
+    // 4b-0. Sales category names (InvoicedItems carries only the CategoryID)
+    D.categoryNames = {};
+    (await tryFetchSoft('Sales categories', 'GC-ItemSalesCategories', { '$select': 'CategoryID,CategoryName' }))
+      .forEach(r => { const id = String(r.CategoryID ?? '').trim(); if (id) D.categoryNames[id] = String(r.CategoryName || '').trim(); });
 
     // 4b-1. Active displays by customer, from the Worker's D10 sync (product line sold in 180 days)
     try {
@@ -2594,21 +2605,6 @@ function renderOverview() {
   document.getElementById('t12-tot-profit').textContent = fmt$(totP);
   document.getElementById('t12-tot-margin').textContent = fmtPct(totP,totS);
 
-  // Item class bars
-  const cls = cls12Data; const maxSales = cls[0]?.sales||1;
-  const COLORS = ['#1e5080','#5a9e45','#5b8fcc','#c4890a','#6b52b8','#c4621a','#3a7a28','#3a6faa'];
-  document.getElementById('itemclass-bars').innerHTML = cls.slice(0,10).map((d,i) => {
-    const pct = (d.sales/maxSales)*100;
-    return `<div class="bar-row">
-      <div class="bar-lbl" title="${d.cls}">${d.cls}</div>
-      <div class="bar-track">
-        <div class="bar-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}">
-          ${pct>22?`<span class="bar-fill-lbl">${fmtK(d.sales)}</span>`:''}
-        </div>
-      </div>
-      ${pct<=22?`<div class="bar-val-out">${fmtK(d.sales)}</div>`:''}
-    </div>`;
-  }).join('');
 }
 
 function pill(good, label) {
@@ -2651,7 +2647,8 @@ function renderCombinedTable() {
       const barColor = ahead ? '#5a9e45' : '#b83228';
       const roeStr   = r.roe != null ? r.roe.toFixed(2)+'x' : '—';
       const [rating, ratingColor] = roeRating(r.roe);
-      const yoyDisp  = r.yoy != null ? (r.yoy >= 0 ? '+' : '') + r.yoy.toFixed(1) + '%' : '—';
+      const yoyDisp  = r.yoy != null ? (r.yoy >= 0 ? '+' : '') + r.yoy.toFixed(1) + '%'
+        : `<span title="No positive prior-year sales credited to this rep for the same dates last year">—</span>`;
       const yoyColor = r.yoy != null ? (r.yoy >= 0 ? 'color:var(--asf-green)' : 'color:var(--red)') : 'color:var(--muted)';
       return `<tr style="${rowBg}">
         <td>${r.name}${isMe?' <span style="font-size:9px;color:var(--asf-blue)">(you)</span>':''}</td>
@@ -3154,9 +3151,11 @@ let custDropdownMousedown = false; // prevents blur from closing dropdown before
 function onCustTabSearch() {
   const q = document.getElementById('cust-tab-search').value.toLowerCase().trim();
   const activeRep = getActiveRepFilter();
-  const allCusts = [...new Set(D.sales
-    .filter(r => !activeRep || r.SalesRep === activeRep)
-    .map(r => (r.CustomerName||'').trim()).filter(Boolean))].sort();
+  // Same list as the table: every active customer in view, including ones with no sales yet
+  const allCusts = custData.length
+    ? custData.map(c => c.name).sort()
+    : [...new Set(D.sales.filter(r => !activeRep || r.SalesRep === activeRep)
+        .map(r => (r.CustomerName||'').trim()).filter(Boolean))].sort();
   const matches = q ? allCusts.filter(c => c.toLowerCase().includes(q)).slice(0, 12) : [];
   renderCustDropdown(matches);
 }
@@ -3195,9 +3194,9 @@ function selectCustTab(name) {
   const active = document.getElementById('cust-tab-active');
   active.textContent = '🔍 ' + name;
   active.style.display = 'block';
-  renderCustItemClassBars();
-  renderCustActFeed();
-  renderCustomerTable();
+  [renderCustItemClassBars, renderCustActFeed, renderCustomerTable].forEach(fn => {
+    try { fn(); } catch (e) { console.error(fn.name, e); addLog(`✗ ${fn.name}: ${e.message}`, 'error'); }
+  });
 }
 
 function clearCustTabFilter() {
@@ -3207,8 +3206,9 @@ function clearCustTabFilter() {
   document.getElementById('cust-tab-active').style.display = 'none';
   document.getElementById('cust-act-section').style.display = 'none';
   document.getElementById('cust-act-badge').style.display = 'none';
-  renderCustItemClassBars();
-  renderCustomerTable();
+  [renderCustItemClassBars, renderCustomerTable].forEach(fn => {
+    try { fn(); } catch (e) { console.error(fn.name, e); addLog(`✗ ${fn.name}: ${e.message}`, 'error'); }
+  });
 }
 
 // ─── CUSTOMER ACTIVITY FEED (last 90 days for selected customer) ───────────────
@@ -3287,21 +3287,22 @@ function renderCustActFeed() {
 
 function renderCustItemClassBars() {
   const activeRep  = getActiveRepFilter();
-  const fetchYear  = String(CUR_YEAR);  // current FY label
-  let src = D.sales.filter(r =>
-    (!activeRep || r.SalesRep === activeRep) &&
-    r._year === fetchYear
-  );
+  // Trailing 12 months — a new fiscal year is only days old, so FY-to-date would be near empty
+  let src = (D.trailing12rows || []).filter(r => !activeRep || r.SalesRep === activeRep);
   if (activeCustTab) src = src.filter(r => (r.CustomerName||'').trim() === activeCustTab);
-  // Acumatica sales categories (InvoicedItems.Category); lines without one roll into "Other"
+  // Acumatica sales categories (InvoicedItems.CategoryID → name); lines without one roll into "Other"
   const catMap = {};
-  src.forEach(r => { const c = (r.Category || '').trim() || 'Other (no sales category)'; catMap[c] = (catMap[c] || 0) + (+r.ExtAmount || 0); });
+  src.forEach(r => {
+    const id = String(r.CategoryID ?? '').trim();
+    const c = (id && ((D.categoryNames || {})[id] || `Category ${id}`)) || 'Other (no sales category)';
+    catMap[c] = (catMap[c] || 0) + (+r.ExtAmount || 0);
+  });
   const clsData = Object.entries(catMap).map(([cls, sales]) => ({ cls, sales })).filter(d => d.sales > 0).sort((a, b) => b.sales - a.sales);
   const maxSales = clsData[0]?.sales || 1;
   const COLORS = ['#1e5080','#5a9e45','#5b8fcc','#c4890a','#6b52b8','#c4621a','#3a7a28','#3a6faa'];
   const el = document.getElementById('cust-itemclass-bars');
   document.getElementById('cust-class-badge').textContent =
-    (activeCustTab ? activeCustTab + ' · ' : '') + 'FY ' + fetchYear;
+    (activeCustTab ? activeCustTab + ' · ' : '') + 'Trailing 12M';
   if (!clsData.length) { el.innerHTML='<div class="empty">No data</div>'; return; }
   el.innerHTML = clsData.slice(0,10).map((d,i) => {
     const pct = (d.sales/maxSales)*100;
