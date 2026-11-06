@@ -246,14 +246,16 @@
   .crm-modal-bg { position:fixed; inset:0; background:rgba(20,40,64,0.45); z-index:9000; display:none; align-items:center; justify-content:center; padding:16px; }
   .crm-modal-bg.open { display:flex; }
   .crm-modal { background:var(--surface); border-radius:10px; width:min(480px,100%); max-height:90vh; overflow:auto; box-shadow:0 12px 40px rgba(20,40,64,0.28); }
-  .crm-modal-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border2); }
+  .crm-modal-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border2); position:sticky; top:0; z-index:2; background:var(--surface); }
   .crm-modal-hdr h3 { font-size:14px; font-weight:700; color:var(--asf-navy); margin:0; }
   .crm-x { border:none; background:none; font-size:20px; color:var(--muted); cursor:pointer; line-height:1; }
   .crm-modal-body { padding:16px 18px; display:flex; flex-direction:column; gap:12px; }
-  .crm-modal-foot { display:flex; gap:8px; justify-content:flex-end; padding:12px 18px; border-top:1px solid var(--border2); background:var(--surface2); }
+  .crm-modal-foot { display:flex; gap:8px; justify-content:flex-end; padding:12px 18px; border-top:1px solid var(--border2); background:var(--surface2); position:sticky; bottom:0; z-index:2; }
   .crm-field { display:flex; flex-direction:column; gap:4px; min-width:0; }
   .crm-field label { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:0.05em; }
-  .crm-in { width:100%; box-sizing:border-box; padding:7px 9px; border:1px solid var(--border); border-radius:6px; font:inherit; font-size:12px; color:var(--text); background:var(--surface); }
+  .crm-field { min-width:0; }
+  input[type=date].crm-in, input[type=time].crm-in { -webkit-appearance:none; appearance:none; display:block; min-height:36px; text-align:left; }
+  .crm-in { width:100%; min-width:0; max-width:100%; box-sizing:border-box; padding:7px 9px; border:1px solid var(--border); border-radius:6px; font:inherit; font-size:12px; color:var(--text); background:var(--surface); }
   .crm-in:focus { outline:none; border-color:var(--asf-blue); box-shadow:0 0 0 2px rgba(91,143,204,0.2); }
   textarea.crm-in { min-height:64px; resize:vertical; }
   .crm-row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -335,8 +337,9 @@
   .ql-smart-row { display:flex; gap:8px; align-items:stretch; }
   .ql-smart textarea { flex:1; min-height:58px; resize:vertical; }
   .ql-smart-btns { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .ql-mic { border:1px solid var(--border); background:var(--surface); border-radius:8px; padding:0 12px; font-size:18px; cursor:pointer; }
-  .ql-mic.on { background:var(--red); border-color:var(--red); color:#fff; }
+  .ql-mic { width:100%; padding:13px; border:none; border-radius:10px; background:var(--asf-green); color:#fff; font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+  .ql-mic.on { background:var(--red); animation: qlPulse 1.2s ease-in-out infinite; }
+  @keyframes qlPulse { 50% { opacity:.75; } }
   .ql-smart-msg { font-size:11px; color:var(--dim); }
   .ql-smart-msg.err { color:var(--red); }
   .ql-sub { border-top:1px dashed var(--border); padding-top:12px; display:flex; flex-direction:column; gap:12px; }
@@ -358,7 +361,10 @@
     .card { overflow-x:auto; }
     .kpi-val { font-size:26px; }
     .crm-modal-bg { align-items:flex-end; padding:0; }
-    .crm-modal { width:100%; max-height:92vh; border-radius:14px 14px 0 0; padding-bottom:env(safe-area-inset-bottom, 0px); }
+    .crm-modal { width:100%; max-height:92vh; max-height:calc(100dvh - 16px); border-radius:14px 14px 0 0; }
+    .crm-modal-foot { padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px)); }
+    .crm-modal-foot .btn-sm { flex:1; }
+    input[type=date].crm-in, input[type=time].crm-in { min-height:44px; }
     .crm-in, input, select, textarea { font-size:16px; }   /* stops iOS zooming into fields */
     .btn-sm, .crm-btn-ghost, .crm-btn-danger { min-height:40px; }
     .crm-toolbar { flex-wrap:wrap; }
@@ -4087,13 +4093,13 @@ function openQuickLog(opts = {}) {
     <div class="crm-modal-body" id="ql-form">
       <div class="ql-smart">
         <label for="ql-say" style="font-size:11px;font-weight:700;color:var(--asf-navy)">Say it or type it — Claude fills in the form</label>
+        <button type="button" class="ql-mic" id="ql-mic" onclick="qlToggleMic()" style="display:none">🎤 Tap to talk</button>
         <div class="ql-smart-row">
           <textarea class="crm-in" id="ql-say" placeholder="e.g. Dropped samples at Greer Flooring, follow up with Mike next Friday"></textarea>
-          <button type="button" class="ql-mic" id="ql-mic" onclick="qlToggleMic()" style="display:none" aria-label="Dictate">🎤</button>
         </div>
         <div class="ql-smart-btns">
           <button type="button" class="btn-sm" id="ql-say-btn" onclick="qlSmartFill()">Fill in for me</button>
-          <span class="ql-smart-msg" id="ql-say-msg">On a phone, tap the microphone on your keyboard to dictate.</span>
+          <span class="ql-smart-msg" id="ql-say-msg">Tap to talk, or type (or use your keyboard's 🎤), then Fill in for me.</span>
         </div>
       </div>
       <div class="ql-choice">
@@ -4160,7 +4166,12 @@ async function qlSmartFill() {
   const text = document.getElementById('ql-say').value.trim();
   const msg = document.getElementById('ql-say-msg'), btn = document.getElementById('ql-say-btn');
   const setMsg = (t, err) => { msg.textContent = t; msg.classList.toggle('err', !!err); };
-  if (!text) { setMsg('Say or type what happened first.', true); return; }
+  if (!text) {
+    if (qlSpeechCtor()) { qlToggleMic(); return; }
+    document.getElementById('ql-say').focus();
+    setMsg('Type it, or tap the 🎤 on your keyboard and speak — then tap Fill in for me.', true);
+    return;
+  }
   btn.disabled = true; btn.textContent = 'Thinking…'; setMsg('');
   try {
     const now = new Date();
@@ -4211,12 +4222,27 @@ function qlToggleMic() {
   const Ctor = qlSpeechCtor(), btn = document.getElementById('ql-mic');
   if (!Ctor) return;
   if (qlRec) { qlRec.stop(); return; }
+  const msg = document.getElementById('ql-say-msg');
+  const setMsg = (t, err) => { msg.textContent = t; msg.classList.toggle('err', !!err); };
   qlRec = new Ctor(); qlRec.lang = 'en-US'; qlRec.interimResults = true; qlRec.continuous = false;
   const box = document.getElementById('ql-say'), base = box.value ? box.value.trim() + ' ' : '';
+  let failed = false;
   qlRec.onresult = ev => { box.value = base + [...ev.results].map(r => r[0].transcript).join(''); };
-  qlRec.onend = () => { qlRec = null; btn.classList.remove('on'); if (box.value.trim()) qlSmartFill(); };
-  qlRec.onerror = () => { qlRec = null; btn.classList.remove('on'); };
-  btn.classList.add('on'); qlRec.start();
+  qlRec.onend = () => {
+    qlRec = null; btn.classList.remove('on'); btn.textContent = '🎤 Tap to talk';
+    if (!failed && box.value.trim()) qlSmartFill();
+    else if (!failed) setMsg("Didn't catch that — tap to talk again, or type it.", true);
+  };
+  qlRec.onerror = ev => {
+    failed = true;
+    const why = ev.error === 'not-allowed' ? 'Microphone access is off for this site — allow it in your browser settings, or use the keyboard 🎤.'
+      : ev.error === 'service-not-allowed' ? 'Dictation is turned off on this device — turn on Siri & Dictation, or type it.'
+      : ev.error === 'no-speech' ? "Didn't hear anything — tap to talk again." : `Couldn't listen (${ev.error}). Type it instead.`;
+    setMsg(why, true);
+  };
+  btn.classList.add('on'); btn.textContent = '● Listening… tap to stop';
+  setMsg('Speak now — it fills in when you stop.');
+  try { qlRec.start(); } catch (e) { failed = true; qlRec = null; btn.classList.remove('on'); btn.textContent = '🎤 Tap to talk'; setMsg('Couldn\'t start the microphone — type it instead.', true); }
 }
 
 function qlSetKind(kind) {
