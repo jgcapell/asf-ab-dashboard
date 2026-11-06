@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ASF Sales">
+<meta name="theme-color" content="#1e5080">
 <title>ASF Sales Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -304,6 +308,74 @@
     .crm-time { display:none; }
     .crm-row2, .crm-row3 { grid-template-columns:1fr; }
   }
+
+  /* ── Quick log (big-button entry, built for phones) ── */
+  #ql-fab { position:fixed; right:calc(18px + env(safe-area-inset-right, 0px)); bottom:calc(18px + env(safe-area-inset-bottom, 0px)); z-index:8500;
+    display:none; align-items:center; gap:8px; padding:13px 18px; border:none; border-radius:28px; background:var(--asf-green); color:#fff;
+    font:700 13px/1 inherit; font-family:inherit; letter-spacing:.02em; box-shadow:0 6px 20px rgba(20,40,64,.3); cursor:pointer; }
+  #ql-fab:active { transform:scale(.97); }
+  .ql-choice { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .ql-choice button { padding:14px 10px; border-radius:10px; border:2px solid var(--border); background:var(--surface2); font:inherit; font-size:13px; font-weight:700; color:var(--asf-navy); cursor:pointer; text-align:left; line-height:1.3; }
+  .ql-choice button small { display:block; font-weight:500; font-size:11px; color:var(--muted); margin-top:3px; }
+  .ql-choice button.on { border-color:var(--asf-navy); background:rgba(30,80,128,.08); }
+  .ql-acct-wrap { position:relative; }
+  .ql-acct-list { margin-top:6px; border:1px solid var(--border); border-radius:8px; max-height:220px; overflow:auto; display:none; }
+  .ql-acct-list.open { display:block; }
+  .ql-acct-list button { display:block; width:100%; text-align:left; padding:11px 12px; border:none; border-bottom:1px solid var(--border2); background:var(--surface); font:inherit; font-size:13px; color:var(--text); cursor:pointer; }
+  .ql-acct-list button:last-child { border-bottom:none; }
+  .ql-acct-list button small { color:var(--muted); font-size:11px; margin-left:6px; }
+  .ql-acct-list button:hover, .ql-acct-list button:focus { background:var(--surface2); }
+  .ql-acct-picked { display:none; align-items:center; gap:8px; padding:10px 12px; border-radius:8px; background:rgba(90,158,69,.12); color:var(--asf-navy); font-weight:600; font-size:13px; }
+  .ql-acct-picked.on { display:flex; }
+  .ql-acct-picked button { margin-left:auto; border:none; background:none; color:var(--muted); font:inherit; font-size:12px; cursor:pointer; text-decoration:underline; }
+  .ql-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .ql-chips button { padding:8px 12px; border-radius:18px; border:1px solid var(--border); background:var(--surface); font:inherit; font-size:12px; font-weight:600; color:var(--dim); cursor:pointer; }
+  .ql-chips button.on { background:var(--asf-navy); border-color:var(--asf-navy); color:#fff; }
+  .ql-smart { background:rgba(91,143,204,.08); border:1px solid rgba(91,143,204,.3); border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:8px; }
+  .ql-smart-row { display:flex; gap:8px; align-items:stretch; }
+  .ql-smart textarea { flex:1; min-height:58px; resize:vertical; }
+  .ql-smart-btns { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .ql-mic { border:1px solid var(--border); background:var(--surface); border-radius:8px; padding:0 12px; font-size:18px; cursor:pointer; }
+  .ql-mic.on { background:var(--red); border-color:var(--red); color:#fff; }
+  .ql-smart-msg { font-size:11px; color:var(--dim); }
+  .ql-smart-msg.err { color:var(--red); }
+  .ql-sub { border-top:1px dashed var(--border); padding-top:12px; display:flex; flex-direction:column; gap:12px; }
+
+  /* ── Phones and small tablets ── */
+  @media (max-width: 760px) {
+    .header { height:auto; padding:10px 14px; flex-wrap:wrap; }
+    .header-right { flex-wrap:wrap; gap:6px; width:100%; }
+    .header-right .hbtn-desktop, #sync-indicator { display:none; }
+    #rep-selector-wrap { flex:1 1 100%; }
+    #nav-tabs { padding:0 6px; overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    #nav-tabs::-webkit-scrollbar { display:none; }
+    .tab { padding:12px 12px; flex:none; }
+    .page { padding:12px; gap:12px; }
+    .row { gap:12px; }
+    .cols-2, .cols-3 { grid-template-columns:1fr; }
+    .cols-4, .cols-5 { grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .col-span-2, .col-span-3 { grid-column:auto; }
+    .card { overflow-x:auto; }
+    .kpi-val { font-size:26px; }
+    .crm-modal-bg { align-items:flex-end; padding:0; }
+    .crm-modal { width:100%; max-height:92vh; border-radius:14px 14px 0 0; padding-bottom:env(safe-area-inset-bottom, 0px); }
+    .crm-in, input, select, textarea { font-size:16px; }   /* stops iOS zooming into fields */
+    .btn-sm, .crm-btn-ghost, .crm-btn-danger { min-height:40px; }
+    .crm-toolbar { flex-wrap:wrap; }
+    #crm-toast { bottom:calc(84px + env(safe-area-inset-bottom, 0px)); left:12px; right:12px; }
+    #crm-pastdue-banner { padding:8px 14px; flex-wrap:wrap; }
+    .pd-acts button { min-height:40px; padding:6px 14px; }
+    .crm-next7 { flex-basis:100%; margin:4px 0 0; }
+  }
+  @media print { #ql-fab { display:none !important; } }
+  /* Calendar as an agenda list on phones */
+  .crm-agenda-day { padding:10px 14px; border-bottom:1px solid var(--border2); }
+  .crm-agenda-day.crm-today { background:rgba(91,143,204,.08); }
+  .crm-agenda-hdr { font-size:11px; font-weight:700; color:var(--dim); margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+  .crm-agenda-hdr button { border:none; background:none; color:var(--asf-blue); font:inherit; font-size:11px; font-weight:700; cursor:pointer; }
+  .crm-agenda-day .crm-item { font-size:13px; padding:9px 10px; margin-bottom:4px; }
+  .crm-agenda-day .crm-time { display:inline; }
+  #crm-cal-grid.crm-agenda { display:block; }
 
   /* Scrollbar */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -790,6 +862,7 @@
 
 <!-- Dashboard -->
 <div id="dashboard">
+  <button type="button" id="ql-fab" onclick="openQuickLog()" aria-label="Quick log a visit or follow-up">＋ Quick log</button>
 
   <div class="header">
     <div class="header-brand">
@@ -812,8 +885,8 @@
         </div>
       </div>
       <button class="hbtn" onclick="connectOutlook()" title="Send your Acumatica tasks and events to Outlook and To Do">CONNECT OUTLOOK</button>
-      <button class="hbtn" onclick="printDashboard()">PRINT / PDF</button>
-      <button class="hbtn" onclick="toggleLog()">DEBUG LOG</button>
+      <button class="hbtn hbtn-desktop" onclick="printDashboard()">PRINT / PDF</button>
+      <button class="hbtn hbtn-desktop" onclick="toggleLog()">DEBUG LOG</button>
       <span id="sync-indicator" style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:600;letter-spacing:0.06em;margin-right:4px">● Live</span>
       <button class="hbtn primary" id="refresh-btn" onclick="loadData()">
         <span id="refresh-icon">⟳</span> REFRESH
@@ -1110,6 +1183,7 @@
           <button type="button" class="crm-nav" onclick="crmShiftMonth(1)" aria-label="Next month">&#8250;</button>
           <button type="button" class="crm-today-btn" onclick="crmGoToday()">Today</button>
           <div class="crm-spacer"></div>
+          <button type="button" class="btn-sm" style="background:var(--asf-green)" onclick="openQuickLog()">Quick log</button>
           <button type="button" class="btn-sm" onclick="openCrmForm({type:'Event'})">+ Event</button>
           <button type="button" class="btn-sm" onclick="openCrmForm({type:'Task'})">+ Task</button>
         </div>
@@ -1910,6 +1984,7 @@ async function afterSignIn() {
     } else {
       loadData();  // loadData calls clearLog() — resolveUserIdentity logs appear before it
       loadCrmItems(); // also feeds the past-due banner; the calendar tab reuses this load
+      document.getElementById('ql-fab').style.display = 'inline-flex'; // Quick log on every tab
       d10LoadData().then(renderOverviewScorecard).catch(e => console.warn('D10 data for Overview:', e)); // scorecard card on the Overview
     }
   } catch(e) { showLoginErr(e.message); }
@@ -3647,6 +3722,26 @@ function renderCrmCalendar() {
 
   const byDay = {};
   crmVisibleItems().forEach(i => { if (i.dayKey) (byDay[i.dayKey] = byDay[i.dayKey] || []).push(i); });
+  const agenda = window.matchMedia('(max-width: 760px)').matches;
+  grid.classList.toggle('crm-agenda', agenda);
+  const wk = document.querySelector('#crm-cal-card .crm-weekdays');
+  if (wk) wk.style.display = agenda ? 'none' : '';
+  if (agenda) {
+    // Phones: one row per day that has something, plus today
+    const tk = crmDayKey(new Date());
+    const dim = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+    let out = '';
+    for (let d = 1; d <= dim; d++) {
+      const key = crmDayKey(new Date(m.getFullYear(), m.getMonth(), d));
+      const items = (byDay[key] || []).sort(crmSort);
+      if (!items.length && key !== tk) continue;
+      out += `<div class="crm-agenda-day${key === tk ? ' crm-today' : ''}"><div class="crm-agenda-hdr"><span>${crmFmtDay(key)}${key === tk ? ' · Today' : ''}</span>`
+        + `<button type="button" onclick="openQuickLog({date:'${key}'})">+ Log</button></div>`
+        + (items.length ? items.map(i => crmPill(i, tk)).join('') : '<div class="crm-hint">Nothing scheduled.</div>') + `</div>`;
+    }
+    grid.innerHTML = out || '<div class="crm-cal-msg">Nothing this month.</div>';
+    return;
+  }
   const first     = new Date(m.getFullYear(), m.getMonth(), 1);
   const daysInMon = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
   const weeks     = Math.ceil((first.getDay() + daysInMon) / 7);
@@ -3667,6 +3762,8 @@ function renderCrmCalendar() {
   }
   grid.innerHTML = html;
 }
+
+window.matchMedia('(max-width: 760px)').addEventListener('change', () => { if (typeof crmInitialized !== 'undefined' && crmInitialized) renderCrmCalendar(); });
 
 function crmShiftMonth(delta) {
   CRM.month = new Date(CRM.month.getFullYear(), CRM.month.getMonth() + delta, 1);
@@ -3878,6 +3975,7 @@ function openCrmDay(key) {
 // ── Create / edit form ──
 function crmAccountNames() {
   const names = new Set();
+  (D.customers || []).forEach(c => { const n = (c.CustomerName || '').trim(); if (n) names.add(n); });
   (D.sales || []).forEach(r => { const n = (r.CustomerName || '').trim(); if (n) names.add(n); });
   (D.activities || []).forEach(r => { const n = (r.AccountName || '').trim(); if (n) names.add(n); });
   CRM.items.forEach(i => { if (i.account) names.add(i.account); });
@@ -3885,6 +3983,7 @@ function crmAccountNames() {
 }
 function crmAccountOptions() {
   const names = new Set();
+  (D.customers || []).forEach(c => { const n = (c.CustomerName || '').trim(); if (n) names.add(n); });
   (D.sales || []).forEach(r => { const n = (r.CustomerName || '').trim(); if (n) names.add(n); });
   (D.activities || []).forEach(r => { const n = (r.AccountName || '').trim(); if (n) names.add(n); });
   CRM.items.forEach(i => { if (i.account) names.add(i.account); });
@@ -3954,6 +4053,263 @@ function openCrmForm(opts = {}) {
       <button type="button" class="btn-sm" id="crm-save-btn" onclick="saveCrmForm()">${edit ? 'Save changes' : 'Save ' + type.toLowerCase()}</button>
     </div>`);
   document.getElementById('crm-f-summary').focus();
+}
+
+// ── Quick log ─────────────────────────────────────────────────────────────
+// Two big choices built for phones: "Log a visit" (an event, saved completed when it
+// already happened, so it counts right away) and "Add a follow-up" (a task). A visit can
+// add its follow-up in the same save. Every entry is tied to an account.
+let QL = { kind: 'visit', account: '', due: null };
+function qlAccountList() {
+  // The rep's own customers first, then every other known account
+  const mine = new Set((D.customers || []).filter(c => USER.salespersonCode && (c.SalespersonID || '').trim() === USER.salespersonCode)
+    .map(c => (c.CustomerName || '').trim()));
+  return [...crmAccountNames()].sort((a, b) => (mine.has(b) - mine.has(a)) || a.localeCompare(b)).map(n => ({ name: n, mine: mine.has(n) }));
+}
+function qlRoundTime(d) { const x = new Date(d); x.setMinutes(Math.floor(x.getMinutes() / 15) * 15, 0, 0); return x; }
+function qlTime(d) { return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
+function qlDueFromChip(c) {
+  const d = new Date(); d.setHours(0, 0, 0, 0);
+  if (c === 'tomorrow') d.setDate(d.getDate() + 1);
+  else if (c === '3days') d.setDate(d.getDate() + 3);
+  else if (c === 'nextmon') d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7));
+  else if (c === 'week') d.setDate(d.getDate() + 7);
+  return crmDayKey(d);
+}
+function openQuickLog(opts = {}) {
+  QL = { kind: opts.kind || 'visit', account: opts.account || (typeof activeCustTab !== 'undefined' && activeCustTab) || '', due: qlDueFromChip('3days') };
+  const now = new Date();
+  const date = opts.date || crmDayKey(now);
+  const end = qlRoundTime(now), start = new Date(end.getTime() - 30 * 60000);
+  const chips = [['tomorrow','Tomorrow'],['3days','In 3 days'],['nextmon','Next Monday'],['week','In a week']];
+  const chipHtml = id => `<div class="ql-chips" id="${id}">${chips.map(([k, l]) => `<button type="button" data-k="${k}" class="${k === '3days' ? 'on' : ''}" onclick="qlPickDue('${id}','${k}')">${l}</button>`).join('')}</div>`;
+  crmOpenModal(crmModalHdr('Quick log') + `
+    <div class="crm-modal-body" id="ql-form">
+      <div class="ql-smart">
+        <label for="ql-say" style="font-size:11px;font-weight:700;color:var(--asf-navy)">Say it or type it — Claude fills in the form</label>
+        <div class="ql-smart-row">
+          <textarea class="crm-in" id="ql-say" placeholder="e.g. Dropped samples at Greer Flooring, follow up with Mike next Friday"></textarea>
+          <button type="button" class="ql-mic" id="ql-mic" onclick="qlToggleMic()" style="display:none" aria-label="Dictate">🎤</button>
+        </div>
+        <div class="ql-smart-btns">
+          <button type="button" class="btn-sm" id="ql-say-btn" onclick="qlSmartFill()">Fill in for me</button>
+          <span class="ql-smart-msg" id="ql-say-msg">On a phone, tap the microphone on your keyboard to dictate.</span>
+        </div>
+      </div>
+      <div class="ql-choice">
+        <button type="button" id="ql-k-visit" class="${QL.kind === 'visit' ? 'on' : ''}" onclick="qlSetKind('visit')">Log a visit<small>Call, visit or meeting — counts on your scorecard</small></button>
+        <button type="button" id="ql-k-task" class="${QL.kind === 'task' ? 'on' : ''}" onclick="qlSetKind('task')">Add a follow-up<small>Sample drop, quote, callback — a task</small></button>
+      </div>
+      <div class="crm-field"><label for="ql-acct">Account</label>
+        <div class="ql-acct-picked${QL.account ? ' on' : ''}" id="ql-acct-picked"><span id="ql-acct-name">${crmEsc(QL.account)}</span><button type="button" onclick="qlClearAccount()">Change</button></div>
+        <div class="ql-acct-wrap" id="ql-acct-search" style="display:${QL.account ? 'none' : 'block'}">
+          <input class="crm-in" id="ql-acct" placeholder="Search your customers…" autocomplete="off" oninput="qlFilterAccounts()">
+          <div class="ql-acct-list" id="ql-acct-list"></div>
+        </div></div>
+      <div class="crm-field"><label for="ql-summary" id="ql-summary-lbl">What happened?</label>
+        <input class="crm-in" id="ql-summary" maxlength="255" placeholder="e.g. Showroom visit, reviewed new SPC line"></div>
+      <div id="ql-visit-fields" style="display:${QL.kind === 'visit' ? 'flex' : 'none'};flex-direction:column;gap:12px">
+        <div class="crm-row3">
+          <div class="crm-field"><label for="ql-date">Date</label><input class="crm-in" type="date" id="ql-date" value="${date}" onchange="qlSyncDone()"></div>
+          <div class="crm-field"><label for="ql-t1">Start</label><input class="crm-in" type="time" id="ql-t1" value="${qlTime(start)}" onchange="qlSyncDone()"></div>
+          <div class="crm-field"><label for="ql-t2">End</label><input class="crm-in" type="time" id="ql-t2" value="${qlTime(end)}"></div>
+        </div>
+        <label class="crm-check"><input type="checkbox" id="ql-done" checked> Already happened — mark it complete so it counts</label>
+        <label class="crm-check"><input type="checkbox" id="ql-add-fu" onchange="document.getElementById('ql-fu').style.display=this.checked?'flex':'none'"> Add a follow-up too</label>
+        <div class="ql-sub" id="ql-fu" style="display:none">
+          <div class="crm-field"><label for="ql-fu-summary">Follow-up</label><input class="crm-in" id="ql-fu-summary" maxlength="255" placeholder="e.g. Send quote, check on samples"></div>
+          <div class="crm-field"><label>Due</label>${chipHtml('ql-fu-chips')}<input class="crm-in" type="date" id="ql-fu-due" value="${QL.due}" style="margin-top:6px" onchange="qlPickDue('ql-fu-chips',null)"></div>
+        </div>
+      </div>
+      <div id="ql-task-fields" style="display:${QL.kind === 'task' ? 'flex' : 'none'};flex-direction:column;gap:12px">
+        <div class="crm-field"><label>Due</label>${chipHtml('ql-due-chips')}<input class="crm-in" type="date" id="ql-due" value="${QL.due}" style="margin-top:6px" onchange="qlPickDue('ql-due-chips',null)"></div>
+      </div>
+      <div class="crm-field"><label for="ql-category">Category (optional)</label><select class="crm-in" id="ql-category">${crmCategoryOptions('')}</select></div>
+      <div class="crm-field"><label for="ql-notes">Notes (optional)</label><textarea class="crm-in" id="ql-notes" placeholder="Optional"></textarea></div>
+      <div class="crm-err" id="crm-form-err"></div>
+      <div class="crm-hint">Saves to Acumatica as you, linked to the account. It shows in Outlook within about 5 minutes.</div>
+    </div>
+    <div class="crm-modal-foot">
+      <button type="button" class="crm-btn-ghost" onclick="crmCloseModal()">Cancel</button>
+      <button type="button" class="btn-sm" id="crm-save-btn" onclick="saveQuickLog()">${QL.kind === 'visit' ? 'Save visit' : 'Save follow-up'}</button>
+    </div>`);
+  qlSetKind(QL.kind);
+  qlSyncDone(); // a future date from the agenda is a scheduled visit, not a completed one
+  if (!QL.account) qlFilterAccounts();
+  if (qlSpeechCtor()) document.getElementById('ql-mic').style.display = '';
+}
+// ── Smart entry: dictation/typing → Claude (Worker /crm/parse) → filled-in form to review ──
+const QL_STOP = new Set(['inc','llc','co','corp','company','the','and','of','dba','ltd','flooring','floors','floor','carpet','carpets','tile','design','designs','interiors','home','center','group','services','supply']);
+function qlWords(t) { return String(t || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter(w => w.length >= 3); }
+// Shortlist of accounts the note could mean, so Claude picks from a short list
+function qlCandidates(text) {
+  const said = new Set(qlWords(text));
+  const lower = String(text || '').toLowerCase();
+  const all = qlAccountList();
+  const scored = all.map(a => {
+    const words = qlWords(a.name);
+    let score = 0;
+    words.forEach(w => { if (said.has(w)) score += QL_STOP.has(w) ? 0.2 : 2; else if (!QL_STOP.has(w) && w.length >= 4 && lower.includes(w.slice(0, 4))) score += 0.5; });
+    if (a.mine) score += 0.3;
+    return { name: a.name, score };
+  }).filter(a => a.score >= 1).sort((x, y) => y.score - x.score).slice(0, 40).map(a => a.name);
+  if (QL.account && !scored.includes(QL.account)) scored.unshift(QL.account);
+  return scored.length ? scored : all.filter(a => a.mine).slice(0, 40).map(a => a.name);
+}
+async function qlSmartFill() {
+  const text = document.getElementById('ql-say').value.trim();
+  const msg = document.getElementById('ql-say-msg'), btn = document.getElementById('ql-say-btn');
+  const setMsg = (t, err) => { msg.textContent = t; msg.classList.toggle('err', !!err); };
+  if (!text) { setMsg('Say or type what happened first.', true); return; }
+  btn.disabled = true; btn.textContent = 'Thinking…'; setMsg('');
+  try {
+    const now = new Date();
+    const r = await crmApi('POST', '/crm/parse', {
+      text, accounts: qlCandidates(text), categories: CRM.categories.length ? CRM.categories : [],
+      today: crmDayKey(now), weekday: now.toLocaleDateString('en-US', { weekday: 'long' }),
+    });
+    qlApplyDraft(r.draft || {});
+    setMsg(r.draft && r.draft.question ? r.draft.question : 'Check the details below, then tap Save.', !!(r.draft && r.draft.question));
+  } catch (e) {
+    setMsg(e.message, true);
+  }
+  btn.disabled = false; btn.textContent = 'Fill in for me';
+}
+function qlApplyDraft(d) {
+  const set = (id, v) => { const el = document.getElementById(id); if (el && v !== undefined && v !== null && v !== '') el.value = v; };
+  if (d.account) qlPickAccount(d.account);
+  else if (!QL.account) { const q = document.getElementById('ql-acct'); q.value = ''; qlFilterAccounts(); }
+  if (d.category) set('ql-category', d.category);
+  if (d.visit) {
+    qlSetKind('visit');
+    set('ql-summary', d.visit.summary);
+    set('ql-date', d.visit.date);
+    if (d.visit.start_time) {
+      set('ql-t1', d.visit.start_time);
+      const [h, m] = d.visit.start_time.split(':').map(Number);
+      const end = new Date(2000, 0, 1, h, m + (d.visit.duration_minutes || 30));
+      set('ql-t2', qlTime(end));
+    }
+    if (d.visit.notes) set('ql-notes', d.visit.notes);
+    qlSyncDone();
+    const fu = document.getElementById('ql-add-fu');
+    fu.checked = !!d.follow_up;
+    document.getElementById('ql-fu').style.display = d.follow_up ? 'flex' : 'none';
+    if (d.follow_up) { set('ql-fu-summary', d.follow_up.summary); set('ql-fu-due', d.follow_up.due_date); qlPickDue('ql-fu-chips', null); }
+  } else if (d.follow_up) {
+    qlSetKind('task');
+    set('ql-summary', d.follow_up.summary);
+    set('ql-due', d.follow_up.due_date);
+    qlPickDue('ql-due-chips', null);
+  }
+}
+// Browser speech recognition where available (desktop Chrome/Edge, Safari); phones can
+// always use the keyboard's microphone instead.
+let qlRec = null;
+function qlSpeechCtor() { return window.SpeechRecognition || window.webkitSpeechRecognition || null; }
+function qlToggleMic() {
+  const Ctor = qlSpeechCtor(), btn = document.getElementById('ql-mic');
+  if (!Ctor) return;
+  if (qlRec) { qlRec.stop(); return; }
+  qlRec = new Ctor(); qlRec.lang = 'en-US'; qlRec.interimResults = true; qlRec.continuous = false;
+  const box = document.getElementById('ql-say'), base = box.value ? box.value.trim() + ' ' : '';
+  qlRec.onresult = ev => { box.value = base + [...ev.results].map(r => r[0].transcript).join(''); };
+  qlRec.onend = () => { qlRec = null; btn.classList.remove('on'); if (box.value.trim()) qlSmartFill(); };
+  qlRec.onerror = () => { qlRec = null; btn.classList.remove('on'); };
+  btn.classList.add('on'); qlRec.start();
+}
+
+function qlSetKind(kind) {
+  QL.kind = kind;
+  document.getElementById('ql-k-visit').classList.toggle('on', kind === 'visit');
+  document.getElementById('ql-k-task').classList.toggle('on', kind === 'task');
+  document.getElementById('ql-visit-fields').style.display = kind === 'visit' ? 'flex' : 'none';
+  document.getElementById('ql-task-fields').style.display = kind === 'task' ? 'flex' : 'none';
+  document.getElementById('ql-summary-lbl').textContent = kind === 'visit' ? 'What happened?' : 'What needs to happen?';
+  document.getElementById('ql-summary').placeholder = kind === 'visit' ? 'e.g. Showroom visit, reviewed new SPC line' : 'e.g. Drop samples, follow up on project';
+  document.getElementById('crm-save-btn').textContent = kind === 'visit' ? 'Save visit' : 'Save follow-up';
+}
+function qlFilterAccounts() {
+  const q = (document.getElementById('ql-acct').value || '').trim().toLowerCase();
+  const list = document.getElementById('ql-acct-list');
+  const all = qlAccountList();
+  const hits = (q ? all.filter(a => a.name.toLowerCase().includes(q)) : all.filter(a => a.mine)).slice(0, 25);
+  list.innerHTML = hits.length
+    ? hits.map(a => `<button type="button" data-n="${crmEsc(a.name)}" onclick="qlPickAccount(this.dataset.n)">${crmEsc(a.name)}${a.mine ? '<small>your customer</small>' : ''}</button>`).join('')
+    : `<div class="crm-hint" style="padding:10px 12px">${q ? 'No matching account.' : 'Start typing a customer name.'}</div>`;
+  list.classList.add('open');
+}
+function qlPickAccount(name) {
+  QL.account = name;
+  document.getElementById('ql-acct-name').textContent = name;
+  document.getElementById('ql-acct-picked').classList.add('on');
+  document.getElementById('ql-acct-search').style.display = 'none';
+  document.getElementById('ql-summary').focus();
+}
+function qlClearAccount() {
+  QL.account = '';
+  document.getElementById('ql-acct-picked').classList.remove('on');
+  document.getElementById('ql-acct-search').style.display = 'block';
+  document.getElementById('ql-acct').value = '';
+  qlFilterAccounts();
+  document.getElementById('ql-acct').focus();
+}
+function qlPickDue(chipsId, key) {
+  const box = document.getElementById(chipsId);
+  box.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.k === key));
+  const input = document.getElementById(chipsId === 'ql-fu-chips' ? 'ql-fu-due' : 'ql-due');
+  if (key) input.value = qlDueFromChip(key);
+}
+function qlSyncDone() {
+  // Future visits are scheduled, not completed
+  const d = document.getElementById('ql-date').value, t = document.getElementById('ql-t1').value;
+  const start = new Date(`${d}T${t || '00:00'}`);
+  document.getElementById('ql-done').checked = !isNaN(start) && start <= new Date();
+}
+async function saveQuickLog() {
+  const val = id => (document.getElementById(id)?.value || '').trim();
+  if (!QL.account) { crmShowErr('Pick the account this is for.'); return; }
+  const category = val('ql-category'), notes = val('ql-notes');
+  let summary = val('ql-summary');
+  if (!summary) summary = category || (QL.kind === 'visit' ? 'Customer visit' : 'Follow up');
+  const btn = document.getElementById('crm-save-btn');
+  const done = msg => { crmCloseModal(); crmToast(msg); loadCrmItems(); };
+  btn.disabled = true; btn.textContent = 'Saving…'; crmShowErr('');
+  try {
+    if (QL.kind === 'task') {
+      const due = val('ql-due');
+      if (!due) throw new Error('Pick a due date.');
+      const today = crmDayKey(new Date());
+      await crmApi('PUT', '/crm/task', { summary, account: QL.account, category, notes, dueDate: due, startDate: due < today ? due : today });
+      return done('Follow-up saved.');
+    }
+    const d = val('ql-date');
+    const s = new Date(`${d}T${val('ql-t1')}`), e = new Date(`${d}T${val('ql-t2')}`);
+    if (!d || isNaN(s) || isNaN(e)) throw new Error('Enter the date and time.');
+    if (e <= s) throw new Error('The end time must be after the start time.');
+    const markDone = document.getElementById('ql-done').checked && s <= new Date();
+    const fu = document.getElementById('ql-add-fu').checked;
+    if (fu && !val('ql-fu-due')) throw new Error('Pick a due date for the follow-up.');
+    const ev = await crmApi('PUT', '/crm/event', { summary, account: QL.account, category, notes,
+      start: s.toISOString(), end: e.toISOString(), allDay: false, location: '', showAs: 'Busy', timeZone: crmAcuTimeZone() });
+    const msgs = ['Visit saved'];
+    if (markDone && ev.id) {
+      try { await crmApi('POST', '/crm/action', { entity: 'Event', action: 'complete', id: ev.id }); msgs[0] += ' and completed'; }
+      catch (err) { msgs.push('mark it complete from the past-due list'); }
+    }
+    if (fu) {
+      const due = val('ql-fu-due'), today = crmDayKey(new Date());
+      try {
+        await crmApi('PUT', '/crm/task', { summary: val('ql-fu-summary') || 'Follow up', account: QL.account, category: '', notes: '',
+          dueDate: due, startDate: due < today ? due : today });
+        msgs.push('follow-up added');
+      } catch (err) { msgs.push(`follow-up not saved: ${err.message}`); }
+    }
+    done(msgs.join(' · ') + '.');
+  } catch (e) {
+    crmShowErr(e.message);
+    btn.disabled = false; btn.textContent = QL.kind === 'visit' ? 'Save visit' : 'Save follow-up';
+  }
 }
 
 function crmSetType(type) {
